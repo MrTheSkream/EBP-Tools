@@ -131,6 +131,8 @@ export class ReplayCutterCropDialog implements OnInit {
             PADDING_BOTTOM;
         }
 
+        console.log(IMAGE.width, matDialogContentWidth);
+
         const CANVAS = document.createElement('canvas');
         CANVAS.width = matDialogContentWidth;
         CANVAS.height = matDialogContentHeight;
@@ -147,7 +149,7 @@ export class ReplayCutterCropDialog implements OnInit {
         }
       };
       IMAGE.src = this.data.imgBase64;
-    }, 200);
+    }, 300);
   }
 
   /**

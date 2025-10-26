@@ -510,7 +510,6 @@ export class ReplayCutterComponent implements OnInit {
                                     })
                                     .afterClosed()
                                     .subscribe((gameID: number | undefined) => {
-                                      this.globalService.loading = undefined;
                                       if (gameID) {
                                         this.cropGameMinimap(
                                           gameIndex,
@@ -522,6 +521,8 @@ export class ReplayCutterComponent implements OnInit {
                                           ORANGE_NAMES_IMAGE,
                                           BLUE_NAMES_IMAGE
                                         );
+                                      } else {
+                                        this.globalService.loading = undefined;
                                       }
                                     });
                                 }
@@ -596,9 +597,13 @@ export class ReplayCutterComponent implements OnInit {
   public detectMinimap(
     game: Game,
     callback: Function,
-    index: number = 0
+    index: number = 0,
+    max: number = 30
   ): void {
     if (this._videoPath) {
+      console.log(
+        `"detectMinimap": Trying to detect the minimap (${index})...`
+      );
       let retry: boolean = false;
 
       const BACK: CropperPosition = JSON.parse(
@@ -742,7 +747,7 @@ export class ReplayCutterComponent implements OnInit {
 
             const GAME_MAP = this.getMapByName(game.map);
             if (GAME_MAP && GAME_MAP.mapBound) {
-              const TOLERANCE: number = videoFrame.width * 0.005;
+              const TOLERANCE: number = videoFrame.width * 0.01;
 
               if (
                 // X
@@ -764,9 +769,15 @@ export class ReplayCutterComponent implements OnInit {
               ) {
                 retry = true;
                 console.warn(
-                  'Error: "detectMinimap", the dimensions of the minimap do not match the expected, retrying...'
+                  'Error: "detectMinimap", the dimensions of the minimap do not match the expected.'
                 );
-                this.detectMinimap(game, callback, index + 1);
+                if (index < max) {
+                  console.warn('Retrying...');
+                  this.detectMinimap(game, callback, index + 1, max);
+                } else {
+                  console.warn(`index == max (${max})...`);
+                  callback(BACK, videoFrame);
+                }
               }
             }
 

@@ -4,11 +4,24 @@ This file is part of a source-visible project.
 See LICENSE for terms. Unauthorized use is prohibited.
 -->
 
-<div class="loader">
-  <ebp-loader
-    [value]="data.percent"
-    [infinite]="data.infinite"
-    [icon]="data.icon"
-  ></ebp-loader>
-</div>
-<ebp-message [html]="data.text"> </ebp-message>
+<main [class.left_rounded]="data.leftRounded">
+  @if (images.length == 0) {
+    <div class="loader">
+      <ebp-loader
+        [value]="data.percent"
+        [infinite]="data.infinite"
+        [icon]="data.icon"
+      ></ebp-loader>
+    </div>
+    <ebp-message [html]="data.text"> </ebp-message>
+  } @else {
+    <div class="images">
+      <ebp-message [html]="data.text"> </ebp-message>
+      <div>
+        @for (image of images; track image) {
+          <img [src]="image" />
+        }
+      </div>
+    </div>
+  }
+</main>

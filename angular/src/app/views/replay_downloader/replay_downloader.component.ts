@@ -104,7 +104,8 @@ export class ReplayDownloaderComponent implements OnInit {
                 percent == 100
                   ? 'fa-sharp fa-solid fa-clapperboard-play'
                   : undefined,
-              text: translated
+              text: translated,
+              leftRounded: true
             });
           });
       });

@@ -4,9 +4,9 @@
 
 // Custom Theming for Angular Material
 // For more information: https://material.angular.dev/guide/theming
-@use "@angular/material" as mat;
-@use "ngx-toastr/toastr";
-@use "./styles/_index" as variables;
+@use '@angular/material' as mat;
+@use 'ngx-toastr/toastr';
+@use './styles/_index' as variables;
 
 html {
   @include mat.theme(
@@ -14,17 +14,17 @@ html {
       color: (
         theme-type: light,
         primary: mat.$azure-palette,
-        tertiary: mat.$blue-palette,
+        tertiary: mat.$blue-palette
       ),
       typography: Roboto,
-      density: 0,
+      density: 0
     )
   );
 } /* You can add global styles to this file, and also import other style files */
 
 @font-face {
   font-family: DukeFill;
-  src: url("/assets/font/dukeFill/Duke Fill.otf") format("opentype");
+  src: url('/assets/font/dukeFill/Duke Fill.otf') format('opentype');
 }
 
 html {
@@ -41,10 +41,20 @@ html {
     font-size: 16px;
 
     *:not(i):not(button):not(.btn) {
-      font-family: system-ui, -apple-system, "Segoe UI", Roboto,
-        "Helvetica Neue", "Noto Sans", "Liberation Sans", Arial, sans-serif,
-        "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol",
-        "Noto Color Emoji" !important;
+      font-family:
+        system-ui,
+        -apple-system,
+        'Segoe UI',
+        Roboto,
+        'Helvetica Neue',
+        'Noto Sans',
+        'Liberation Sans',
+        Arial,
+        sans-serif,
+        'Apple Color Emoji',
+        'Segoe UI Emoji',
+        'Segoe UI Symbol',
+        'Noto Color Emoji' !important;
     }
 
     > app-root {
@@ -63,6 +73,17 @@ html {
           height: 100%;
           overflow-x: hidden;
           overflow-y: auto;
+        }
+      }
+    }
+
+    .ngx-toastr {
+      &.toast-error {
+        .toast-message {
+          .btn {
+            background-color: transparent;
+            border-color: white;
+          }
         }
       }
     }

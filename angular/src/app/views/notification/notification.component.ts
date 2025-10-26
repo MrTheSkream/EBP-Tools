@@ -27,11 +27,13 @@ import { ConsoleService } from '../../shared/console/services/console.service';
 export class NotificationComponent implements OnInit, OnDestroy {
   //#region Attributes
 
+  protected images: string[] = [];
   protected data: Message = {
     percent: 0,
     infinite: false,
     icon: undefined,
-    text: ''
+    text: '',
+    leftRounded: true
   };
   private subscription: Subscription | undefined;
 
@@ -51,6 +53,13 @@ export class NotificationComponent implements OnInit, OnDestroy {
     this.subscription = this.notificationService.messages$.subscribe(
       (msg: Message) => (this.data = msg)
     );
+
+    // Retrieving images
+    const IMAGES = localStorage.getItem('notification_images');
+    if (IMAGES) {
+      this.images = JSON.parse(IMAGES);
+    }
+    localStorage.removeItem('notification_images');
 
     this.route.queryParams.subscribe((params) => {
       if (params['data']) {

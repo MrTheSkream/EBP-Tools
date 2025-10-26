@@ -6,7 +6,11 @@
 
 import { Component, Inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
+import {
+  MAT_DIALOG_DATA,
+  MatDialogModule,
+  MatDialogRef
+} from '@angular/material/dialog';
 import { TranslateModule } from '@ngx-translate/core';
 import { RestGame } from '../../models/rest-game';
 import { GridModule } from '../../../../shared/grid/grid.module';
@@ -31,6 +35,7 @@ import { Game } from '../../models/game';
 })
 export class ReplayCutterAttachGameDialog {
   constructor(
+    private readonly dialogRef: MatDialogRef<ReplayCutterAttachGameDialog>,
     private readonly globalService: GlobalService,
     @Inject(MAT_DIALOG_DATA)
     protected data: {
@@ -59,23 +64,7 @@ export class ReplayCutterAttachGameDialog {
           `${this.globalService.webSiteURL}/tools/statistics`
         );
       } else if (event.target.tagName === 'B') {
-        const DATA = {
-          map: this.data.game.map,
-          date: new Date().getTime(),
-          orange: {
-            name: this.data.game.orangeTeam.name,
-            score: this.data.game.orangeTeam.score,
-            players: this.data.orangePlayersNames
-          },
-          blue: {
-            name: this.data.game.blueTeam.name,
-            score: this.data.game.blueTeam.score,
-            players: this.data.bluePlayersNames
-          }
-        };
-        window.electronAPI.openURL(
-          `${this.globalService.webSiteURL}/tools/statistics?new=${encodeURIComponent(JSON.stringify(DATA))}`
-        );
+        this.dialogRef.close(null);
       }
     }
   }

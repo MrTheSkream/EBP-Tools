@@ -28,8 +28,9 @@
         "videosCutHere": "Tus videos han sido cortados aquí: {{filePath}}",
         "videoCutHere": "Tu video ha sido cortado aquí: {{filePath}}",
         "videoFileNotFound": "Archivo de video no encontrado.",
-        "noGamesFoundInStatistics": "No se encontró ningún partido en {{map}} con estos resultados ({{orangeScore}} vs {{blueScore}}). ¿Desea crear uno? <span class='btn'>Sí</span>",
-        "noGamesFoundInVideo": "No se encontraron juegos en tu video. Si crees que es un error, házmelo saber."
+        "noGamesFoundInStatistics": "No se encontró ningún partido en {{map}} con estos resultados ({{orangeScore}} vs {{blueScore}}).<br/>¿Desea crear uno? <span class='btn mt-1 ml-auto'>Sí</span>",
+        "noGamesFoundInVideo": "No se encontraron juegos en tu video. Si crees que es un error, házmelo saber.",
+        "createGameOnEBPHelper": "Aquí están los nombres de usuario del video.<br/>Asegúrate de escribirlos correctamente en EPB."
       },
       "outputPath": "Ruta de salida",
       "detectingPlayerNicknames": "Detectando apodos de jugadores...",

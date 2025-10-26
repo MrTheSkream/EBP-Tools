@@ -28,8 +28,9 @@
         "videosCutHere": "Your videos have been cut here: {{filePath}}",
         "videoCutHere": "Your video has been cut here: {{filePath}}",
         "videoFileNotFound": "Video file not found.",
-        "noGamesFoundInStatistics": "No match was found on {{map}} with these scores ({{orangeScore}} vs {{blueScore}}). Would you like to create one? <span class='btn'>Yes</span>",
-        "noGamesFoundInVideo": "No games were found in your video. If you think this is a mistake, please let me know."
+        "noGamesFoundInStatistics": "No match was found on {{map}} with these scores ({{orangeScore}} vs {{blueScore}}).<br/>Would you like to create one? <span class='btn mt-1 ml-auto'>Yes</span>",
+        "noGamesFoundInVideo": "No games were found in your video. If you think this is a mistake, please let me know.",
+        "createGameOnEBPHelper": "Here are the usernames from the video.<br/>Please make sure to spell them correctly on EPB."
       },
       "outputPath": "Output path",
       "detectingPlayerNicknames": "Detecting player nicknames...",

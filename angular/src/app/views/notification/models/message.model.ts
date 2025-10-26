@@ -9,6 +9,7 @@ export interface Message {
   infinite: boolean;
   icon: string | undefined;
   text: string;
+  leftRounded: boolean;
 
   //#endregion
 }

@@ -28,8 +28,9 @@
         "videosCutHere": "Vos vidéos ont été découpées ici : {{filePath}}",
         "videoCutHere": "Votre vidéo a été découpée ici : {{filePath}}",
         "videoFileNotFound": "Fichier vidéo introuvable.",
-        "noGamesFoundInStatistics": "Aucune partie n'a été trouvée sur {{map}} avec ces scores ({{orangeScore}} vs {{blueScore}}). Souhaitez vous la créer ? <span class='btn'>Oui</span>",
-        "noGamesFoundInVideo": "Aucune partie n'a été trouvée dans votre vidéo. Si vous pensez que c'est une erreur, faites-le moi savoir."
+        "noGamesFoundInStatistics": "Aucune partie n'a été trouvée sur {{map}} avec ces scores ({{orangeScore}} vs {{blueScore}}).<br/>Souhaitez vous la créer ? <span class='btn mt-1 ml-auto'>Oui</span>",
+        "noGamesFoundInVideo": "Aucune partie n'a été trouvée dans votre vidéo. Si vous pensez que c'est une erreur, faites-le moi savoir.",
+        "createGameOnEBPHelper": "Voici les pseudos provenant de la vidéo.<br/>Veuillez à bien les orthographier sur EPB."
       },
       "outputPath": "Dossier de sortie",
       "detectingPlayerNicknames": "Détection des pseudos des joueurs...",

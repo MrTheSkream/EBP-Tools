@@ -29,41 +29,69 @@
 
 //#endregion
 
-$height: calc(150px - 12px * 4);
 :host {
-  margin: variables.$margin;
-  height: calc(100vh - #{variables.$margin} * 2);
-  display: flex;
-  box-sizing: border-box;
-  background-color: variables.$dark_color;
-  border: 1px solid variables.$border_color;
-  box-sizing: border-box;
-  padding: variables.$margin;
-  border-top-left-radius: $height;
-  border-bottom-left-radius: $height;
-  position: relative;
+  $height: calc(150px - 12px * 4);
+  padding: 0;
 
-  > .loader {
+  main {
+    margin: variables.$margin;
+    height: calc(100vh - #{variables.$margin} * 2);
+    display: flex;
+    box-sizing: border-box;
+    background-color: variables.$dark_color;
+    border: 1px solid variables.$border_color;
+    box-sizing: border-box;
+    padding: variables.$margin;
     position: relative;
-    height: $height;
-    width: $height;
-    min-width: $height;
 
-    > ebp-loader {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%) scale(0.67);
+    &.left_rounded {
+      border-top-left-radius: $height;
+      border-bottom-left-radius: $height;
     }
-  }
 
-  > ebp-message {
-    position: absolute;
-    right: calc(#{variables.$form_height} + #{variables.$margin} * 3);
-    top: 50%;
-    transform: translateY(-50%);
-    width: calc(
-      100% - #{$height} - #{variables.$form_height} - #{variables.$margin} * 7
-    );
+    > .loader {
+      position: relative;
+      height: $height;
+      width: $height;
+      min-width: $height;
+
+      > ebp-loader {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%) scale(0.67);
+      }
+    }
+
+    > ebp-message {
+      position: absolute;
+      right: calc(#{variables.$form_height} + #{variables.$margin} * 3);
+      top: 50%;
+      transform: translateY(-50%);
+      width: calc(
+        100% - #{$height} - #{variables.$form_height} - #{variables.$margin} * 7
+      );
+    }
+
+    > .images {
+      display: flex;
+      flex-direction: column;
+
+      > div {
+        display: flex;
+        gap: variables.$margin;
+
+        > img {
+          flex: 1;
+          aspect-ratio: auto;
+        }
+      }
+    }
+
+    > button {
+      position: absolute;
+      top: variables.$margin;
+      right: variables.$margin;
+    }
   }
 }

@@ -10,6 +10,7 @@ import {
   ElementRef,
   isDevMode,
   NgZone,
+  OnDestroy,
   OnInit,
   ViewChild
 } from '@angular/core';
@@ -69,13 +70,15 @@ import { CropperPositionAndFrame } from './models/CropperPosition';
     FormsModule
   ]
 })
-export class ReplayCutterComponent implements OnInit {
+export class ReplayCutterComponent implements OnInit, OnDestroy {
   //#region Attributes
 
   @ViewChild('debug') debug?: ElementRef<HTMLDivElement>;
   protected debugMode: boolean = false;
   public debugPause: boolean = false;
   private settings: Settings = new Settings();
+
+  private creatingAGame: number | undefined;
 
   protected percent: number = -1;
   protected inputFileDisabled: boolean = true;
@@ -149,7 +152,12 @@ export class ReplayCutterComponent implements OnInit {
 
   ngOnInit(): void {
     this._videoPath = undefined;
+    window.electronAPI.removeNotification(false);
+
     this.initServices();
+
+    this.visibilityChangeHandler = this.visibilityChangeHandler.bind(this);
+    document.addEventListener('visibilitychange', this.visibilityChangeHandler);
 
     window.electronAPI.gameIsUploaded(() => {
       this.ngZone.run(() => {
@@ -173,7 +181,8 @@ export class ReplayCutterComponent implements OnInit {
               percent: percent,
               infinite: false,
               icon: undefined,
-              text: translated
+              text: translated,
+              leftRounded: true
             });
           });
       });
@@ -192,7 +201,8 @@ export class ReplayCutterComponent implements OnInit {
               infinite: percent == 100,
               icon:
                 percent == 100 ? 'fa-sharp fa-solid fa-scissors' : undefined,
-              text: translated
+              text: translated,
+              leftRounded: true
             });
           });
       });
@@ -309,6 +319,13 @@ export class ReplayCutterComponent implements OnInit {
             }
           });
       }
+    );
+  }
+
+  ngOnDestroy(): void {
+    document.removeEventListener(
+      'visibilitychange',
+      this.visibilityChangeHandler
     );
   }
 
@@ -436,139 +453,159 @@ export class ReplayCutterComponent implements OnInit {
                       orangePlayersNames: string[],
                       bluePlayersNames: string[]
                     ) => {
-                      if (games && games.length > 0) {
-                        // We get the coordinates of the orange team's information.
-                        this.globalService.loading =
-                          this.translateService.instant(
-                            'view.replay_cutter.detectingOrangeInfoZone'
-                          );
-                        this.getTeamInfosPosition(
-                          gameIndex,
-                          new RGB(235, 121, 0),
-                          (
-                            orangeTeamInfosPosition: CropperPositionAndFrame
-                          ) => {
-                            // We get the coordinates of the blue team's information.
-                            this.globalService.loading =
-                              this.translateService.instant(
-                                'view.replay_cutter.detectingBlueInfoZone'
+                      // We get the coordinates of the orange team's information.
+                      this.globalService.loading =
+                        this.translateService.instant(
+                          'view.replay_cutter.detectingOrangeInfoZone'
+                        );
+                      this.getTeamInfosPosition(
+                        gameIndex,
+                        new RGB(235, 121, 0),
+                        (orangeTeamInfosPosition: CropperPositionAndFrame) => {
+                          // We get the coordinates of the blue team's information.
+                          this.globalService.loading =
+                            this.translateService.instant(
+                              'view.replay_cutter.detectingBlueInfoZone'
+                            );
+                          this.getTeamInfosPosition(
+                            gameIndex,
+                            new RGB(29, 127, 255),
+                            (
+                              blueTeamInfosPosition: CropperPositionAndFrame
+                            ) => {
+                              const ORANGE_BLOC_IMAGE = this.cropImage(
+                                orangeTeamInfosPosition.frame!,
+                                orangeTeamInfosPosition.x1,
+                                orangeTeamInfosPosition.y1,
+                                orangeTeamInfosPosition.x2,
+                                orangeTeamInfosPosition.y2
                               );
-                            this.getTeamInfosPosition(
-                              gameIndex,
-                              new RGB(29, 127, 255),
-                              (
-                                blueTeamInfosPosition: CropperPositionAndFrame
-                              ) => {
-                                const ORANGE_BLOC_IMAGE = this.cropImage(
-                                  orangeTeamInfosPosition.frame!,
-                                  orangeTeamInfosPosition.x1,
-                                  orangeTeamInfosPosition.y1,
-                                  orangeTeamInfosPosition.x2,
-                                  orangeTeamInfosPosition.y2
-                                );
 
-                                const BLUE_BLOC_IMAGE = this.cropImage(
-                                  blueTeamInfosPosition.frame!,
-                                  blueTeamInfosPosition.x1,
-                                  blueTeamInfosPosition.y1,
-                                  blueTeamInfosPosition.x2,
-                                  blueTeamInfosPosition.y2
-                                );
+                              const BLUE_BLOC_IMAGE = this.cropImage(
+                                blueTeamInfosPosition.frame!,
+                                blueTeamInfosPosition.x1,
+                                blueTeamInfosPosition.y1,
+                                blueTeamInfosPosition.x2,
+                                blueTeamInfosPosition.y2
+                              );
+
+                              if (ORANGE_BLOC_IMAGE && BLUE_BLOC_IMAGE) {
+                                const ORANGE_NAMES_IMAGE =
+                                  this.getPlayersNamesAsImage(
+                                    4,
+                                    ORANGE_BLOC_IMAGE,
+                                    true
+                                  ).toDataURL();
+                                const BLUE_NAMES_IMAGE =
+                                  this.getPlayersNamesAsImage(
+                                    4,
+                                    BLUE_BLOC_IMAGE,
+                                    false
+                                  ).toDataURL();
 
                                 if (ORANGE_BLOC_IMAGE && BLUE_BLOC_IMAGE) {
-                                  const ORANGE_NAMES_IMAGE =
-                                    this.getPlayersNamesAsImage(
-                                      4,
-                                      ORANGE_BLOC_IMAGE,
-                                      true
-                                    ).toDataURL();
-                                  const BLUE_NAMES_IMAGE =
-                                    this.getPlayersNamesAsImage(
-                                      4,
-                                      BLUE_BLOC_IMAGE,
-                                      false
-                                    ).toDataURL();
+                                  if (games && games.length > 0) {
+                                    const DIALOG_WIDTH: string =
+                                      'calc(100vw - 12px * 4)';
+                                    this.dialogService
+                                      .open(ReplayCutterAttachGameDialog, {
+                                        data: {
+                                          game: this.games[gameIndex],
+                                          games: games,
+                                          images: [
+                                            ORANGE_NAMES_IMAGE,
+                                            BLUE_NAMES_IMAGE
+                                          ],
 
-                                  const DIALOG_WIDTH: string =
-                                    'calc(100vw - 12px * 4)';
-                                  this.dialogService
-                                    .open(ReplayCutterAttachGameDialog, {
-                                      data: {
-                                        game: this.games[gameIndex],
-                                        games: games,
-                                        images: [
-                                          ORANGE_NAMES_IMAGE,
-                                          BLUE_NAMES_IMAGE
-                                        ],
-
-                                        orangePlayersNames: orangePlayersNames,
-                                        bluePlayersNames: bluePlayersNames
-                                      },
-                                      autoFocus: false,
-                                      width: DIALOG_WIDTH,
-                                      maxWidth: '922px'
-                                    })
-                                    .afterClosed()
-                                    .subscribe((gameID: number | undefined) => {
-                                      if (gameID) {
-                                        this.cropGameMinimap(
-                                          gameIndex,
-                                          games.find(
-                                            (game) => game.ID == gameID
-                                          )!,
-                                          orangeTeamInfosPosition,
-                                          blueTeamInfosPosition,
-                                          ORANGE_NAMES_IMAGE,
-                                          BLUE_NAMES_IMAGE
-                                        );
-                                      } else {
+                                          orangePlayersNames:
+                                            orangePlayersNames,
+                                          bluePlayersNames: bluePlayersNames
+                                        },
+                                        autoFocus: false,
+                                        width: DIALOG_WIDTH,
+                                        maxWidth: '922px'
+                                      })
+                                      .afterClosed()
+                                      .subscribe(
+                                        (gameID: number | undefined | null) => {
+                                          if (gameID === undefined) {
+                                            this.globalService.loading =
+                                              undefined;
+                                          } else if (gameID === null) {
+                                            console.log();
+                                            this.createGame(
+                                              gameIndex,
+                                              orangePlayersNames,
+                                              bluePlayersNames,
+                                              [
+                                                ORANGE_NAMES_IMAGE,
+                                                BLUE_NAMES_IMAGE
+                                              ]
+                                            );
+                                          } else {
+                                            this.cropGameMinimap(
+                                              gameIndex,
+                                              games.find(
+                                                (game) => game.ID == gameID
+                                              )!,
+                                              orangeTeamInfosPosition,
+                                              blueTeamInfosPosition,
+                                              ORANGE_NAMES_IMAGE,
+                                              BLUE_NAMES_IMAGE
+                                            );
+                                          }
+                                        }
+                                      );
+                                  } else {
+                                    this.globalService.loading = undefined;
+                                    this.translateService
+                                      .get(
+                                        'view.replay_cutter.toast.noGamesFoundInStatistics',
+                                        {
+                                          map: game.map,
+                                          orangeScore: game.orangeTeam.score,
+                                          blueScore: game.blueTeam.score
+                                        }
+                                      )
+                                      .subscribe((translated: string) => {
                                         this.globalService.loading = undefined;
-                                      }
-                                    });
-                                }
-                              },
-                              orangeTeamInfosPosition.frame
-                            );
-                          }
-                        );
-                      } else {
-                        this.translateService
-                          .get(
-                            'view.replay_cutter.toast.noGamesFoundInStatistics',
-                            {
-                              map: game.map,
-                              orangeScore: game.orangeTeam.score,
-                              blueScore: game.blueTeam.score
-                            }
-                          )
-                          .subscribe((translated: string) => {
-                            this.globalService.loading = undefined;
-                            this.toastrService
-                              .error(translated, undefined, {
-                                enableHtml: true
-                              })
-                              .onTap.subscribe(() => {
-                                const DATA = {
-                                  map: this.games[gameIndex].map,
-                                  date: new Date().getTime(),
-                                  orange: {
-                                    name: this.games[gameIndex].orangeTeam.name,
-                                    score:
-                                      this.games[gameIndex].orangeTeam.score,
-                                    players: orangePlayersNames
-                                  },
-                                  blue: {
-                                    name: this.games[gameIndex].blueTeam.name,
-                                    score: this.games[gameIndex].blueTeam.score,
-                                    players: bluePlayersNames
+                                        this.toastrService
+                                          .error(translated, undefined, {
+                                            enableHtml: true,
+                                            timeOut: 20 * 1000
+                                          })
+                                          .onTap.subscribe(() => {
+                                            localStorage.setItem(
+                                              'notification_images',
+                                              JSON.stringify([
+                                                ORANGE_NAMES_IMAGE,
+                                                BLUE_NAMES_IMAGE
+                                              ])
+                                            );
+
+                                            this.createGame(
+                                              gameIndex,
+                                              orangePlayersNames,
+                                              bluePlayersNames,
+                                              [
+                                                ORANGE_NAMES_IMAGE,
+                                                BLUE_NAMES_IMAGE
+                                              ]
+                                            );
+                                          });
+                                      });
                                   }
-                                };
-                                window.electronAPI.openURL(
-                                  `${this.globalService.webSiteURL}/tools/statistics?new=${encodeURIComponent(JSON.stringify(DATA))}`
-                                );
-                              });
-                          });
-                      }
+                                } else {
+                                  console.error(
+                                    "'selectWhichGameToAttachMinimap': Team images are missing."
+                                  );
+                                }
+                              }
+                            },
+                            orangeTeamInfosPosition.frame
+                          );
+                        }
+                      );
                     }
                   );
                 }
@@ -587,6 +624,62 @@ export class ReplayCutterComponent implements OnInit {
         autoFocus: false
       });
     }
+  }
+
+  /**
+   * Opens the browser's default browser to create a new game with the specified players.
+   * - Stores player images in localStorage for the notifications
+   * - Sets the current game as being created.
+   * - Shows a notification via the Electron API with translated text.
+   * - Prepares game data and opens the statistics page in the default browser.
+   * @param gameIndex - Index of the game in the games array.
+   * @param orangePlayersNames - Names of the orange team players.
+   * @param bluePlayersNames - Names of the blue team players.
+   * @param playersImages - Base64 of the player images.
+   */
+  protected createGame(
+    gameIndex: number,
+    orangePlayersNames: string[],
+    bluePlayersNames: string[],
+    playersImages: string[]
+  ): void {
+    localStorage.setItem('notification_images', JSON.stringify(playersImages));
+    this.creatingAGame = gameIndex;
+    this.translateService
+      .get('view.replay_cutter.toast.createGameOnEBPHelper')
+      .subscribe((translated: string) => {
+        window.electronAPI.showNotification(
+          false,
+          540,
+          210,
+          JSON.stringify({
+            percent: 0,
+            infinite: false,
+            icon: undefined,
+            text: translated,
+            leftRounded: false
+          })
+        );
+      });
+
+    const DATA = {
+      map: this.games[gameIndex].map,
+      date: new Date().getTime(),
+      orange: {
+        name: this.games[gameIndex].orangeTeam.name,
+        score: this.games[gameIndex].orangeTeam.score,
+        players: orangePlayersNames
+      },
+      blue: {
+        name: this.games[gameIndex].blueTeam.name,
+        score: this.games[gameIndex].blueTeam.score,
+        players: bluePlayersNames
+      }
+    };
+
+    window.electronAPI.openURL(
+      `${this.globalService.webSiteURL}/tools/statistics?new=${encodeURIComponent(JSON.stringify(DATA))}`
+    );
   }
 
   /**
@@ -1488,7 +1581,8 @@ export class ReplayCutterComponent implements OnInit {
                   percent: this.percent,
                   infinite: false,
                   icon: undefined,
-                  text: translated
+                  text: translated,
+                  leftRounded: true
                 });
               });
 
@@ -1644,7 +1738,8 @@ export class ReplayCutterComponent implements OnInit {
                           percent: this.percent,
                           infinite: false,
                           icon: undefined,
-                          text: translated
+                          text: translated,
+                          leftRounded: true
                         });
                       });
                   }
@@ -2747,6 +2842,109 @@ export class ReplayCutterComponent implements OnInit {
   }
 
   /**
+   * Opens a dialog to edit the map of a given game and updates the game with the selected map.
+   * @param game The game object whose map is being edited
+   */
+  protected editGameMap(game: Game): void {
+    this.dialogService
+      .open(ReplayCutterEditMapDialog, {
+        data: {
+          map: game.map,
+          maps: this.maps.map((x) => x.name)
+        },
+        width: '400px'
+      })
+      .afterClosed()
+      .subscribe((newMap: string | undefined) => {
+        if (newMap) {
+          game.map = newMap;
+        }
+      });
+  }
+
+  /**
+   * Opens a dialog to edit the score of a specific team for a given game.
+   * @param game The game object to modify.
+   * @param team The team whose score should be edited ('orange' or 'blue').
+   */
+  protected editTeamScore(game: Game, team: 'orange' | 'blue'): void {
+    const CURRENT_SCORE =
+      team === 'orange' ? game.orangeTeam.score : game.blueTeam.score;
+
+    this.dialogService
+      .open(ReplayCutterEditTeamScoreDialog, {
+        data: CURRENT_SCORE,
+        width: '400px'
+      })
+      .afterClosed()
+      .subscribe((newScore: number | undefined) => {
+        if (newScore) {
+          if (team === 'orange') {
+            game.orangeTeam.score = newScore;
+          } else {
+            game.blueTeam.score = newScore;
+          }
+        }
+      });
+  }
+
+  /**
+   * Captures a specific frame from the video at a given game time and crops it to the specified rectangle.
+   * Returns the cropped frame as a data URL.
+   * @param gameTimeMs The time in milliseconds of the frame to capture.
+   * @param x1 The left coordinate of the crop.
+   * @param y1 The top coordinate of the crop.
+   * @param x2 The right coordinate of the crop.
+   * @param y2 The bottom coordinate of the crop.
+   * @returns A promise resolving to the cropped frame as a data URL, or undefined if capture fails.
+   */
+  protected async getGameCroppedFrame(
+    gameTimeMs: number,
+    x1: number,
+    y1: number,
+    x2: number,
+    y2: number
+  ): Promise<string | undefined> {
+    return new Promise((resolve) => {
+      this.videoURLToCanvas(
+        `http://localhost:${this.globalService.serverPort}/file?path=${this._videoPath}`,
+        gameTimeMs,
+        (videoFrame?: HTMLCanvasElement) => {
+          if (videoFrame) {
+            resolve(this.cropImage(videoFrame, x1, y1, x2, y2)?.toDataURL());
+          }
+        }
+      );
+    });
+  }
+
+  /**
+   * Opens a dialog to edit the name of a specific team for a given game.
+   * @param game The game object to modify.
+   * @param team The team whose name should be edited ('orange' or 'blue').
+   */
+  protected editTeamName(game: Game, team: 'orange' | 'blue'): void {
+    const CURRENT_NAME =
+      team === 'orange' ? game.orangeTeam.name : game.blueTeam.name;
+
+    this.dialogService
+      .open(ReplayCutterEditTeamNameDialog, {
+        data: CURRENT_NAME,
+        width: '400px'
+      })
+      .afterClosed()
+      .subscribe((newName: string | undefined) => {
+        if (newName) {
+          if (team === 'orange') {
+            game.orangeTeam.name = newName;
+          } else {
+            game.blueTeam.name = newName;
+          }
+        }
+      });
+  }
+
+  /**
    * This function returns a black and white canvas from a canvas ctx passed as a parameter.
    * @param ctx Canvas ctx to copy.
    * @param luminance Boundary luminance between white and black.
@@ -2996,106 +3194,17 @@ export class ReplayCutterComponent implements OnInit {
   }
 
   /**
-   * Opens a dialog to edit the map of a given game and updates the game with the selected map.
-   * @param game The game object whose map is being edited
+   * Handler called when the page visibility changes.
+   * If the page becomes visible and a game is being created, it removes any notification via the Electron API.
    */
-  protected editGameMap(game: Game): void {
-    this.dialogService
-      .open(ReplayCutterEditMapDialog, {
-        data: {
-          map: game.map,
-          maps: this.maps.map((x) => x.name)
-        },
-        width: '400px'
-      })
-      .afterClosed()
-      .subscribe((newMap: string | undefined) => {
-        if (newMap) {
-          game.map = newMap;
-        }
-      });
-  }
-
-  /**
-   * Opens a dialog to edit the score of a specific team for a given game.
-   * @param game The game object to modify.
-   * @param team The team whose score should be edited ('orange' or 'blue').
-   */
-  protected editTeamScore(game: Game, team: 'orange' | 'blue'): void {
-    const CURRENT_SCORE =
-      team === 'orange' ? game.orangeTeam.score : game.blueTeam.score;
-
-    this.dialogService
-      .open(ReplayCutterEditTeamScoreDialog, {
-        data: CURRENT_SCORE,
-        width: '400px'
-      })
-      .afterClosed()
-      .subscribe((newScore: number | undefined) => {
-        if (newScore) {
-          if (team === 'orange') {
-            game.orangeTeam.score = newScore;
-          } else {
-            game.blueTeam.score = newScore;
-          }
-        }
-      });
-  }
-
-  /**
-   * Captures a specific frame from the video at a given game time and crops it to the specified rectangle.
-   * Returns the cropped frame as a data URL.
-   * @param gameTimeMs The time in milliseconds of the frame to capture.
-   * @param x1 The left coordinate of the crop.
-   * @param y1 The top coordinate of the crop.
-   * @param x2 The right coordinate of the crop.
-   * @param y2 The bottom coordinate of the crop.
-   * @returns A promise resolving to the cropped frame as a data URL, or undefined if capture fails.
-   */
-  protected async getGameCroppedFrame(
-    gameTimeMs: number,
-    x1: number,
-    y1: number,
-    x2: number,
-    y2: number
-  ): Promise<string | undefined> {
-    return new Promise((resolve) => {
-      this.videoURLToCanvas(
-        `http://localhost:${this.globalService.serverPort}/file?path=${this._videoPath}`,
-        gameTimeMs,
-        (videoFrame?: HTMLCanvasElement) => {
-          if (videoFrame) {
-            resolve(this.cropImage(videoFrame, x1, y1, x2, y2)?.toDataURL());
-          }
-        }
-      );
-    });
-  }
-
-  /**
-   * Opens a dialog to edit the name of a specific team for a given game.
-   * @param game The game object to modify.
-   * @param team The team whose name should be edited ('orange' or 'blue').
-   */
-  protected editTeamName(game: Game, team: 'orange' | 'blue'): void {
-    const CURRENT_NAME =
-      team === 'orange' ? game.orangeTeam.name : game.blueTeam.name;
-
-    this.dialogService
-      .open(ReplayCutterEditTeamNameDialog, {
-        data: CURRENT_NAME,
-        width: '400px'
-      })
-      .afterClosed()
-      .subscribe((newName: string | undefined) => {
-        if (newName) {
-          if (team === 'orange') {
-            game.orangeTeam.name = newName;
-          } else {
-            game.blueTeam.name = newName;
-          }
-        }
-      });
+  private visibilityChangeHandler(): void {
+    if (!document.hidden) {
+      if (this.creatingAGame !== undefined) {
+        window.electronAPI.removeNotification(true);
+        this.selectWhichGameToAttachMinimap(this.creatingAGame);
+        this.creatingAGame = undefined;
+      }
+    }
   }
 
   //#endregion

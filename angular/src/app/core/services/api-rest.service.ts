@@ -9,6 +9,7 @@ import { Injectable } from '@angular/core';
 import { RestGame } from '../../views/replay_cutter/models/rest-game';
 import { Observable } from 'rxjs';
 import { Team } from './identity/model/team.model';
+import { AccessibilitySettingsDTO } from './identity/model/accessibility-settings.model';
 
 //#endregion
 
@@ -47,6 +48,20 @@ export class APIRestService {
     return this.httpClient.get<RestGame[]>(APIRestService.serverURL, {
       params
     });
+  }
+
+  /**
+   * Retrieves the accessibility settings from the server.
+   */
+  public getAccessibilitySettings(): Observable<AccessibilitySettingsDTO | null> {
+    const params = new HttpParams().set('r', 'accessibility-settings');
+
+    return this.httpClient.get<AccessibilitySettingsDTO | null>(
+      APIRestService.serverURL,
+      {
+        params
+      }
+    );
   }
 
   /**

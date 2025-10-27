@@ -37,7 +37,7 @@ html {
     margin: 0;
     background-color: variables.$dark_color;
     color: white;
-    overflow-x: hidden;
+    overflow: hidden;
     font-size: 16px;
 
     *:not(i):not(button):not(.btn) {

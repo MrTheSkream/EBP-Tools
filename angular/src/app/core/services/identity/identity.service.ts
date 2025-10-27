@@ -7,6 +7,7 @@
 import { Injectable } from '@angular/core';
 import { GlobalService } from '../global.service';
 import { Team } from './model/team.model';
+import { AccessibilitySettings } from './model/accessibility-settings.model';
 
 //#endregion
 
@@ -26,6 +27,9 @@ export class IdentityService {
   public selectedTeamsIndex: number = 0;
 
   public coins: number | undefined;
+
+  public accessibilitySettings: AccessibilitySettings =
+    new AccessibilitySettings();
 
   //#endregion
 

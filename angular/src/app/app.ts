@@ -25,6 +25,7 @@ import { APIRestService } from './core/services/api-rest.service';
 import { ToastrService } from 'ngx-toastr';
 import { Team } from './core/services/identity/model/team.model';
 import { ConsoleComponent } from './shared/console/console.component';
+import { AccessibilitySettingsDTO } from './core/services/identity/model/accessibility-settings.model';
 
 //#endregion
 @Component({
@@ -58,7 +59,8 @@ export class App implements OnInit {
     private readonly identityService: IdentityService,
     private readonly apiRestService: APIRestService,
     private readonly translateService: TranslateService,
-    private readonly toastrService: ToastrService
+    private readonly toastrService: ToastrService,
+    private readonly elementRef: ElementRef
   ) {}
 
   //#region Functions
@@ -114,12 +116,31 @@ export class App implements OnInit {
                 this.identityService.teams = teams;
               });
 
-              // Get account coins
+              // Get account accessibility settings
+              this.apiRestService
+                .getAccessibilitySettings()
+                .subscribe(
+                  (accessibilitySettings: AccessibilitySettingsDTO | null) => {
+                    if (accessibilitySettings) {
+                      this.identityService.accessibilitySettings.saturation =
+                        accessibilitySettings.saturation;
+                      this.identityService.accessibilitySettings.contrast =
+                        accessibilitySettings.contrast;
+                      this.identityService.accessibilitySettings.protanopia =
+                        accessibilitySettings.protanopia;
+                      this.identityService.accessibilitySettings.deuteranopia =
+                        accessibilitySettings.deuteranopia;
+                      this.identityService.accessibilitySettings.tritanopia =
+                        accessibilitySettings.tritanopia;
+                      this.updateAccessibilityFilter();
+                    }
+                  }
+                );
 
+              // Get account coins
               this.apiRestService.getMyCoins().subscribe((coins: number) => {
                 this.identityService.coins = coins;
               });
-
               setInterval(() => {
                 this.apiRestService.getMyCoins().subscribe((coins: number) => {
                   this.identityService.coins = coins;
@@ -178,7 +199,7 @@ export class App implements OnInit {
   /**
    * This function enables/disables debug mode.
    */
-  debugMode(): void {
+  private debugMode(): void {
     window.electronAPI?.debugMode();
   }
 
@@ -190,6 +211,43 @@ export class App implements OnInit {
     window.electronAPI?.openURL(
       'https://github.com/HeyHeyChicken/EBP-EVA-Battle-Plan-Tools/releases/latest'
     );
+  }
+
+  /**
+   * Updates the element's CSS filter based on user accessibility settings.
+   * Adjusts saturation and contrast, and applies approximated color adjustments for protanopia, deuteranopia, and tritanopia according to the configured intensity.
+   */
+  private updateAccessibilityFilter() {
+    let filter = `saturate(${
+      (this.identityService.accessibilitySettings.saturation ?? 50) / 50
+    }) contrast(${(100 + (this.identityService.accessibilitySettings.contrast ?? 0)) / 100})`;
+
+    // Approximations CSS pour les différents types de daltonisme
+    if (this.identityService.accessibilitySettings.protanopia > 0) {
+      const intensity =
+        this.identityService.accessibilitySettings.protanopia / 100;
+      filter += ` hue-rotate(${-20 * intensity}deg) saturate(${1 + 0.5 * intensity}) sepia(${
+        0.2 * intensity
+      })`;
+    }
+
+    if (this.identityService.accessibilitySettings.deuteranopia > 0) {
+      const intensity =
+        this.identityService.accessibilitySettings.deuteranopia / 100;
+      filter += ` hue-rotate(${25 * intensity}deg) saturate(${1 + 0.4 * intensity}) sepia(${
+        0.15 * intensity
+      })`;
+    }
+
+    if (this.identityService.accessibilitySettings.tritanopia > 0) {
+      const intensity =
+        this.identityService.accessibilitySettings.tritanopia / 100;
+      filter += ` hue-rotate(${-40 * intensity}deg) saturate(${1 + 0.3 * intensity}) sepia(${
+        0.25 * intensity
+      }) brightness(${1 + 0.1 * intensity})`;
+    }
+
+    this.elementRef.nativeElement.style.filter = filter;
   }
 
   //#endregion

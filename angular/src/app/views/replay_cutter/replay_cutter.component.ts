@@ -8,6 +8,7 @@ import { CommonModule } from '@angular/common';
 import {
   Component,
   ElementRef,
+  HostListener,
   isDevMode,
   NgZone,
   OnDestroy,
@@ -327,6 +328,11 @@ export class ReplayCutterComponent implements OnInit, OnDestroy {
       'visibilitychange',
       this.visibilityChangeHandler
     );
+  }
+
+  @HostListener('document:mousedown', ['$event'])
+  onDocumentClick(event: MouseEvent) {
+    this.visibilityChangeHandler();
   }
 
   /**

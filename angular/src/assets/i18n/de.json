@@ -11,7 +11,13 @@
     "home": {
       "welcomeTo": "Willkommen bei ",
       "tuto": "Wählen Sie das gewünschte Tool aus der obigen Dropdown-Liste aus.",
-      "thanksToTheContributors": "Danke an die Mitwirkenden"
+      "thanksToTheContributors": "Danke an die Mitwirkenden",
+      "dialog": {
+        "linux-intro": {
+          "title": "Oh, ein Pinguin!",
+          "description": "Hallo, gefiederter Freund!<br/>\nDie Anwendung hängt von <code>ffmpeg</code> und <code>yt-dlp</code> ab, um zu funktionieren.<br/>\nUnter Windows und Mac sind diese Bibliotheken in Tools integriert, aber unter Linux musst du sie selbst installieren."
+        }
+      }
     },
     "replay_cutter": {
       "inputTrainingFile": "Klicken Sie hier, um Ihre Trainingsvideodatei automatisch zu schneiden",

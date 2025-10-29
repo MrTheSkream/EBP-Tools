@@ -11,7 +11,13 @@
     "home": {
       "welcomeTo": "Welcome to ",
       "tuto": "Choose the tool you want to use from the dropdown list above.",
-      "thanksToTheContributors": "Thanks to the contributors"
+      "thanksToTheContributors": "Thanks to the contributors",
+      "dialog": {
+        "linux-intro": {
+          "title": "Oh, a penguin!",
+          "description": "Hello, flying friend!<br/>\nThe application depends on <code>ffmpeg</code> and <code>yt-dlp</code> to work.<br/>\nOn Windows and Mac, these libraries are included in Tools, but on Linux, you need to install them yourself."
+        }
+      }
     },
     "replay_cutter": {
       "inputTrainingFile": "Click here to auto cut your training video file",

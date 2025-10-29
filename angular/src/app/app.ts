@@ -26,6 +26,8 @@ import { ToastrService } from 'ngx-toastr';
 import { Team } from './core/services/identity/model/team.model';
 import { ConsoleComponent } from './shared/console/console.component';
 import { AccessibilitySettingsDTO } from './core/services/identity/model/accessibility-settings.model';
+import { MatDialog } from '@angular/material/dialog';
+import { LinuxIntroDialog } from './views/home/dialogs/linux-intro/linux-intro.dialog';
 
 //#endregion
 @Component({
@@ -60,7 +62,8 @@ export class App implements OnInit {
     private readonly apiRestService: APIRestService,
     private readonly translateService: TranslateService,
     private readonly toastrService: ToastrService,
-    private readonly elementRef: ElementRef
+    private readonly elementRef: ElementRef,
+        private readonly dialogService: MatDialog,
   ) {}
 
   //#region Functions
@@ -88,6 +91,11 @@ export class App implements OnInit {
     window.electronAPI?.getOS().then((os: NodeJS.Platform) => {
       this.ngZone.run(() => {
         this.globalService.os = os;
+
+        if(os == "linux"){
+          console.log("LINUX")
+          this.dialogService.open(LinuxIntroDialog)
+        }
       });
     });
 

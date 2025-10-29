@@ -1,0 +1,30 @@
+<!--
+Copyright (c) 2025, Antoine Duval
+This file is part of a source-visible project.
+See LICENSE for terms. Unauthorized use is prohibited.
+-->
+
+<h2 mat-dialog-title>
+  {{ 'view.home.dialog.linux-intro.title' | translate }}
+  <button
+    class="squared"
+    mat-dialog-close
+    matTooltip="{{ 'common.close' | translate }}"
+  >
+    <i class="fa-sharp fa-solid fa-xmark"></i>
+  </button>
+</h2>
+<mat-dialog-content>
+  <i class="fa-brands fa-linux"></i>
+  <p innerHTML="{{ 'view.home.dialog.linux-intro.description' | translate }}"></p>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button
+    type="button"
+    [mat-dialog-close]
+    class="green"
+    attr.aria-label="{{ 'common.ok' | translate }}"
+  >
+    <i class="fa-sharp fa-solid fa-check"></i>{{ "common.ok" | translate }}
+  </button>
+</mat-dialog-actions>

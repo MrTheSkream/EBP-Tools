@@ -149,12 +149,12 @@ if (!APP_GOT_THE_LOCK) {
 
 //#region Binaries paths
 
-const FFMPEG_PATH = path.join(
+const FFMPEG_PATH = os.platform() == 'linux' ? 'ffmpeg' : path.join(
     ROOT_PATH,
     isProd ? 'ffmpeg' : '../binaries/ffmpeg',
     os.platform() + (os.platform() == 'win32' ? '.exe' : '')
 );
-const YTDLP_PATH = path.join(
+const YTDLP_PATH = os.platform() == 'linux' ? 'yt-dlp' : path.join(
     ROOT_PATH,
     isProd ? 'yt-dlp' : '../binaries/yt-dlp',
     os.platform() + (os.platform() == 'win32' ? '.exe' : '')

@@ -15,7 +15,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { ToastrService } from 'ngx-toastr';
 import { GlobalService } from '../../core/services/global.service';
 import { MatDialog } from '@angular/material/dialog';
-import { ConfirmationDialog } from './dialog/confirmation/confirmation.dialog';
+import { ConfirmationDialog } from './dialogs/confirmation/confirmation.dialog';
 import { MessageComponent } from '../../shared/message/message.component';
 
 //#endregion

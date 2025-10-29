@@ -1,0 +1,14 @@
+// Copyright (c) 2025, Antoine Duval
+// This file is part of a source-visible project.
+// See LICENSE for terms. Unauthorized use is prohibited.
+
+@use '../../../../../styles/imports/variables' as variables;
+
+mat-dialog-content {
+  i{
+    font-size: calc(#{variables.$margin} * 6);
+    margin: 0 auto;
+    display: block;
+    width: fit-content;
+  }
+}

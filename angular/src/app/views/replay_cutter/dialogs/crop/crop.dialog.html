@@ -1,0 +1,64 @@
+<!--
+Copyright (c) 2025, Antoine Duval
+This file is part of a source-visible project.
+See LICENSE for terms. Unauthorized use is prohibited.
+-->
+
+<mat-dialog-content #matDialogContent>
+  <button
+    class="squared"
+    mat-dialog-close
+    matTooltip="{{ 'common.close' | translate }}"
+  >
+    <i class="fa-sharp fa-solid fa-xmark"></i>
+  </button>
+  <div #imageCropperContainer>
+    @if(currentImgBase64){
+    <image-cropper
+      [imageBase64]="currentImgBase64"
+      [cropper]="cropper"
+      [maintainAspectRatio]="false"
+      (cropperReady)="onCropperReady($event)"
+      (cropperChange)="onCropperChange($event)"
+      [style.maxWidth]="matDialogContentWidth + 'px'"
+      [style.maxHeight]="matDialogContentHeight + 'px'"
+    ></image-cropper>
+    }
+  </div>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <!-- RESET BUTTON -->
+  <button
+    type="button"
+    class="mr-2"
+    (click)="reset()"
+    attr.aria-label="{{ 'common.reset' | translate }}"
+  >
+    <i class="fa-sharp fa-solid fa-arrow-rotate-left"></i
+    >{{"common.reset"|translate}}
+  </button>
+  <!-- NEW IMAGE BUTTON -->
+  <button
+    type="button"
+    class="mr-auto"
+    (click)="getNewImage()"
+    attr.aria-label="{{ 'common.reset' | translate }}"
+  >
+    <i class="fa-sharp fa-solid fa-image"></i>
+    {{"view.replay_cutter.dialog.attach-game.changeFrame"|translate}}
+  </button>
+  <!-- SUBMIT BUTTON -->
+  <button
+    type="button"
+    class="mr-2 green"
+    [disabled]="disableSubmitButton"
+    (click)="submit()"
+    attr.aria-label="{{ 'common.ok' | translate }}"
+  >
+    <i class="fa-sharp fa-solid fa-check"></i>{{ "common.ok" | translate }}
+  </button>
+  <ebp-assistant
+    textWidth="500px"
+    text="{{ 'view.replay_cutter.dialog.crop.explanations' | translate}}"
+  ></ebp-assistant>
+</mat-dialog-actions>

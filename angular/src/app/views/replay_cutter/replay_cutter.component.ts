@@ -337,16 +337,12 @@ export class ReplayCutterComponent implements OnInit, OnDestroy {
 
   /**
    * Determines whether the upload button should be disabled based on video path and map configuration.
-   * The button is disabled if no video is loaded or if the map has no configured margins and the user is a beta user.
+   * The button is disabled if no video is loaded or if the map has no configured margins.
    * @param mapName The name of the map to check for margin configuration.
    * @returns True if the upload button should be disabled, false otherwise.
    */
   protected disableUploadButton(mapName: string): boolean {
-    return (
-      !this._videoPath ||
-      (!this.getMapByName(mapName)?.mapMargins &&
-        this.identityService.isBetaUser)
-    );
+    return !this._videoPath || !this.getMapByName(mapName)?.mapMargins;
   }
 
   /**
@@ -431,204 +427,191 @@ export class ReplayCutterComponent implements OnInit, OnDestroy {
     console.log(
       `The user wants to analyze his game with EBP's AI... (game index: ${gameIndex})`
     );
-    if (this.identityService.isBetaUser) {
-      if (this.identityService.coins && this.identityService.coins > 0) {
-        console.log(
-          `The user has enough tokens.\nDetecting the start and end of gameplay...`
-        );
-        this.globalService.loading = '';
-        this.getGamePlayingBounds(this.games[gameIndex]).then((game) => {
-          if (game) {
-            console.log(
-              `We pick up the game on the EBP website on the "${game.map}" map and with the score ${game.orangeTeam.score}/${game.blueTeam.score}...`
-            );
-            this.apiRestService
-              .getGames(game.map, game.orangeTeam.score, game.blueTeam.score)
-              .subscribe({
-                next: (games: RestGame[]) => {
-                  this.sortPlayersFromGameFrame(
-                    gameIndex,
-                    {
-                      ID: 0,
-                      tags: [],
-                      date: new Date().toString(),
-                      orangePlayers: [],
-                      bluePlayers: []
-                    },
-                    (
-                      orangePlayersNames: string[],
-                      bluePlayersNames: string[]
-                    ) => {
-                      // We get the coordinates of the orange team's information.
-                      this.globalService.loading =
-                        this.translateService.instant(
-                          'view.replay_cutter.detectingOrangeInfoZone'
-                        );
-                      this.getTeamInfosPosition(
-                        gameIndex,
-                        new RGB(235, 121, 0),
-                        (orangeTeamInfosPosition: CropperPositionAndFrame) => {
-                          // We get the coordinates of the blue team's information.
-                          this.globalService.loading =
-                            this.translateService.instant(
-                              'view.replay_cutter.detectingBlueInfoZone'
+    if (this.identityService.coins && this.identityService.coins > 0) {
+      console.log(
+        `The user has enough tokens.\nDetecting the start and end of gameplay...`
+      );
+      this.globalService.loading = '';
+      this.getGamePlayingBounds(this.games[gameIndex]).then((game) => {
+        if (game) {
+          console.log(
+            `We pick up the game on the EBP website on the "${game.map}" map and with the score ${game.orangeTeam.score}/${game.blueTeam.score}...`
+          );
+          this.apiRestService
+            .getGames(game.map, game.orangeTeam.score, game.blueTeam.score)
+            .subscribe({
+              next: (games: RestGame[]) => {
+                this.sortPlayersFromGameFrame(
+                  gameIndex,
+                  {
+                    ID: 0,
+                    tags: [],
+                    date: new Date().toString(),
+                    orangePlayers: [],
+                    bluePlayers: []
+                  },
+                  (
+                    orangePlayersNames: string[],
+                    bluePlayersNames: string[]
+                  ) => {
+                    // We get the coordinates of the orange team's information.
+                    this.globalService.loading = this.translateService.instant(
+                      'view.replay_cutter.detectingOrangeInfoZone'
+                    );
+                    this.getTeamInfosPosition(
+                      gameIndex,
+                      new RGB(235, 121, 0),
+                      (orangeTeamInfosPosition: CropperPositionAndFrame) => {
+                        // We get the coordinates of the blue team's information.
+                        this.globalService.loading =
+                          this.translateService.instant(
+                            'view.replay_cutter.detectingBlueInfoZone'
+                          );
+                        this.getTeamInfosPosition(
+                          gameIndex,
+                          new RGB(29, 127, 255),
+                          (blueTeamInfosPosition: CropperPositionAndFrame) => {
+                            const ORANGE_BLOC_IMAGE = this.cropImage(
+                              orangeTeamInfosPosition.frame!,
+                              orangeTeamInfosPosition.x1,
+                              orangeTeamInfosPosition.y1,
+                              orangeTeamInfosPosition.x2,
+                              orangeTeamInfosPosition.y2
                             );
-                          this.getTeamInfosPosition(
-                            gameIndex,
-                            new RGB(29, 127, 255),
-                            (
-                              blueTeamInfosPosition: CropperPositionAndFrame
-                            ) => {
-                              const ORANGE_BLOC_IMAGE = this.cropImage(
-                                orangeTeamInfosPosition.frame!,
-                                orangeTeamInfosPosition.x1,
-                                orangeTeamInfosPosition.y1,
-                                orangeTeamInfosPosition.x2,
-                                orangeTeamInfosPosition.y2
-                              );
 
-                              const BLUE_BLOC_IMAGE = this.cropImage(
-                                blueTeamInfosPosition.frame!,
-                                blueTeamInfosPosition.x1,
-                                blueTeamInfosPosition.y1,
-                                blueTeamInfosPosition.x2,
-                                blueTeamInfosPosition.y2
-                              );
+                            const BLUE_BLOC_IMAGE = this.cropImage(
+                              blueTeamInfosPosition.frame!,
+                              blueTeamInfosPosition.x1,
+                              blueTeamInfosPosition.y1,
+                              blueTeamInfosPosition.x2,
+                              blueTeamInfosPosition.y2
+                            );
+
+                            if (ORANGE_BLOC_IMAGE && BLUE_BLOC_IMAGE) {
+                              const ORANGE_NAMES_IMAGE =
+                                this.getPlayersNamesAsImage(
+                                  4,
+                                  ORANGE_BLOC_IMAGE,
+                                  true
+                                ).toDataURL();
+                              const BLUE_NAMES_IMAGE =
+                                this.getPlayersNamesAsImage(
+                                  4,
+                                  BLUE_BLOC_IMAGE,
+                                  false
+                                ).toDataURL();
 
                               if (ORANGE_BLOC_IMAGE && BLUE_BLOC_IMAGE) {
-                                const ORANGE_NAMES_IMAGE =
-                                  this.getPlayersNamesAsImage(
-                                    4,
-                                    ORANGE_BLOC_IMAGE,
-                                    true
-                                  ).toDataURL();
-                                const BLUE_NAMES_IMAGE =
-                                  this.getPlayersNamesAsImage(
-                                    4,
-                                    BLUE_BLOC_IMAGE,
-                                    false
-                                  ).toDataURL();
+                                if (games && games.length > 0) {
+                                  const DIALOG_WIDTH: string =
+                                    'calc(100vw - 12px * 4)';
+                                  this.dialogService
+                                    .open(ReplayCutterAttachGameDialog, {
+                                      data: {
+                                        game: this.games[gameIndex],
+                                        games: games,
+                                        images: [
+                                          ORANGE_NAMES_IMAGE,
+                                          BLUE_NAMES_IMAGE
+                                        ],
 
-                                if (ORANGE_BLOC_IMAGE && BLUE_BLOC_IMAGE) {
-                                  if (games && games.length > 0) {
-                                    const DIALOG_WIDTH: string =
-                                      'calc(100vw - 12px * 4)';
-                                    this.dialogService
-                                      .open(ReplayCutterAttachGameDialog, {
-                                        data: {
-                                          game: this.games[gameIndex],
-                                          games: games,
-                                          images: [
-                                            ORANGE_NAMES_IMAGE,
-                                            BLUE_NAMES_IMAGE
-                                          ],
-
-                                          orangePlayersNames:
+                                        orangePlayersNames: orangePlayersNames,
+                                        bluePlayersNames: bluePlayersNames
+                                      },
+                                      autoFocus: false,
+                                      width: DIALOG_WIDTH,
+                                      maxWidth: '922px'
+                                    })
+                                    .afterClosed()
+                                    .subscribe(
+                                      (gameID: number | undefined | null) => {
+                                        if (gameID === undefined) {
+                                          this.globalService.loading =
+                                            undefined;
+                                        } else if (gameID === null) {
+                                          console.log();
+                                          this.createGame(
+                                            gameIndex,
                                             orangePlayersNames,
-                                          bluePlayersNames: bluePlayersNames
-                                        },
-                                        autoFocus: false,
-                                        width: DIALOG_WIDTH,
-                                        maxWidth: '922px'
-                                      })
-                                      .afterClosed()
-                                      .subscribe(
-                                        (gameID: number | undefined | null) => {
-                                          if (gameID === undefined) {
-                                            this.globalService.loading =
-                                              undefined;
-                                          } else if (gameID === null) {
-                                            console.log();
-                                            this.createGame(
-                                              gameIndex,
-                                              orangePlayersNames,
-                                              bluePlayersNames,
-                                              [
-                                                ORANGE_NAMES_IMAGE,
-                                                BLUE_NAMES_IMAGE
-                                              ]
-                                            );
-                                          } else {
-                                            this.cropGameMinimap(
-                                              gameIndex,
-                                              games.find(
-                                                (game) => game.ID == gameID
-                                              )!,
-                                              orangeTeamInfosPosition,
-                                              blueTeamInfosPosition,
+                                            bluePlayersNames,
+                                            [
                                               ORANGE_NAMES_IMAGE,
                                               BLUE_NAMES_IMAGE
-                                            );
-                                          }
+                                            ]
+                                          );
+                                        } else {
+                                          this.cropGameMinimap(
+                                            gameIndex,
+                                            games.find(
+                                              (game) => game.ID == gameID
+                                            )!,
+                                            orangeTeamInfosPosition,
+                                            blueTeamInfosPosition,
+                                            ORANGE_NAMES_IMAGE,
+                                            BLUE_NAMES_IMAGE
+                                          );
                                         }
-                                      );
-                                  } else {
-                                    this.globalService.loading = undefined;
-                                    this.translateService
-                                      .get(
-                                        'view.replay_cutter.toast.noGamesFoundInStatistics',
-                                        {
-                                          map: game.map,
-                                          orangeScore: game.orangeTeam.score,
-                                          blueScore: game.blueTeam.score
-                                        }
-                                      )
-                                      .subscribe((translated: string) => {
-                                        this.globalService.loading = undefined;
-                                        this.toastrService
-                                          .error(translated, undefined, {
-                                            enableHtml: true,
-                                            timeOut: 20 * 1000
-                                          })
-                                          .onTap.subscribe(() => {
-                                            localStorage.setItem(
-                                              'notification_images',
-                                              JSON.stringify([
-                                                ORANGE_NAMES_IMAGE,
-                                                BLUE_NAMES_IMAGE
-                                              ])
-                                            );
-
-                                            this.createGame(
-                                              gameIndex,
-                                              orangePlayersNames,
-                                              bluePlayersNames,
-                                              [
-                                                ORANGE_NAMES_IMAGE,
-                                                BLUE_NAMES_IMAGE
-                                              ]
-                                            );
-                                          });
-                                      });
-                                  }
+                                      }
+                                    );
                                 } else {
-                                  console.error(
-                                    "'selectWhichGameToAttachMinimap': Team images are missing."
-                                  );
+                                  this.globalService.loading = undefined;
+                                  this.translateService
+                                    .get(
+                                      'view.replay_cutter.toast.noGamesFoundInStatistics',
+                                      {
+                                        map: game.map,
+                                        orangeScore: game.orangeTeam.score,
+                                        blueScore: game.blueTeam.score
+                                      }
+                                    )
+                                    .subscribe((translated: string) => {
+                                      this.globalService.loading = undefined;
+                                      this.toastrService
+                                        .error(translated, undefined, {
+                                          enableHtml: true,
+                                          timeOut: 20 * 1000
+                                        })
+                                        .onTap.subscribe(() => {
+                                          localStorage.setItem(
+                                            'notification_images',
+                                            JSON.stringify([
+                                              ORANGE_NAMES_IMAGE,
+                                              BLUE_NAMES_IMAGE
+                                            ])
+                                          );
+
+                                          this.createGame(
+                                            gameIndex,
+                                            orangePlayersNames,
+                                            bluePlayersNames,
+                                            [
+                                              ORANGE_NAMES_IMAGE,
+                                              BLUE_NAMES_IMAGE
+                                            ]
+                                          );
+                                        });
+                                    });
                                 }
+                              } else {
+                                console.error(
+                                  "'selectWhichGameToAttachMinimap': Team images are missing."
+                                );
                               }
-                            },
-                            orangeTeamInfosPosition.frame
-                          );
-                        }
-                      );
-                    }
-                  );
-                }
-              });
-          }
-        });
-      } else {
-        console.error(`The user does not have enough tokens.`);
-        this.headerService.showCoinsPopup = true;
-      }
-    } else {
-      this.dialogService.open(ReplayCutterBetaRequiredDialog, {
-        width: '700px',
-        maxWidth: '700px',
-        height: '500px',
-        autoFocus: false
+                            }
+                          },
+                          orangeTeamInfosPosition.frame
+                        );
+                      }
+                    );
+                  }
+                );
+              }
+            });
+        }
       });
+    } else {
+      console.error(`The user does not have enough tokens.`);
+      this.headerService.showCoinsPopup = true;
     }
   }
 

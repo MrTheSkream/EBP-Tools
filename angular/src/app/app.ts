@@ -72,8 +72,13 @@ export class App implements OnInit {
   //#region Functions
 
   ngOnInit(): void {
-    if (!this.activatedRoute.snapshot.paramMap.get('lang')) {
-      this.router.navigate([`/${this.translateService.getCurrentLang()}/`]);
+    const SPLITED = window.location.pathname
+      .split('/')
+      .filter((x) => x && x.trim().length > 0);
+    // If the language is not in the URL...
+    if (SPLITED.length == 0 || SPLITED[0].length != 2) {
+      const URL = `/${this.translateService.getCurrentLang() ?? 'en'}${SPLITED.slice(1).join('/')}`;
+      this.router.navigate([URL]);
     }
 
     // We scroll up each time the user changes pages.

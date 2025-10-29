@@ -1044,6 +1044,7 @@ let projectLatestVersion /* string */ = '';
                 WINDOW_HEIGHT
             ),
             show: !APP_ARGS.includes('--mode=startup'),
+            skipTaskbar: APP_ARGS.includes('--mode=startup'),
             resizable: false,
             contextIsolation: true,
             webPreferences: {

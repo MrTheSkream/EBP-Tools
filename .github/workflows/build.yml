@@ -67,10 +67,6 @@ jobs:
             - name: Install Node dependencies
               run: npm run install_npm
 
-            # Rebuild native modules for Electron
-            - name: Rebuild native modules
-              run: npx electron-rebuild
-
             # Building Angular and making the Electron application.
             - name: Build Electron app
               run: npm run make
@@ -110,14 +106,6 @@ jobs:
             # Install NPM dependencies.
             - name: Install Node dependencies
               run: npm run install_npm
-
-            # Pre-download Electron headers to avoid network issues during rebuild
-            - name: Cache Electron headers
-              run: npx electron --version && npm config set target_platform win32 && npm config set target_arch x64 && npm config set disturl https://electronjs.org/headers && npm config set cache .npm
-
-            # Rebuild native modules for Electron
-            - name: Rebuild native modules
-              run: npx electron-rebuild
 
             # Building Angular and making the Electron application.
             - name: Build Electron app

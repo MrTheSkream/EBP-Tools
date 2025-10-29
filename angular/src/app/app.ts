@@ -12,12 +12,7 @@ import {
   OnInit,
   ViewChild
 } from '@angular/core';
-import {
-  ActivatedRoute,
-  NavigationEnd,
-  Router,
-  RouterOutlet
-} from '@angular/router';
+import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import { HeaderComponent } from './shared/header/header.component';
 import { WizzComponent } from './shared/wizz/wizz.component';
 import { FooterComponent } from './shared/footer/footer.component';
@@ -65,8 +60,7 @@ export class App implements OnInit {
     private readonly apiRestService: APIRestService,
     private readonly translateService: TranslateService,
     private readonly toastrService: ToastrService,
-    private readonly elementRef: ElementRef,
-    private readonly activatedRoute: ActivatedRoute
+    private readonly elementRef: ElementRef
   ) {}
 
   //#region Functions

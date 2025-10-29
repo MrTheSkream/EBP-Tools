@@ -57,9 +57,19 @@ jobs:
               with:
                   node-version: '20'
 
+            # Setup Python for node-gyp
+            - name: Setup Python
+              uses: actions/setup-python@v4
+              with:
+                  python-version: '3.11'
+
             # Install NPM dependencies.
             - name: Install Node dependencies
               run: npm run install_npm
+
+            # Rebuild native modules for Electron
+            - name: Rebuild native modules
+              run: npx electron-rebuild
 
             # Building Angular and making the Electron application.
             - name: Build Electron app
@@ -90,9 +100,25 @@ jobs:
               uses: actions/setup-node@v4
               with:
                   node-version: '20'
+
+            # Setup Python for node-gyp
+            - name: Setup Python
+              uses: actions/setup-python@v4
+              with:
+                  python-version: '3.11'
+
             # Install NPM dependencies.
             - name: Install Node dependencies
               run: npm run install_npm
+
+            # Pre-download Electron headers to avoid network issues during rebuild
+            - name: Cache Electron headers
+              run: npx electron --version && npm config set target_platform win32 && npm config set target_arch x64 && npm config set disturl https://electronjs.org/headers && npm config set cache .npm
+
+            # Rebuild native modules for Electron
+            - name: Rebuild native modules
+              run: npx electron-rebuild
+
             # Building Angular and making the Electron application.
             - name: Build Electron app
               run: npm run make

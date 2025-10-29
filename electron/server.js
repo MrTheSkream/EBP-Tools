@@ -723,12 +723,15 @@ let projectLatestVersion /* string */ = '';
      * @returns {boolean}
      */
     function isJwtAccessTokenOk() {
+        console.log(`Checking access token...`);
         const SETTINGS = JSON.parse(fs.readFileSync(SETTINGS_PATH, 'utf-8'));
         if (SETTINGS['jwt']) {
             if (Date.now() < SETTINGS['jwt'].access_expires_in) {
+                console.log('Access token is ok.');
                 return true;
             }
         }
+        console.log('Access token not ok.');
         return false;
     }
 
@@ -737,12 +740,15 @@ let projectLatestVersion /* string */ = '';
      * @returns {boolean}
      */
     function isJwtRefreshTokenOk() {
+        console.log(`Checking refresh token...`);
         const SETTINGS = JSON.parse(fs.readFileSync(SETTINGS_PATH, 'utf-8'));
         if (SETTINGS['jwt']) {
             if (Date.now() < SETTINGS['jwt'].refresh_expires_in) {
+                console.log('Refresh token is ok.');
                 return true;
             }
         }
+        console.log('Refresh token not ok.');
         return false;
     }
 
@@ -752,6 +758,9 @@ let projectLatestVersion /* string */ = '';
      * @param {boolean} justLoggedFromWordpress
      */
     async function checkJwtToken(callback, justLoggedFromWordpress = false) {
+        console.log(
+            `Checking JWT token... (justLoggedFromWordpress: ${justLoggedFromWordpress})`
+        );
         if (isJwtAccessTokenOk()) {
             if (callback) {
                 callback(true);
@@ -1050,7 +1059,8 @@ let projectLatestVersion /* string */ = '';
             language = app.getLocale();
         }
 
-        const HOME_URL = `http://localhost:${isProd ? PORT : '4200'}/${language}/`;
+        const ROOT_URL = `http://localhost:${isProd ? PORT : '4200'}/`;
+        const HOME_URL = `${ROOT_URL}${language}/`;
 
         // When the user clicks on the close cross, we hide the application.
         mainWindow.on('close', (event) => {
@@ -1092,8 +1102,12 @@ let projectLatestVersion /* string */ = '';
         });
 
         mainWindow.webContents.on('did-navigate', async (event, url) => {
-            if (url === HOME_URL) {
+            if (url.startsWith(ROOT_URL)) {
                 checkJwtToken(undefined, true);
+            } else {
+                console.log(
+                    `Main window > did-navigate : ${url} - ${HOME_URL}`
+                );
             }
         });
 

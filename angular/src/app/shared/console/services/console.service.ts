@@ -172,7 +172,10 @@ export class ConsoleService {
     }
 
     if (Array.isArray(obj)) {
-      return obj.map((item) => this.sanitizeImageData(item));
+      if (obj.length > 0) {
+        return obj.map((item) => this.sanitizeImageData(item));
+      }
+      return [];
     }
 
     if (typeof obj === 'object') {

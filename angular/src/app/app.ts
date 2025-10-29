@@ -12,7 +12,12 @@ import {
   OnInit,
   ViewChild
 } from '@angular/core';
-import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
+import {
+  ActivatedRoute,
+  NavigationEnd,
+  Router,
+  RouterOutlet
+} from '@angular/router';
 import { HeaderComponent } from './shared/header/header.component';
 import { WizzComponent } from './shared/wizz/wizz.component';
 import { FooterComponent } from './shared/footer/footer.component';
@@ -60,12 +65,17 @@ export class App implements OnInit {
     private readonly apiRestService: APIRestService,
     private readonly translateService: TranslateService,
     private readonly toastrService: ToastrService,
-    private readonly elementRef: ElementRef
+    private readonly elementRef: ElementRef,
+    private readonly activatedRoute: ActivatedRoute
   ) {}
 
   //#region Functions
 
   ngOnInit(): void {
+    if (!this.activatedRoute.snapshot.paramMap.get('lang')) {
+      this.router.navigate([`/${this.translateService.getCurrentLang()}/`]);
+    }
+
     // We scroll up each time the user changes pages.
     this.router.events.subscribe((event) => {
       if (this.main) {
@@ -177,6 +187,8 @@ export class App implements OnInit {
         });
       }
     );
+
+    window.electronAPI?.checkJwtToken();
   }
 
   /**

@@ -57,12 +57,6 @@ jobs:
               with:
                   node-version: '20'
 
-            # Setup Python for node-gyp
-            - name: Setup Python
-              uses: actions/setup-python@v4
-              with:
-                  python-version: '3.11'
-
             # Install NPM dependencies.
             - name: Install Node dependencies
               run: npm run install_npm
@@ -96,17 +90,9 @@ jobs:
               uses: actions/setup-node@v4
               with:
                   node-version: '20'
-
-            # Setup Python for node-gyp
-            - name: Setup Python
-              uses: actions/setup-python@v4
-              with:
-                  python-version: '3.11'
-
             # Install NPM dependencies.
             - name: Install Node dependencies
               run: npm run install_npm
-
             # Building Angular and making the Electron application.
             - name: Build Electron app
               run: npm run make

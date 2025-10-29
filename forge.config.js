@@ -37,7 +37,17 @@ module.exports = {
                   teamId: process.env.APPLE_TEAM_ID
               }
     },
-    rebuildConfig: {},
+    rebuildConfig: {
+        onlyModules: [],
+        force: false,
+        debug: false,
+        extraModules: [],
+        disablePreGypCopy: false,
+        types: ['prod', 'optional'],
+        prebuildTagPrefix: 'v',
+        mode: 'sequential',
+        exclude: ['register-scheme']
+    },
     makers: [
         {
             // Windows

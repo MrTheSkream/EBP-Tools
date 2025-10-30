@@ -69,6 +69,9 @@ function getBrowserPath(mainWindow, callback) {
             browserPath =
                 '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
             break;
+        case 'linux':
+            browserPath = '/usr/bin/google-chrome';
+            break;
         default:
             return null;
     }

@@ -12,7 +12,7 @@
         "start-ubuntu": "concurrently \"cd ./angular && npx ng serve\" \"electron ./electron/server.js --no-sandbox\"",
         "test": "cd angular && npx jest"
     },
-    "repository": "https://github.com/HeyHeyChicken/EBP-EVA-Battle-Plan-Tools",
+    "repository": "https://github.com/HeyHeyChicken/EBP-Tools",
     "keywords": [],
     "author": "Antoine Duval",
     "license": "See LICENSE.txt",

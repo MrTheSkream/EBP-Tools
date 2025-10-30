@@ -229,7 +229,7 @@ export class App implements OnInit {
    */
   protected onNewUpdateLinkClick(): void {
     window.electronAPI?.openURL(
-      'https://github.com/HeyHeyChicken/EBP-EVA-Battle-Plan-Tools/releases/latest'
+      'https://github.com/HeyHeyChicken/EBP-Tools/releases/latest'
     );
   }
 

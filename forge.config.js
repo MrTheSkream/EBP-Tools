@@ -20,6 +20,7 @@ module.exports = {
         ],
         icon: 'electron/assets/icon',
         name: 'EBP - Tools',
+        executableName: 'ebp-tools',
         osxSign: process.env.SKIP_NOTARIZATION
             ? false
             : {
@@ -64,14 +65,26 @@ module.exports = {
             name: '@electron-forge/maker-deb',
             config: {
                 options: {
-                    icon: './electron/icon'
+                    icon: './electron/assets/icon.png',
+                    maintainer: 'Antoine Duval',
+                    homepage: 'https://github.com/HeyHeyChicken/EBP-Tools',
+                    description: 'EBP - Tools is a tooling application for EVA (eva.gg) players, offering replay cutting, YouTube timecode generation, game history export, and replay downloading from YouTube and Twitch.',
+                    productDescription: 'An application providing essential tools for EVA players including auto-cutting game replays, YouTube timecode generation, Excel export of game history, and replay downloading capabilities.',
+                    categories: ['Game', 'Utility'],
+                    section: 'games',
+                    priority: 'optional',
+                    depends: [
+                        'gconf2',
+                        'gconf-service',
+                        'libnotify4',
+                        'libappindicator1',
+                        'libxtst6',
+                        'libnss3',
+                        'libxss1',
+                        'libgconf-2-4'
+                    ]
                 }
             }
-        },
-        {
-            // Linux (Fedora, etc.)
-            name: '@electron-forge/maker-rpm',
-            config: {}
         },
         {
             // MacOS

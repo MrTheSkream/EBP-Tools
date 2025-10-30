@@ -38,6 +38,7 @@ module.exports = {
               }
     },
     rebuildConfig: {
+        /*
         onlyModules: [],
         force: false,
         debug: false,
@@ -47,6 +48,7 @@ module.exports = {
         prebuildTagPrefix: 'v',
         mode: 'sequential',
         exclude: ['register-scheme']
+        */
     },
     makers: [
         {

@@ -3,7 +3,7 @@
     "home": {
       "dialog": {
         "linux-intro": {
-          "description": "Salut, prieten zburător!<br/>\nAplicația depinde de <code>ffmpeg</code> și <code>yt-dlp</code> pentru a funcționa.<br/>\nPe Windows și Mac, aceste biblioteci sunt incluse în Tools, dar pe Linux trebuie să le instalezi singur."
+          "description": "<span>Bună, prietene zburător!</span>\nAplicația depinde de <code>ffmpeg</code>, <code>yt-dlp</code> și <code>chromium-browser</code> pentru a funcționa.<br/>\nVă rugăm să le instalați."
         }
       }
     }

@@ -93,8 +93,9 @@ export class App implements OnInit {
         this.globalService.os = os;
 
         if(os == "linux"){
-          console.log("LINUX")
-          this.dialogService.open(LinuxIntroDialog)
+          if(SPLITED[1] != "notification"){
+            this.dialogService.open(LinuxIntroDialog)
+          }
         }
       });
     });

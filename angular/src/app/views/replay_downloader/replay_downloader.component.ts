@@ -197,7 +197,8 @@ export class ReplayDownloaderComponent implements OnInit {
             percent: 0,
             infinite: true,
             icon: 'fa-sharp fa-solid fa-clapperboard-play',
-            text: translated
+            text: translated,
+            leftRounded: true
           })
         );
       });

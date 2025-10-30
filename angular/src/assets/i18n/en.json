@@ -15,7 +15,7 @@
       "dialog": {
         "linux-intro": {
           "title": "Oh, a penguin!",
-          "description": "Hello, flying friend!<br/>\nThe application depends on <code>ffmpeg</code> and <code>yt-dlp</code> to work.<br/>\nOn Windows and Mac, these libraries are included in Tools, but on Linux, you need to install them yourself."
+          "description": "<span>Hello, flying friend!</span>\nThe application depends on <code>ffmpeg</code>, <code>yt-dlp</code> and <code>chromium-browser</code> to work.<br/>\nPlease install them."
         }
       }
     },

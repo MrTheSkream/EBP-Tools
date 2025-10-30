@@ -5,6 +5,7 @@
 //#region Imports
 
 const puppeteer = require('puppeteer-core');
+const { execSync } = require('child_process');
 const os = require('os');
 const fs = require('fs');
 
@@ -70,7 +71,7 @@ function getBrowserPath(mainWindow, callback) {
                 '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
             break;
         case 'linux':
-            browserPath = '/usr/bin/google-chrome';
+            browserPath = execSync('which chromium-browser').toString().trim();
             break;
         default:
             return null;

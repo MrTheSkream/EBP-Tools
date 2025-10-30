@@ -24,7 +24,7 @@ if (require('electron-squirrel-startup')) {
 const path = require('node:path');
 const express = require('express');
 const os = require('os');
-const { exec, spawn, execFile } = require('child_process');
+const { exec, spawn, execFile, execSync } = require('child_process');
 const { default: getPort } = require('get-port');
 const { version } = require('../package.json');
 const https = require('https');
@@ -149,16 +149,18 @@ if (!APP_GOT_THE_LOCK) {
 
 //#region Binaries paths
 
-const FFMPEG_PATH = os.platform() == 'linux' ? 'ffmpeg' : path.join(
+const FFMPEG_PATH = os.platform() == 'linux' ? execSync('which ffmpeg').toString().trim() : path.join(
     ROOT_PATH,
     isProd ? 'ffmpeg' : '../binaries/ffmpeg',
     os.platform() + (os.platform() == 'win32' ? '.exe' : '')
 );
-const YTDLP_PATH = os.platform() == 'linux' ? 'yt-dlp' : path.join(
+const YTDLP_PATH = os.platform() == 'linux' ? execSync('which yt-dlp').toString().trim() : path.join(
     ROOT_PATH,
     isProd ? 'yt-dlp' : '../binaries/yt-dlp',
     os.platform() + (os.platform() == 'win32' ? '.exe' : '')
 );
+
+console.log(FFMPEG_PATH)
 
 //#endregion
 

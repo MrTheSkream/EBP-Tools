@@ -63,7 +63,7 @@ export class App implements OnInit {
     private readonly translateService: TranslateService,
     private readonly toastrService: ToastrService,
     private readonly elementRef: ElementRef,
-        private readonly dialogService: MatDialog,
+    private readonly dialogService: MatDialog
   ) {}
 
   //#region Functions
@@ -92,9 +92,9 @@ export class App implements OnInit {
       this.ngZone.run(() => {
         this.globalService.os = os;
 
-        if(os == "linux"){
-          if(SPLITED[1] != "notification"){
-            this.dialogService.open(LinuxIntroDialog)
+        if (os == 'linux') {
+          if (SPLITED[1] != 'notification') {
+            this.dialogService.open(LinuxIntroDialog);
           }
         }
       });

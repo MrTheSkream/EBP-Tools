@@ -28,6 +28,9 @@ jobs:
             # Install NPM dependencies.
             - name: Install Node dependencies
               run: npm run install_npm
+            # Validate translation files.
+            - name: Validate translations
+              run: node scripts/validate-translations.js
             # Run Jest tests.
             - name: Run tests
               run: npm test

@@ -607,6 +607,8 @@ export class ReplayCutterComponent implements OnInit, OnDestroy {
                 );
               }
             });
+        } else {
+          console.error(`"selectWhichGameToAttachMinimap", no game found.`);
         }
       });
     } else {
@@ -1421,10 +1423,12 @@ export class ReplayCutterComponent implements OnInit, OnDestroy {
       const GAME = new Game(game.mode);
       const URL: string = `http://localhost:${this.globalService.serverPort}/file?path=${this.videoPath}`;
 
+      console.log('Getting game start...');
       this.getGamePlayingBound(URL, GAME, game.start, 1).then((start) => {
         if (start !== null) {
           game.start = start;
 
+          console.log('Getting game end...');
           this.getGamePlayingBound(URL, GAME, game.end, -1).then((end) => {
             if (end !== null) {
               game.end = end;
@@ -1456,13 +1460,14 @@ export class ReplayCutterComponent implements OnInit, OnDestroy {
     jump: number
   ): Promise<number | null> {
     const VIDEO = document.createElement('video');
+    console.log('getGamePlayingBound', start);
 
     return new Promise((resolve) => {
       const ON_SEEKED = () => {
         if (this.detectGamePlaying(VIDEO, [game], true)) {
           resolve(VIDEO.currentTime);
           CLEAN();
-        } else if (VIDEO.currentTime < VIDEO.duration) {
+        } else if (VIDEO.currentTime + jump < VIDEO.duration) {
           VIDEO.currentTime += jump;
         } else {
           CLEAN();

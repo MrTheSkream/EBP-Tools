@@ -149,7 +149,8 @@
       }
     },
     "replay_downloader": {
-      "intro": "Descarcă aici replay-urile tale de pe YouTube sau Twitch."
+      "intro": "Descarcă aici replay-urile tale de pe YouTube sau Twitch.",
+      "youtuDotBe": "URL-urile \"youtu.be\" sunt incompatibile, vă rugăm să furnizați un URL \"youtube.com\"."
     }
   },
   "shared": {
@@ -170,7 +171,8 @@
     "footer": {
       "version": "Versiune",
       "newUpdate": "O nouă actualizare este disponibilă, descarc-o făcând click aici.",
-      "beta": "Folosesti o versiune beta a aplicației, te rugăm să nu o distribui."
+      "beta": "Folosesti o versiune beta a aplicației, te rugăm să nu o distribui.",
+      "showConsole": "Afișează consola"
     },
     "console": {
       "console": "Consolă",

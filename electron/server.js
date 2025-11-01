@@ -149,18 +149,24 @@ if (!APP_GOT_THE_LOCK) {
 
 //#region Binaries paths
 
-const FFMPEG_PATH = os.platform() == 'linux' ? execSync('which ffmpeg').toString().trim() : path.join(
-    ROOT_PATH,
-    isProd ? 'ffmpeg' : '../binaries/ffmpeg',
-    os.platform() + (os.platform() == 'win32' ? '.exe' : '')
-);
-const YTDLP_PATH = os.platform() == 'linux' ? execSync('which yt-dlp').toString().trim() : path.join(
-    ROOT_PATH,
-    isProd ? 'yt-dlp' : '../binaries/yt-dlp',
-    os.platform() + (os.platform() == 'win32' ? '.exe' : '')
-);
+const FFMPEG_PATH =
+    os.platform() == 'linux'
+        ? execSync('which ffmpeg').toString().trim()
+        : path.join(
+              ROOT_PATH,
+              isProd ? 'ffmpeg' : '../binaries/ffmpeg',
+              os.platform() + (os.platform() == 'win32' ? '.exe' : '')
+          );
+const YTDLP_PATH =
+    os.platform() == 'linux'
+        ? execSync('which yt-dlp').toString().trim()
+        : path.join(
+              ROOT_PATH,
+              isProd ? 'yt-dlp' : '../binaries/yt-dlp',
+              os.platform() + (os.platform() == 'win32' ? '.exe' : '')
+          );
 
-console.log(FFMPEG_PATH)
+console.log(FFMPEG_PATH);
 
 //#endregion
 
@@ -982,6 +988,91 @@ let projectLatestVersion /* string */ = '';
         TEMP_FILES.forEach((f) => fs.unlinkSync(f));
     }
 
+    /**
+     * Checks local YT-DLP version against the latest version available on GitHub
+     * Prompts for update if a newer version is available
+     */
+    function checkYTDLPVersion() {
+        execFile(YTDLP_PATH, ['--version'], (error, stdout, stderr) => {
+            if (error) {
+                console.error('YT-DLP erreur:\n', error);
+                return;
+            }
+            const LOCAL_VERSION = stdout.trim();
+            console.info('Local YT-DLP version:\n', LOCAL_VERSION);
+
+            https
+                .get(
+                    'https://api.github.com/repos/yt-dlp/yt-dlp/releases/latest',
+                    {
+                        headers: { 'User-Agent': 'node.js' } // GitHub API requiert un User-Agent
+                    },
+                    (res) => {
+                        let data = '';
+                        res.on('data', (chunk) => (data += chunk));
+                        res.on('end', () => {
+                            const RELEASE = JSON.parse(data);
+                            const GITHUB_VERSION = RELEASE.tag_name;
+
+                            console.info(
+                                'GitHub YT-DLP version:\n',
+                                GITHUB_VERSION
+                            );
+
+                            if (LOCAL_VERSION != GITHUB_VERSION) {
+                                const MESSAGE =
+                                    'YT-DLP is outdated. You should update it.';
+                                console.warn(MESSAGE);
+
+                                if (!isProd) {
+                                    const ANSWER_INDEX =
+                                        dialog.showMessageBoxSync(mainWindow, {
+                                            type: 'question',
+                                            buttons: ['Ok', 'Later'],
+                                            defaultId: 0,
+                                            title: 'Choix',
+                                            message: MESSAGE
+                                        });
+
+                                    if (ANSWER_INDEX == 0) {
+                                        const ASSETS = RELEASE.assets;
+
+                                        const MAC_ASSET = ASSETS.find(
+                                            (a) => a.name === 'yt-dlp_macos'
+                                        );
+                                        const WIN_ASSET = ASSETS.find(
+                                            (a) => a.name === 'yt-dlp.exe'
+                                        );
+
+                                        if (!MAC_ASSET || !WIN_ASSET) {
+                                            console.error(
+                                                'Impossible de trouver les fichiers pour Mac ou Windows.'
+                                            );
+                                            return;
+                                        }
+
+                                        try {
+                                            shell.openExternal(
+                                                MAC_ASSET.browser_download_url
+                                            );
+                                            shell.openExternal(
+                                                WIN_ASSET.browser_download_url
+                                            );
+                                        } catch (err) {
+                                            console.error(err);
+                                        }
+                                    }
+                                }
+                            } else {
+                                console.info('YT-DLP is up to date.');
+                            }
+                        });
+                    }
+                )
+                .on('error', (err) => console.error(err));
+        });
+    }
+
     function createFloatingWindow(width, height, callback, data) {
         const PRIMARY_DISPLAY = screen.getPrimaryDisplay();
         const WIDTH = Math.min(PRIMARY_DISPLAY.workAreaSize.width, width);
@@ -1037,10 +1128,7 @@ let projectLatestVersion /* string */ = '';
         const PRIMARY_DISPLAY = screen.getPrimaryDisplay();
         const APP_ARGS = process.argv;
         mainWindow = new BrowserWindow({
-            width: Math.min(
-                PRIMARY_DISPLAY.workAreaSize.width,
-                WINDOW_WIDTH + (!isProd ? WINDOW_DEV_PANEL_WIDTH : 0)
-            ),
+            width: Math.min(PRIMARY_DISPLAY.workAreaSize.width, WINDOW_WIDTH),
             height: Math.min(
                 PRIMARY_DISPLAY.workAreaSize.height,
                 WINDOW_HEIGHT
@@ -1116,10 +1204,6 @@ let projectLatestVersion /* string */ = '';
 
         // Hides the menu bar displayed in the top left corner on Windows.
         mainWindow.setMenuBarVisibility(false);
-
-        if (!isProd) {
-            mainWindow.webContents.openDevTools();
-        }
 
         // Setup console log redirection to frontend
         setupConsoleRedirection();
@@ -1471,13 +1555,7 @@ let projectLatestVersion /* string */ = '';
                 console.info('FFMPEG version:\n', stdout);
             });
 
-            execFile(YTDLP_PATH, ['--version'], (error, stdout, stderr) => {
-                if (error) {
-                    console.error('YT-DLP erreur:\n', error);
-                    return;
-                }
-                console.info('YT-DLP version:\n', stdout.trim());
-            });
+            checkYTDLPVersion();
 
             //#endregion
 

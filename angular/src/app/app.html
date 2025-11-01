@@ -8,18 +8,28 @@ See LICENSE for terms. Unauthorized use is prohibited.
 <main #main>
   <router-outlet></router-outlet>
 </main>
-<ebp-footer>
+<footer>
   <span
     >{{ "shared.footer.version" | translate }}: {{ versions?.current }}</span
   >
-  @if(versions && versions.last){ @if(versions.isUpToDate < 0){
-  <a class="ml-auto" (click)="onNewUpdateLinkClick()">
-    {{ "shared.footer.newUpdate" | translate }}
-  </a>
-  } @if(versions.isUpToDate > 0){
-  <a class="ml-auto beta"> {{ "shared.footer.beta" | translate }} </a>
-  } }
-</ebp-footer>
+  <div class="right">
+    @if(versions && versions.last){ @if(versions.isUpToDate < 0){
+    <a class="ml-auto" (click)="onNewUpdateLinkClick()">
+      {{ "shared.footer.newUpdate" | translate }}
+    </a>
+    } @if(versions.isUpToDate > 0){
+    <a class="ml-auto beta"> {{ "shared.footer.beta" | translate }} </a>
+    } }
+    <button
+      class="squared"
+      (click)="consoleComponent.toggleConsole();"
+      matTooltip="{{ 'shared.footer.showConsole' | translate }}"
+      matTooltipPosition="left"
+    >
+      <i class="fa-sharp fa-solid fa-bug"></i>
+    </button>
+  </div>
+</footer>
 @if(globalService.loading !== undefined){
 <div id="loader">
   <div>

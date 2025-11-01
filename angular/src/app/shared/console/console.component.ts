@@ -97,10 +97,11 @@ export class ConsoleComponent implements OnInit, OnDestroy {
   /**
    * Toggles the console visibility.
    */
-  protected toggleConsole(): void {
+  public toggleConsole(): void {
     this.isVisible = !this.isVisible;
     if (this.isVisible) {
       setTimeout(() => this.scrollToBottom(), 100);
+      window.electronAPI?.debugMode();
     }
   }
 
@@ -134,6 +135,7 @@ export class ConsoleComponent implements OnInit, OnDestroy {
    */
   protected closeConsole(): void {
     this.isVisible = false;
+    window.electronAPI?.debugMode();
   }
 
   /**

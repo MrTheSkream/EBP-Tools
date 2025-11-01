@@ -149,7 +149,8 @@
       }
     },
     "replay_downloader": {
-      "intro": "Scarica qui le tue repliche da YouTube o Twitch."
+      "intro": "Scarica qui le tue repliche da YouTube o Twitch.",
+      "youtuDotBe": "Gli URL \"youtu.be\" non sono compatibili, si prega di fornire un URL \"youtube.com\"."
     }
   },
   "shared": {
@@ -170,7 +171,8 @@
     "footer": {
       "version": "Versione",
       "newUpdate": "È disponibile un nuovo aggiornamento, scaricalo cliccando qui.",
-      "beta": "Stai usando una versione beta dell'app, ti preghiamo di non condividerla."
+      "beta": "Stai usando una versione beta dell'app, ti preghiamo di non condividerla.",
+      "showConsole": "Mostra la console"
     },
     "console": {
       "console": "Console",

@@ -61,13 +61,7 @@ $height: 400px;
       }
 
       > span {
-        &:not(.shortcut) {
-          font-weight: bold;
-        }
-
-        &.shortcut {
-          opacity: 0.5;
-        }
+        font-weight: bold;
       }
     }
 

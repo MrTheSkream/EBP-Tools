@@ -149,7 +149,8 @@
       }
     },
     "replay_downloader": {
-      "intro": "Download your replays from YouTube or Twitch here."
+      "intro": "Download your replays from YouTube or Twitch here.",
+      "youtuDotBe": "The \"youtu.be\" URLs are incompatible, please provide a \"youtube.com\" URL."
     }
   },
   "shared": {
@@ -170,7 +171,8 @@
     "footer": {
       "version": "Version",
       "newUpdate": "A new update is available, download it by clicking here.",
-      "beta": "You are using a beta version of the app, please do not share it."
+      "beta": "You are using a beta version of the app, please do not share it.",
+      "showConsole": "Show the console"
     },
     "console": {
       "console": "Console",

@@ -211,8 +211,16 @@ export class ReplayDownloaderComponent implements OnInit {
    * @returns True if the URL matches a valid YouTube URL pattern, false otherwise.
    */
   private isYouTubeUrl(url: string): boolean {
+    if (url.includes('youtu.be')) {
+      this.translateService
+        .get('view.replay_downloader.youtuDotBe')
+        .subscribe((translated: string) => {
+          this.toastrService.error(translated);
+        });
+      return false;
+    }
     const regex =
-      /^(https?:\/\/)?(www\.)?(youtube\.com\/(watch\?v=|live\/)|youtu\.be\/)[\w-]{11}(&\S*)?$/;
+      /^(https?:\/\/)?(www\.)?youtube\.com\/(watch\?v=|live\/)[\w-]{11}(&\S*)?$/;
     return regex.test(url);
   }
 

@@ -149,7 +149,8 @@
       }
     },
     "replay_downloader": {
-      "intro": "Descarga aquí tus repeticiones desde YouTube o Twitch."
+      "intro": "Descarga aquí tus repeticiones desde YouTube o Twitch.",
+      "youtuDotBe": "Las URL \"youtu.be\" son incompatibles, por favor proporcione una URL \"youtube.com\"."
     }
   },
   "shared": {
@@ -170,7 +171,8 @@
     "footer": {
       "version": "Versión",
       "newUpdate": "Hay una nueva actualización disponible, descárgala haciendo clic aquí.",
-      "beta": "Estás usando una versión beta de la aplicación, por favor no la compartas."
+      "beta": "Estás usando una versión beta de la aplicación, por favor no la compartas.",
+      "showConsole": "Mostrar la consola"
     },
     "console": {
       "console": "Consola",

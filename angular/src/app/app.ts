@@ -8,6 +8,7 @@ import {
   Component,
   ElementRef,
   HostListener,
+  isDevMode,
   NgZone,
   OnInit,
   ViewChild
@@ -15,7 +16,6 @@ import {
 import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import { HeaderComponent } from './shared/header/header.component';
 import { WizzComponent } from './shared/wizz/wizz.component';
-import { FooterComponent } from './shared/footer/footer.component';
 import { CommonModule } from '@angular/common';
 import { GlobalService } from './core/services/global.service';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
@@ -28,6 +28,7 @@ import { ConsoleComponent } from './shared/console/console.component';
 import { AccessibilitySettingsDTO } from './core/services/identity/model/accessibility-settings.model';
 import { MatDialog } from '@angular/material/dialog';
 import { LinuxIntroDialog } from './views/home/dialogs/linux-intro/linux-intro.dialog';
+import { MatTooltipModule } from '@angular/material/tooltip';
 
 //#endregion
 @Component({
@@ -36,10 +37,10 @@ import { LinuxIntroDialog } from './views/home/dialogs/linux-intro/linux-intro.d
     RouterOutlet,
     HeaderComponent,
     WizzComponent,
-    FooterComponent,
     CommonModule,
     TranslateModule,
-    ConsoleComponent
+    ConsoleComponent,
+    MatTooltipModule
   ],
   templateUrl: './app.html',
   styleUrls: ['./app.scss']
@@ -52,6 +53,8 @@ export class App implements OnInit {
   private readonly main: ElementRef<HTMLElement> | undefined;
 
   protected versions: Versions | undefined;
+
+  @ViewChild(ConsoleComponent) consoleComponent!: ConsoleComponent;
 
   //#endregion
   constructor(
@@ -197,30 +200,10 @@ export class App implements OnInit {
     );
 
     window.electronAPI?.checkJwtToken();
-  }
 
-  /**
-   * Handles keyboard events to trigger debug mode when the user presses Ctrl+Shift+D.
-   * When the key combination is detected, toggles debug mode and updates the global service with the current development mode state from the Electron API.
-   * @param event The keyboard event containing key press information.
-   */
-  @HostListener('document:keydown', ['$event'])
-  handleKeyboardEvent(event: KeyboardEvent) {
-    if (event.ctrlKey && event.shiftKey && event.key.toLowerCase() === 'd') {
-      this.debugMode();
-      window.electronAPI?.isDevMode().then((devMode: boolean) => {
-        this.ngZone.run(() => {
-          this.globalService.devMode = devMode;
-        });
-      });
+    if (isDevMode()) {
+      window.electronAPI?.debugMode();
     }
-  }
-
-  /**
-   * This function enables/disables debug mode.
-   */
-  private debugMode(): void {
-    window.electronAPI?.debugMode();
   }
 
   /**

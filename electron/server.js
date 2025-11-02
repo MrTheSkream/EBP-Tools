@@ -1236,67 +1236,73 @@ let projectLatestVersion /* string */ = '';
 
         let rowIndew = 3;
         games.forEach((game) => {
-            rowIndew++;
+            if (
+                game.orangeTeam.players.length <= 5 &&
+                game.blueTeam.players.length <= 5
+            ) {
+                rowIndew++;
 
-            worksheet.getCell(`A${rowIndew}`).value = game.mode; // Mode
-            worksheet.getCell(`B${rowIndew}`).value =
-                game.orangeTeam.players.length + game.blueTeam.players.length; // Nb players
-            worksheet.getCell(`C${rowIndew}`).value = game.map; // Map
-            worksheet.getCell(`D${rowIndew}`).value = game.date; // Date
-            worksheet.getCell(`E${rowIndew}`).value = game.hour; // Hour
-            worksheet.getCell(`F${rowIndew}`).value = `${Math.floor(
-                game.duration / 60
-            )}m${game.duration % 60}s`; // Readable duration
-            worksheet.getCell(`G${rowIndew}`).value = game.duration; // Duration
-            worksheet.getCell(`H${rowIndew}`).value = game.orangeTeam.score; // Orange team score
-            worksheet.getCell(`AR${rowIndew}`).value = game.blueTeam.score; // Blue team score
+                worksheet.getCell(`A${rowIndew}`).value = game.mode; // Mode
+                worksheet.getCell(`B${rowIndew}`).value =
+                    game.orangeTeam.players.length +
+                    game.blueTeam.players.length; // Nb players
+                worksheet.getCell(`C${rowIndew}`).value = game.map; // Map
+                worksheet.getCell(`D${rowIndew}`).value = game.date; // Date
+                worksheet.getCell(`E${rowIndew}`).value = game.hour; // Hour
+                worksheet.getCell(`F${rowIndew}`).value = `${Math.floor(
+                    game.duration / 60
+                )}m${game.duration % 60}s`; // Readable duration
+                worksheet.getCell(`G${rowIndew}`).value = game.duration; // Duration
+                worksheet.getCell(`H${rowIndew}`).value = game.orangeTeam.score; // Orange team score
+                worksheet.getCell(`AR${rowIndew}`).value = game.blueTeam.score; // Blue team score
 
-            let letters = [
-                ['I', 'J', 'K', 'L', 'M', 'N', 'O'],
-                ['P', 'Q', 'R', 'S', 'T', 'U', 'V'],
-                ['W', 'X', 'Y', 'Z', 'AA', 'AB', 'AC'],
-                ['AD', 'AE', 'AF', 'AG', 'AH', 'AI', 'AJ'],
-                ['AK', 'AL', 'AM', 'AN', 'AO', 'AP', 'AQ']
-            ];
-            for (let i = 0; i < game.orangeTeam.players.length; i++) {
-                worksheet.getCell(`${letters[i][0]}${rowIndew}`).value =
-                    game.orangeTeam.players[i].name; // Name
-                worksheet.getCell(`${letters[i][1]}${rowIndew}`).value =
-                    game.orangeTeam.players[i].kills; // Kills
-                worksheet.getCell(`${letters[i][2]}${rowIndew}`).value =
-                    game.orangeTeam.players[i].deaths; // Deaths
-                worksheet.getCell(`${letters[i][3]}${rowIndew}`).value =
-                    game.orangeTeam.players[i].assists; // Assists
-                worksheet.getCell(`${letters[i][4]}${rowIndew}`).value =
-                    game.orangeTeam.players[i].score; // Score
-                worksheet.getCell(`${letters[i][5]}${rowIndew}`).value =
-                    game.orangeTeam.players[i].inflictedDamage; // Inflicted damage
-                worksheet.getCell(`${letters[i][6]}${rowIndew}`).value =
-                    game.orangeTeam.players[i].bulletsFiredAccuracy; // Bullets fired accuracy
-            }
+                let letters = [
+                    ['I', 'J', 'K', 'L', 'M', 'N', 'O'],
+                    ['P', 'Q', 'R', 'S', 'T', 'U', 'V'],
+                    ['W', 'X', 'Y', 'Z', 'AA', 'AB', 'AC'],
+                    ['AD', 'AE', 'AF', 'AG', 'AH', 'AI', 'AJ'],
+                    ['AK', 'AL', 'AM', 'AN', 'AO', 'AP', 'AQ']
+                ];
+                for (let i = 0; i < game.orangeTeam.players.length; i++) {
+                    worksheet.getCell(`${letters[i][0]}${rowIndew}`).value =
+                        game.orangeTeam.players[i].name; // Name
+                    worksheet.getCell(`${letters[i][1]}${rowIndew}`).value =
+                        game.orangeTeam.players[i].kills; // Kills
+                    worksheet.getCell(`${letters[i][2]}${rowIndew}`).value =
+                        game.orangeTeam.players[i].deaths; // Deaths
+                    worksheet.getCell(`${letters[i][3]}${rowIndew}`).value =
+                        game.orangeTeam.players[i].assists; // Assists
+                    worksheet.getCell(`${letters[i][4]}${rowIndew}`).value =
+                        game.orangeTeam.players[i].score; // Score
+                    worksheet.getCell(`${letters[i][5]}${rowIndew}`).value =
+                        game.orangeTeam.players[i].inflictedDamage; // Inflicted damage
+                    worksheet.getCell(`${letters[i][6]}${rowIndew}`).value =
+                        game.orangeTeam.players[i].bulletsFiredAccuracy; // Bullets fired accuracy
+                }
 
-            letters = [
-                ['AS', 'AT', 'AU', 'AV', 'AW', 'AX', 'AY'],
-                ['AZ', 'BA', 'BB', 'BC', 'BD', 'BE', 'BF'],
-                ['BG', 'BH', 'BI', 'BJ', 'BK', 'BL', 'BM'],
-                ['BN', 'BO', 'BP', 'BQ', 'BR', 'BS', 'BT'],
-                ['BU', 'BV', 'BW', 'BX', 'BY', 'BZ', 'CA']
-            ];
-            for (let i = 0; i < game.blueTeam.players.length; i++) {
-                worksheet.getCell(`${letters[i][0]}${rowIndew}`).value =
-                    game.blueTeam.players[i].name; // Name
-                worksheet.getCell(`${letters[i][1]}${rowIndew}`).value =
-                    game.blueTeam.players[i].kills; // Kills
-                worksheet.getCell(`${letters[i][2]}${rowIndew}`).value =
-                    game.blueTeam.players[i].deaths; // Deaths
-                worksheet.getCell(`${letters[i][3]}${rowIndew}`).value =
-                    game.blueTeam.players[i].assists; // Assists
-                worksheet.getCell(`${letters[i][4]}${rowIndew}`).value =
-                    game.blueTeam.players[i].score; // Score
-                worksheet.getCell(`${letters[i][5]}${rowIndew}`).value =
-                    game.blueTeam.players[i].inflictedDamage; // Inflicted damage
-                worksheet.getCell(`${letters[i][6]}${rowIndew}`).value =
-                    game.blueTeam.players[i].bulletsFiredAccuracy; // Bullets fired accuracy
+                letters = [
+                    ['AS', 'AT', 'AU', 'AV', 'AW', 'AX', 'AY'],
+                    ['AZ', 'BA', 'BB', 'BC', 'BD', 'BE', 'BF'],
+                    ['BG', 'BH', 'BI', 'BJ', 'BK', 'BL', 'BM'],
+                    ['BN', 'BO', 'BP', 'BQ', 'BR', 'BS', 'BT'],
+                    ['BU', 'BV', 'BW', 'BX', 'BY', 'BZ', 'CA']
+                ];
+                for (let i = 0; i < game.blueTeam.players.length; i++) {
+                    worksheet.getCell(`${letters[i][0]}${rowIndew}`).value =
+                        game.blueTeam.players[i].name; // Name
+                    worksheet.getCell(`${letters[i][1]}${rowIndew}`).value =
+                        game.blueTeam.players[i].kills; // Kills
+                    worksheet.getCell(`${letters[i][2]}${rowIndew}`).value =
+                        game.blueTeam.players[i].deaths; // Deaths
+                    worksheet.getCell(`${letters[i][3]}${rowIndew}`).value =
+                        game.blueTeam.players[i].assists; // Assists
+                    worksheet.getCell(`${letters[i][4]}${rowIndew}`).value =
+                        game.blueTeam.players[i].score; // Score
+                    worksheet.getCell(`${letters[i][5]}${rowIndew}`).value =
+                        game.blueTeam.players[i].inflictedDamage; // Inflicted damage
+                    worksheet.getCell(`${letters[i][6]}${rowIndew}`).value =
+                        game.blueTeam.players[i].bulletsFiredAccuracy; // Bullets fired accuracy
+                }
             }
         });
 

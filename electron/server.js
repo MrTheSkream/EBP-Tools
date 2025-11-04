@@ -1085,9 +1085,10 @@ let projectLatestVersion /* string */ = '';
                 contextIsolation: true,
                 resizable: false,
                 webPreferences: {
-                    preload: isProd
-                        ? MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY
-                        : path.join(__dirname, 'preload.js')
+                    preload:
+                        process.env.NODE_ENV === 'production'
+                            ? MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY
+                            : path.join(__dirname, 'preload.js')
                 },
                 frame: false,
                 transparent: true,

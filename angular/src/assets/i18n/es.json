@@ -95,10 +95,10 @@
           "explanations": "Para garantizar un análisis correcto, el minimapa debe estar correctamente delimitado.<br/>Tools no siempre lo hace automáticamente. Verifique los límites y recorte si es necesario, asegurándose de incluir los bordes exteriores del mapa en el recorte (excluya los TP y otros elementos)."
         },
         "edit-map": {
-          "title": "Modifier la carte de la game"
+          "title": "Modificar el mapa del juego"
         },
         "attach-game": {
-          "title": "Associer le replay à une game",
+          "title": "Asociar la repetición a una partida",
           "tags": "Etiquetas",
           "players": "Jugadores",
           "date": "Fecha",

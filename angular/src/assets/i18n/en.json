@@ -95,10 +95,10 @@
           "explanations": "To ensure proper analysis, the minimap must be correctly delimited.<br/>Tools does not always do this automatically. Check the boundaries and crop if needed, making sure to include the outer map borders in the crop (exclude TPs and other elements)."
         },
         "edit-map": {
-          "title": "Modifier la carte de la game"
+          "title": "Edit the game map"
         },
         "attach-game": {
-          "title": "Associer le replay à une game",
+          "title": "Link the replay to a game",
           "tags": "Tags",
           "players": "Players",
           "date": "Date",

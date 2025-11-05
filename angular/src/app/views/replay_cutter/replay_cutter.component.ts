@@ -515,7 +515,6 @@ export class ReplayCutterComponent implements OnInit, OnDestroy {
                                           this.globalService.loading =
                                             undefined;
                                         } else if (gameID === null) {
-                                          console.log();
                                           this.createGame(
                                             gameIndex,
                                             orangePlayersNames,

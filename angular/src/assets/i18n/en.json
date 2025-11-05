@@ -104,6 +104,10 @@
           "date": "Date",
           "changeFrame": "Change the image",
           "description": "Please link the replay to a game listed on the <a>EBP statistics</a> page.<br />If it doesn’t exist, please <b>create it</b>."
+        },
+        "before-removing-borders": {
+          "description": "Your replay contains borders that should be removed before analysis?<br/>You can remove them manually here.<br/>Processing may take a little while.",
+          "title": "Remove borders"
         }
       },
       "inputOfficialFile": "Click here to manually cut your official video file"
@@ -146,6 +150,9 @@
       "replay_downloader": {
         "fetching": "Video information is being retrieved…",
         "downloading": "The video is downloading..."
+      },
+      "removing-border": {
+        "description": "Your replay is being processed. Please wait..."
       }
     },
     "replay_downloader": {

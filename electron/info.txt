@@ -1,0 +1,105 @@
+electron/
+  ├── server.js                      # Point d'entrée principal (simplifié)
+  ├── core/
+  │   ├── app.js                     # Initialisation et cycle de vie de l'app
+  │   ├── window-manager.js          # Gestion des fenêtres
+  │   └── console-manager.js         # Redirection console
+  ├── services/
+  │   ├── auth-service.js            # JWT et authentification
+  │   ├── video-service.js           # Traitement vidéo FFmpeg
+  │   ├── upload-service.js          # Upload S3
+  │   ├── excel-service.js           # Export Excel
+  │   ├── version-service.js         # Vérification versions
+  │   └── settings-service.js        # Configuration et paramètres
+  ├── handlers/
+  │   ├── ipc-handlers.js            # Enregistrement des handlers IPC
+  │   ├── video-handlers.js          # Handlers vidéo
+  │   ├── file-handlers.js           # Handlers fichiers
+  │   └── auth-handlers.js           # Handlers authentification
+  ├── utils/
+  │   ├── file-utils.js              # Utilitaires système de fichiers
+  │   ├── path-utils.js              # Résolution de chemins
+  │   └── validation-utils.js        # Validation des entrées
+  ├── config/
+  │   ├── constants.js               # Constantes application
+  │   └── paths.js                   # Chemins binaires et ressources
+  └── express/
+      └── express-server.js          # Configuration serveur Express
+
+  Principales Séparations Identifiées
+
+  1. Point d'Entrée Principal (server.js simplifié)
+
+  // ~50-100 lignes au lieu de 2273
+  const { app } = require('electron');
+  const { initializeApp } = require('./core/app');
+  const { setupExpressServer } = require('./express/express-server');
+  const { registerIpcHandlers } = require('./handlers/ipc-handlers');
+
+  async function start() {
+      const port = await setupExpressServer();
+      await app.whenReady();
+      initializeApp(port);
+      registerIpcHandlers();
+  }
+
+  start();
+
+  2. Services Métier
+
+  services/video-service.js - Traitement vidéo
+  - upscaleVideo() (que nous venons de modifier)
+  - cutVideoFile()
+  - cropVideoFile()
+  - removeBorders()
+  - getVideoResolution()
+
+  services/auth-service.js - Authentification
+  - checkJwtToken()
+  - isJwtAccessTokenOk()
+  - logout()
+
+  services/excel-service.js - Export Excel
+  - exportGamesToExcel()
+
+  3. Gestionnaires IPC Organisés
+
+  handlers/video-handlers.js
+  - cut-video-file
+  - remove-borders
+  - set-video-resolution
+  - upload-game-mini-map
+
+  handlers/file-handlers.js
+  - open-files
+  - save-console-logs
+  - open-video-file
+
+  4. Utilitaires et Configuration
+
+  config/constants.js
+  const EBP_DOMAIN = 'evabattleplan.com';
+  const WINDOW_WIDTH = 900;
+  const WINDOW_HEIGHT = 800;
+  const WINDOW_DEV_PANEL_WIDTH = 400;
+
+  utils/file-utils.js
+  function hmsToSec(time) { /* */ }
+  function waitForHttp(port) { /* */ }
+
+  Avantages de Cette Architecture
+
+  1. Séparation des Responsabilités - Chaque module a un rôle bien défini
+  2. Maintenabilité - Plus facile de localiser et modifier du code
+  3. Testabilité - Modules individuels testables séparément
+  4. Réutilisabilité - Services réutilisables dans différentes parties
+  5. Développement en Équipe - Plusieurs développeurs peuvent travailler sur différents modules
+  6. Lisibilité - Structure claire et navigation facilitée
+
+  Stratégie de Migration
+
+  1. Commencer par les Constantes - Extraire les constantes et utilitaires
+  2. Créer la Couche Service - Déplacer la logique métier
+  3. Organiser les Handlers IPC - Grouper par fonctionnalité
+  4. Refactoriser le Point d'Entrée - Simplifier server.js
+  5. Tester Chaque Module - Vérifier que la fonctionnalité est préservée

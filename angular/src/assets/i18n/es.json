@@ -104,6 +104,10 @@
           "date": "Fecha",
           "changeFrame": "Cambiar la imagen",
           "description": "Asocie la repetición a una partida presente en la página de <a>estadísticas de EBP</a>.<br />Si no existe, por favor <b>créela</b>."
+        },
+        "before-removing-borders": {
+          "description": "¿Tu repetición contiene bordes que deben eliminarse antes del análisis?<br/>Puedes quitarlos manualmente aquí.<br/>El procesamiento puede tardar un poco.",
+          "title": "Eliminar los bordes"
         }
       },
       "inputOfficialFile": "Haga clic aquí para cortar manualmente su archivo de video oficial"
@@ -146,6 +150,9 @@
       "replay_downloader": {
         "fetching": "La información del video se está recuperando…",
         "downloading": "El video se está descargando..."
+      },
+      "removing-border": {
+        "description": "Su repetición se está procesando. Por favor, espere..."
       }
     },
     "replay_downloader": {

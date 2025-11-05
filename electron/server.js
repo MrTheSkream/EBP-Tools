@@ -7,13 +7,10 @@
 const {
     app,
     BrowserWindow,
-    screen,
     ipcMain,
     session,
     dialog,
-    shell,
-    Tray,
-    Menu
+    shell
 } = require('electron');
 
 // When in installation mode, close the application.
@@ -22,10 +19,8 @@ if (require('electron-squirrel-startup')) {
 }
 
 const path = require('node:path');
-const express = require('express');
 const os = require('os');
-const { exec, spawn, execFile, execSync } = require('child_process');
-const { default: getPort } = require('get-port');
+const { exec, spawn, execFile } = require('child_process');
 const { version } = require('../package.json');
 const https = require('https');
 const http = require('http');
@@ -38,108 +33,36 @@ const {
 } = require('./puppeteer.js');
 const util = require('util');
 const execAsync = util.promisify(exec);
+const {
+    EBP_DOMAIN,
+    IS_DEV_MODE,
+    ROOT_PATH,
+    DEFAULT_VIDEO_HEIGHT,
+    FFMPEG_PATH,
+    YTDLP_PATH,
+    SETTINGS_PATH,
+    getCurrentPort
+} = require('./config/constants');
+const {
+    setWindowSize,
+    createFloatingWindow,
+    deleteFloatingWindow,
+    createWindow,
+    switchDebugMode,
+    getMainWindow,
+    setDebugMode
+} = require('./core/window-manager');
+const { checkJwtToken, logout } = require('./services/auth-service');
+const { setupExpressServer } = require('./express/express-server');
+const {
+    changeVideoResolution,
+    removeBorders
+} = require('./services/video-service');
 
 //#endregion
 
-//#region Console Log Redirection
-
-/**
- * Setup console log redirection to send Electron console output to the frontend.
- */
-function setupConsoleRedirection() {
-    // Store original console methods
-    const originalConsole = {
-        log: console.log,
-        error: console.error,
-        warn: console.warn,
-        info: console.info,
-        debug: console.debug
-    };
-
-    // Helper function to sanitize objects by replacing data:image/ URLs with "..."
-    const sanitizeImageData = (obj) => {
-        if (obj === null || obj === undefined) {
-            return obj;
-        }
-
-        if (typeof obj === 'string') {
-            return obj.startsWith('data:image/') ? '...' : obj;
-        }
-
-        if (Array.isArray(obj)) {
-            return obj.map((item) => sanitizeImageData(item));
-        }
-
-        if (typeof obj === 'object') {
-            const sanitized = {};
-            for (const key in obj) {
-                if (obj.hasOwnProperty(key)) {
-                    sanitized[key] = sanitizeImageData(obj[key]);
-                }
-            }
-            return sanitized;
-        }
-
-        return obj;
-    };
-
-    // Function to send log to frontend
-    const sendLogToFrontend = (level, ...args) => {
-        if (mainWindow && !mainWindow.isDestroyed()) {
-            const sanitizeArg = (arg) => {
-                if (typeof arg === 'object' && arg !== null) {
-                    const sanitized = sanitizeImageData(arg);
-                    return JSON.stringify(sanitized, null, 2);
-                }
-                return String(arg);
-            };
-
-            const logData = {
-                level: level,
-                message: args.map(sanitizeArg).join(' '),
-                timestamp: new Date().toISOString(),
-                source: 'electron'
-            };
-
-            try {
-                mainWindow.webContents.send('console-log', logData);
-            } catch (error) {
-                // Silently ignore if window is not ready
-            }
-        }
-    };
-
-    // Override console methods
-    console.log = (...args) => {
-        originalConsole.log(...args);
-        sendLogToFrontend('log', ...args);
-    };
-
-    console.error = (...args) => {
-        originalConsole.error(...args);
-        sendLogToFrontend('error', ...args);
-    };
-
-    console.warn = (...args) => {
-        originalConsole.warn(...args);
-        sendLogToFrontend('warn', ...args);
-    };
-
-    console.info = (...args) => {
-        originalConsole.info(...args);
-        sendLogToFrontend('info', ...args);
-    };
-
-    console.debug = (...args) => {
-        originalConsole.debug(...args);
-        sendLogToFrontend('debug', ...args);
-    };
-}
-
-//#endregion
-
-let isProd = process.env.NODE_ENV === 'production';
-const ROOT_PATH = isProd ? process.resourcesPath : __dirname;
+// Initialize debug mode
+setDebugMode(IS_DEV_MODE);
 const APP_GOT_THE_LOCK = app.requestSingleInstanceLock();
 
 if (!APP_GOT_THE_LOCK) {
@@ -147,74 +70,12 @@ if (!APP_GOT_THE_LOCK) {
     app.quit();
 }
 
-//#region Binaries paths
-
-const FFMPEG_PATH =
-    os.platform() == 'linux'
-        ? execSync('which ffmpeg').toString().trim()
-        : path.join(
-              ROOT_PATH,
-              isProd ? 'ffmpeg' : '../binaries/ffmpeg',
-              os.platform() + (os.platform() == 'win32' ? '.exe' : '')
-          );
-const YTDLP_PATH =
-    os.platform() == 'linux'
-        ? execSync('which yt-dlp').toString().trim()
-        : path.join(
-              ROOT_PATH,
-              isProd ? 'yt-dlp' : '../binaries/yt-dlp',
-              os.platform() + (os.platform() == 'win32' ? '.exe' : '')
-          );
-
-console.log(FFMPEG_PATH);
-
-//#endregion
-
-const EBP_DOMAIN = 'evabattleplan.com';
-const SETTINGS_PATH = path.join(ROOT_PATH, 'settings.json');
-const WINDOW_WIDTH = 900;
-const WINDOW_DEV_PANEL_WIDTH = 540;
-const WINDOW_HEIGHT = 800;
-let mainWindow, floatingWindow;
 let projectLatestVersion /* string */ = '';
 
 (async () => {
-    //#region Express
+    //#region Express Server Setup
 
-    // A port is randomly generated from the ports available on the machine.
-    const PORT = await getPort();
-    const APP = express();
-    if (!isProd) {
-        APP.set('env', 'development');
-    }
-    if (isProd) {
-        APP.use(express.static(path.join(ROOT_PATH, 'browser')));
-    }
-
-    // Allows the application's front-end to access local files on the user's device.
-    APP.get('/file', (req, res) => {
-        const FILE_PATH = req.query.path;
-        if (!FILE_PATH) {
-            return res.status(400).send('Missing path');
-        }
-        res.sendFile(FILE_PATH);
-    });
-
-    APP.use((req, res, next) => {
-        if (!isProd) return res.redirect('http://localhost:4200');
-
-        const indexFile = path.join(ROOT_PATH, 'browser', 'index.html');
-        res.sendFile(indexFile, (err) => {
-            if (err) {
-                console.error(err);
-                res.status(500).send('Server error');
-            }
-        });
-    });
-
-    APP.listen(PORT, () => {
-        console.log(`[EXPRESS] Listening on http://localhost:${PORT}.`);
-    });
+    await setupExpressServer();
 
     //#endregion
 
@@ -393,7 +254,7 @@ let projectLatestVersion /* string */ = '';
         const URL_PARAMS = new URLSearchParams({
             r: 's3_uploaded',
             gameID: gameID,
-            dev: isProd ? '0' : '1'
+            dev: !IS_DEV_MODE ? '0' : '1'
         });
 
         const OPTIONS = {
@@ -546,128 +407,6 @@ let projectLatestVersion /* string */ = '';
     }
 
     /**
-     * Resize the main window to specified dimensions or fullscreen.
-     * Automatically retries if the initial resize fails.
-     * @param {number} width Target width (0 for fullscreen width, undefined for default)
-     * @param {number} height Target height (0 for fullscreen height, undefined for default)
-     */
-    function setWindowSize(width, height) {
-        const PRIMARY_DISPLAY = screen.getPrimaryDisplay();
-        let targetWidth = 0;
-        let targetHeight = 0;
-
-        // Reset to default size
-        if (width === undefined || height === undefined) {
-            targetWidth = Math.min(
-                PRIMARY_DISPLAY.workAreaSize.width,
-                WINDOW_WIDTH + (!isProd ? WINDOW_DEV_PANEL_WIDTH : 0)
-            );
-            targetHeight = Math.min(
-                PRIMARY_DISPLAY.workAreaSize.height,
-                WINDOW_HEIGHT
-            );
-        }
-        // Full screen
-        else if (width == 0 && height == 0) {
-            targetWidth = PRIMARY_DISPLAY.workAreaSize.width;
-            targetHeight = PRIMARY_DISPLAY.workAreaSize.height;
-        } else {
-            targetWidth = width;
-            targetHeight = height;
-        }
-
-        mainWindow.setSize(targetWidth, targetHeight);
-        mainWindow.center();
-
-        // Verify the resize was successful and retry if needed
-        setTimeout(() => {
-            const NEW_SIZE = mainWindow.getSize();
-            const SUCCESS =
-                NEW_SIZE[0] === targetWidth && NEW_SIZE[1] === targetHeight;
-            if (!SUCCESS) {
-                setWindowSize(width, height);
-            }
-        }, 100);
-    }
-
-    /**
-     * Upscales a video to 1920x1080 resolution using FFmpeg with progress tracking.
-     * Sends real-time progress updates to the main window.
-     * @param inputPath Path to the source video file to upscale.
-     * @param outputPath Path where the upscaled video will be saved.
-     * @param callback Function called when the upscaling process is complete.
-     */
-    function upscaleVideo(
-        inputPath /* string */,
-        outputPath /* string */,
-        callback /* Function */
-    ) {
-        if (fs.existsSync(outputPath)) {
-            fs.unlinkSync(outputPath);
-        }
-
-        const FFMPEG_ARGS = [
-            '-i',
-            inputPath,
-            '-vf',
-            'scale=1920:1080:flags=lanczos',
-            '-c:v',
-            'libx264',
-            '-preset',
-            'ultrafast',
-            '-crf',
-            '18',
-            '-c:a',
-            'copy',
-            outputPath
-        ];
-
-        console.log(
-            `[FFMPEG] Upscale - Executing: ${FFMPEG_PATH} ${FFMPEG_ARGS.join(' ')}`
-        );
-
-        const FFMPEG = spawn(FFMPEG_PATH, FFMPEG_ARGS);
-
-        let duration = 0;
-
-        // Retrieving duration + progress information
-        FFMPEG.stderr.on('data', (data) => {
-            const DATA = data.toString();
-
-            // Log all ffmpeg output for debugging
-            console.log(`[FFMPEG] Upscale - ${DATA.trim()}`);
-
-            // Total duration
-            const DURATION_MATCH = DATA.match(
-                /Duration: (\d+):(\d+):(\d+\.\d+)/
-            );
-            if (DURATION_MATCH) {
-                const HOURS = parseInt(DURATION_MATCH[1]);
-                const MINUTES = parseInt(DURATION_MATCH[2]);
-                const SECONDES = parseFloat(DURATION_MATCH[3]);
-                duration = HOURS * 3600 + MINUTES * 60 + SECONDES;
-            }
-
-            // Progress
-            const TIME_MATCH = DATA.match(/time=(\d+):(\d+):(\d+\.\d+)/);
-            if (TIME_MATCH && duration > 0) {
-                const HOURS = parseInt(TIME_MATCH[1]);
-                const MINUTES = parseInt(TIME_MATCH[2]);
-                const SECONDES = parseFloat(TIME_MATCH[3]);
-                const CURRENT = HOURS * 3600 + MINUTES * 60 + SECONDES;
-
-                const PERCENT = Math.ceil((CURRENT / duration) * 100);
-
-                mainWindow.webContents.send('set-upscale-percent', PERCENT);
-            }
-        });
-
-        FFMPEG.on('close', (code) => {
-            callback();
-        });
-    }
-
-    /**
      * This function retrieves the number of the latest published version of the project.
      */
     function getProjectLatestVersion() {
@@ -692,173 +431,6 @@ let projectLatestVersion /* string */ = '';
 
         REQUEST.on('error', (err) => console.error(err));
         REQUEST.end();
-    }
-
-    /**
-     * This function retrieves the resolution of a video file.
-     * @param {string} videoPath Path of the video file.
-     * @param {Function} callback Callback function with width and height information.
-     */
-    function getVideoResolution(videoPath, callback) {
-        const COMMAND = `"${FFMPEG_PATH}" -i "${videoPath}" 2>&1`;
-        console.log(
-            `[FFMPEG] Get video resolution - Executing command: ${COMMAND}`
-        );
-
-        exec(COMMAND, (err, stdout, stderr) => {
-            const OUTPUT = stderr || stdout;
-
-            // Log the raw ffmpeg output
-            if (OUTPUT) {
-                console.log(`[FFMPEG] Get video resolution - ${OUTPUT}`);
-            }
-
-            const RESOLUTION = OUTPUT.match(/, (\d+)x(\d+)[ ,]/);
-            if (!RESOLUTION) {
-                console.error('[FFMPEG] Resolution info not found in output.');
-                callback(0, 0);
-            } else {
-                const WIDTH = +RESOLUTION[1];
-                const HEIGHT = +RESOLUTION[2];
-                console.log(`[FFMPEG] Detected resolution: ${WIDTH}x${HEIGHT}`);
-                callback(WIDTH, HEIGHT);
-            }
-        });
-    }
-
-    /**
-     * This function indicates whether the user's access token exists and is still valid.
-     * @returns {boolean}
-     */
-    function isJwtAccessTokenOk() {
-        console.log(`Checking access token...`);
-        const SETTINGS = JSON.parse(fs.readFileSync(SETTINGS_PATH, 'utf-8'));
-        if (SETTINGS['jwt']) {
-            if (Date.now() < SETTINGS['jwt'].access_expires_in) {
-                console.log('Access token is ok.');
-                return true;
-            }
-        }
-        console.log('Access token not ok.');
-        return false;
-    }
-
-    /**
-     * This function indicates whether the user's refresh token exists and is still valid.
-     * @returns {boolean}
-     */
-    function isJwtRefreshTokenOk() {
-        console.log(`Checking refresh token...`);
-        const SETTINGS = JSON.parse(fs.readFileSync(SETTINGS_PATH, 'utf-8'));
-        if (SETTINGS['jwt']) {
-            if (Date.now() < SETTINGS['jwt'].refresh_expires_in) {
-                console.log('Refresh token is ok.');
-                return true;
-            }
-        }
-        console.log('Refresh token not ok.');
-        return false;
-    }
-
-    /**
-     * This function checks that the user is logged in with a valid token.
-     * @param {Function} callback Callback function with loggin in information.
-     * @param {boolean} justLoggedFromWordpress
-     */
-    async function checkJwtToken(callback, justLoggedFromWordpress = false) {
-        console.log(
-            `Checking JWT token... (justLoggedFromWordpress: ${justLoggedFromWordpress})`
-        );
-        if (isJwtAccessTokenOk()) {
-            if (callback) {
-                callback(true);
-            }
-        } else {
-            const IS_JWT_REFRESH_TOKEN_OK = isJwtRefreshTokenOk();
-            if (IS_JWT_REFRESH_TOKEN_OK || justLoggedFromWordpress) {
-                const SETTINGS = JSON.parse(
-                    fs.readFileSync(SETTINGS_PATH, 'utf-8')
-                );
-
-                // We retrieve cookies from the main window.
-                const COOKIES =
-                    await mainWindow.webContents.session.cookies.get({
-                        url: `https://${EBP_DOMAIN}`
-                    });
-
-                // We transform cookies into headers.
-                const COOKIES_HEADER = COOKIES.map(
-                    (c) => `${c.name}=${c.value}`
-                ).join('; ');
-
-                let path = '/back/api/?c=user&r=token';
-                if (IS_JWT_REFRESH_TOKEN_OK) {
-                    path += '&refresh=' + SETTINGS['jwt'].refresh_token;
-                }
-                const REQUEST_OPTIONS = {
-                    hostname: EBP_DOMAIN,
-                    port: 443,
-                    path: path,
-                    method: 'GET',
-                    headers: {
-                        Cookie: COOKIES_HEADER,
-                        Accept: 'application/json'
-                    }
-                };
-
-                const REQUEST = https.request(REQUEST_OPTIONS, (res) => {
-                    let data = '';
-
-                    res.on('data', (chunk) => {
-                        data += chunk;
-                    });
-
-                    res.on('end', () => {
-                        try {
-                            const DATA = JSON.parse(data);
-                            DATA.access_expires_in =
-                                DATA.access_expires_in * 1000 + Date.now();
-                            DATA.refresh_expires_in =
-                                DATA.refresh_expires_in * 1000 + Date.now();
-
-                            SETTINGS['jwt'] = DATA;
-                            fs.writeFileSync(
-                                SETTINGS_PATH,
-                                JSON.stringify(SETTINGS, null, 2),
-                                'utf-8'
-                            );
-
-                            mainWindow.webContents.send(
-                                'set-jwt-access-token',
-                                SETTINGS['jwt'].access_token
-                            );
-
-                            if (callback) {
-                                callback(true);
-                            }
-                        } catch (e) {
-                            console.error(`Error: ${e.message}`);
-                            if (callback) {
-                                callback(false);
-                            }
-                        }
-                    });
-                });
-
-                REQUEST.on('error', (e) => {
-                    console.error(`Error: ${e.message}`);
-                    if (callback) {
-                        callback(false);
-                    }
-                });
-
-                REQUEST.end();
-            } else {
-                if (callback) {
-                    callback(false);
-                }
-            }
-        }
     }
 
     /**
@@ -939,7 +511,7 @@ let projectLatestVersion /* string */ = '';
                         const GLOBAL_PERCENT = Math.round(
                             PERCENT_PORTION * i + PERCENT_PORTION * PART_PERCENT
                         );
-                        mainWindow.webContents.send(
+                        getMainWindow().webContents.send(
                             'set-manual-cut-percent',
                             GLOBAL_PERCENT
                         );
@@ -1014,210 +586,67 @@ let projectLatestVersion /* string */ = '';
                             const RELEASE = JSON.parse(data);
                             const GITHUB_VERSION = RELEASE.tag_name;
 
-                            console.info(
-                                'GitHub YT-DLP version:\n',
-                                GITHUB_VERSION
-                            );
+                            if (GITHUB_VERSION) {
+                                console.info(
+                                    'GitHub YT-DLP version:\n',
+                                    GITHUB_VERSION
+                                );
 
-                            if (LOCAL_VERSION != GITHUB_VERSION) {
-                                const MESSAGE =
-                                    'YT-DLP is outdated. You should update it.';
-                                console.warn(MESSAGE);
+                                if (LOCAL_VERSION != GITHUB_VERSION) {
+                                    const MESSAGE =
+                                        'YT-DLP is outdated. You should update it.';
+                                    console.warn(MESSAGE);
 
-                                if (!isProd) {
-                                    const ANSWER_INDEX =
-                                        dialog.showMessageBoxSync(mainWindow, {
-                                            type: 'question',
-                                            buttons: ['Ok', 'Later'],
-                                            defaultId: 0,
-                                            title: 'Choix',
-                                            message: MESSAGE
-                                        });
-
-                                    if (ANSWER_INDEX == 0) {
-                                        const ASSETS = RELEASE.assets;
-
-                                        const MAC_ASSET = ASSETS.find(
-                                            (a) => a.name === 'yt-dlp_macos'
-                                        );
-                                        const WIN_ASSET = ASSETS.find(
-                                            (a) => a.name === 'yt-dlp.exe'
-                                        );
-
-                                        if (!MAC_ASSET || !WIN_ASSET) {
-                                            console.error(
-                                                'Impossible de trouver les fichiers pour Mac ou Windows.'
+                                    if (IS_DEV_MODE) {
+                                        const ANSWER_INDEX =
+                                            dialog.showMessageBoxSync(
+                                                getMainWindow(),
+                                                {
+                                                    type: 'question',
+                                                    buttons: ['Ok', 'Later'],
+                                                    defaultId: 0,
+                                                    title: 'Choix',
+                                                    message: MESSAGE
+                                                }
                                             );
-                                            return;
-                                        }
 
-                                        try {
-                                            shell.openExternal(
-                                                MAC_ASSET.browser_download_url
+                                        if (ANSWER_INDEX == 0) {
+                                            const ASSETS = RELEASE.assets;
+
+                                            const MAC_ASSET = ASSETS.find(
+                                                (a) => a.name === 'yt-dlp_macos'
                                             );
-                                            shell.openExternal(
-                                                WIN_ASSET.browser_download_url
+                                            const WIN_ASSET = ASSETS.find(
+                                                (a) => a.name === 'yt-dlp.exe'
                                             );
-                                        } catch (err) {
-                                            console.error(err);
+
+                                            if (!MAC_ASSET || !WIN_ASSET) {
+                                                console.error(
+                                                    'Impossible de trouver les fichiers pour Mac ou Windows.'
+                                                );
+                                                return;
+                                            }
+
+                                            try {
+                                                shell.openExternal(
+                                                    MAC_ASSET.browser_download_url
+                                                );
+                                                shell.openExternal(
+                                                    WIN_ASSET.browser_download_url
+                                                );
+                                            } catch (err) {
+                                                console.error(err);
+                                            }
                                         }
                                     }
+                                } else {
+                                    console.info('YT-DLP is up to date.');
                                 }
-                            } else {
-                                console.info('YT-DLP is up to date.');
                             }
                         });
                     }
                 )
                 .on('error', (err) => console.error(err));
-        });
-    }
-
-    function createFloatingWindow(width, height, callback, data) {
-        const PRIMARY_DISPLAY = screen.getPrimaryDisplay();
-        const WIDTH = Math.min(PRIMARY_DISPLAY.workAreaSize.width, width);
-        const HEIGHT = Math.min(PRIMARY_DISPLAY.workAreaSize.height, height);
-
-        if (!floatingWindow) {
-            floatingWindow = new BrowserWindow({
-                width: WIDTH,
-                height: HEIGHT,
-                contextIsolation: true,
-                resizable: false,
-                webPreferences: {
-                    preload:
-                        process.env.NODE_ENV === 'production'
-                            ? MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY
-                            : path.join(__dirname, 'preload.js')
-                },
-                frame: false,
-                transparent: true,
-                alwaysOnTop: true
-            });
-
-            // Position at the bottom right.
-            floatingWindow.setBounds({
-                x: PRIMARY_DISPLAY.workAreaSize.width - width,
-                y: PRIMARY_DISPLAY.workAreaSize.height - height
-            });
-        }
-
-        floatingWindow.setBounds({
-            width: WIDTH,
-            height: HEIGHT
-        });
-
-        floatingWindow.webContents.once('did-finish-load', () => {
-            if (callback) {
-                setTimeout(() => {
-                    callback();
-                }, 100);
-            }
-        });
-
-        const SETTINGS = JSON.parse(fs.readFileSync(SETTINGS_PATH, 'utf-8'));
-
-        const URL = `http://localhost:${isProd ? PORT : '4200'}/${SETTINGS['language'] ?? 'aa'}/notification?data=${encodeURIComponent(data)}`;
-
-        floatingWindow.loadURL(URL);
-    }
-
-    /**
-     * This function initializes the front-end.
-     */
-    function createWindow() {
-        const PRIMARY_DISPLAY = screen.getPrimaryDisplay();
-        const APP_ARGS = process.argv;
-        mainWindow = new BrowserWindow({
-            width: Math.min(PRIMARY_DISPLAY.workAreaSize.width, WINDOW_WIDTH),
-            height: Math.min(
-                PRIMARY_DISPLAY.workAreaSize.height,
-                WINDOW_HEIGHT
-            ),
-            show: !APP_ARGS.includes('--mode=startup'),
-            skipTaskbar: APP_ARGS.includes('--mode=startup'),
-            resizable: false,
-            contextIsolation: true,
-            webPreferences: {
-                preload: isProd
-                    ? MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY
-                    : path.join(__dirname, 'preload.js')
-            }
-        });
-
-        const SETTINGS = JSON.parse(fs.readFileSync(SETTINGS_PATH, 'utf-8'));
-        let language = SETTINGS['language'];
-        if (!language) {
-            language = app.getLocale();
-        }
-
-        const ROOT_URL = `http://localhost:${isProd ? PORT : '4200'}/`;
-        const HOME_URL = `${ROOT_URL}${language}/`;
-
-        // When the user clicks on the close cross, we hide the application.
-        mainWindow.on('close', (event) => {
-            event.preventDefault();
-            if (mainWindow && !mainWindow.isDestroyed() && isProd) {
-                mainWindow.hide();
-            }
-        });
-
-        const TRAY = new Tray(path.join(ROOT_PATH, 'assets', 'favicon.png'));
-        const CONTEXT_MENU = Menu.buildFromTemplate([
-            {
-                label: 'Open',
-                click: () => {
-                    if (mainWindow && !mainWindow.isDestroyed()) {
-                        mainWindow.show();
-                        mainWindow.focus();
-                    }
-                }
-            },
-            {
-                label: 'Quit',
-                click: () => {
-                    if (mainWindow && !mainWindow.isDestroyed()) {
-                        mainWindow.destroy();
-                    }
-                    app.quit();
-                }
-            }
-        ]);
-
-        TRAY.setToolTip('EBP - Tools');
-        TRAY.setContextMenu(CONTEXT_MENU);
-
-        // Double-click on the icon to reopen the window.
-        TRAY.on('double-click', () => {
-            mainWindow.show();
-            mainWindow.setSkipTaskbar(false);
-        });
-
-        mainWindow.webContents.on('did-navigate', async (event, url) => {
-            if (url.startsWith(ROOT_URL)) {
-                checkJwtToken(undefined, true);
-            } else {
-                console.log(
-                    `Main window > did-navigate : ${url} - ${HOME_URL}`
-                );
-            }
-        });
-
-        // Hides the menu bar displayed in the top left corner on Windows.
-        mainWindow.setMenuBarVisibility(false);
-
-        // Setup console log redirection to frontend
-        setupConsoleRedirection();
-
-        checkJwtToken((isLoggedIn) => {
-            // Loads the application's index.html.
-            mainWindow.loadURL(
-                isLoggedIn
-                    ? HOME_URL
-                    : `https://${EBP_DOMAIN}/${language}/login?app=cutter&redirect_uri=${encodeURIComponent(
-                          HOME_URL
-                      )}`
-            );
         });
     }
 
@@ -1320,7 +749,7 @@ let projectLatestVersion /* string */ = '';
         return FILE_PATH;
     }
 
-    if (!isProd) {
+    if (IS_DEV_MODE) {
         app.commandLine.appendSwitch('disable-web-security');
         app.commandLine.appendSwitch(
             'disable-features',
@@ -1332,15 +761,20 @@ let projectLatestVersion /* string */ = '';
      * This method will be called when Electron has finished initialization and is ready to create browser windows.
      */
     app.whenReady().then(() => {
-        if (isProd) {
-            // If we are in production, we immediately create the window that will contain the HMI.
+        if (IS_DEV_MODE) {
+            // We wait until the Angular server is ready before creating the window that will contain the HMI.
+            waitForHttp(4200).then(() => {
+                createWindow();
+            });
+        } else {
+            // We immediately create the window that will contain the HMI.
             createWindow();
 
             // If a second instance is launched, the first is displayed.
             app.on('second-instance', (event, argv, workingDirectory) => {
-                if (mainWindow && !mainWindow.isDestroyed()) {
-                    mainWindow.show();
-                    mainWindow.focus();
+                if (getMainWindow() && !getMainWindow().isDestroyed()) {
+                    getMainWindow().show();
+                    getMainWindow().focus();
                 }
             });
 
@@ -1349,69 +783,35 @@ let projectLatestVersion /* string */ = '';
                 path: app.getPath('exe'),
                 args: ['--mode=startup']
             });
-        } else {
-            // If we are in dev, we wait until the Angular server is ready before creating the window that will contain the HMI.
-            waitForHttp(4200).then(() => {
-                createWindow();
-            });
         }
 
         // The front-end asks the server to enables/disables debug mode.
-        ipcMain.handle('debug-mode', async () => {
-            isProd = !isProd;
-            if (isProd) {
-                mainWindow.webContents.closeDevTools();
-            } else {
-                mainWindow.webContents.openDevTools();
-            }
-
-            const PRIMARY_DISPLAY = screen.getPrimaryDisplay();
-            mainWindow.setResizable(true);
-            const DESIRED_WIDTH =
-                WINDOW_WIDTH + (!isProd ? WINDOW_DEV_PANEL_WIDTH : 0);
-            mainWindow.setSize(
-                Math.min(PRIMARY_DISPLAY.workAreaSize.width, DESIRED_WIDTH),
-                Math.min(PRIMARY_DISPLAY.workAreaSize.height, WINDOW_HEIGHT)
-            );
-            mainWindow.setResizable(false);
-        });
+        ipcMain.handle('switch-debug-mode', switchDebugMode);
 
         // The front-end asks the server to show a notification.
         ipcMain.handle(
             'show-notification',
             (event, hideMainWindow, width, height, notificationData) => {
-                createFloatingWindow(
-                    width,
-                    height,
-                    undefined,
-                    notificationData
-                );
+                createFloatingWindow(width, height, notificationData);
                 if (
                     hideMainWindow &&
-                    mainWindow &&
-                    !mainWindow.isDestroyed() &&
-                    isProd
+                    getMainWindow() &&
+                    !getMainWindow().isDestroyed() &&
+                    !IS_DEV_MODE
                 ) {
-                    mainWindow.hide();
+                    getMainWindow().hide();
                 }
             }
         );
 
         // The front-end asks the server to remove the notification.
         ipcMain.handle('remove-notification', (event, showMainWindow) => {
-            if (floatingWindow) {
-                floatingWindow.close();
-                floatingWindow = undefined;
-            }
-            if (showMainWindow && mainWindow && !mainWindow.isDestroyed()) {
-                mainWindow.show();
-                mainWindow.focus();
-            }
+            deleteFloatingWindow(showMainWindow);
         });
 
         // The front-end asks the server to return the developer mode state.
         ipcMain.handle('is-dev-mode', () => {
-            return !isProd;
+            return IS_DEV_MODE;
         });
 
         // The front-end asks the server to resize the main frame;
@@ -1433,7 +833,7 @@ let projectLatestVersion /* string */ = '';
                 (error, stdout, stderr) => {
                     if (error) {
                         console.error(error.message);
-                        mainWindow.webContents.send(
+                        getMainWindow().webContents.send(
                             'replay-downloader-error',
                             error.message.split('ERROR: ')[1]
                         );
@@ -1457,7 +857,7 @@ let projectLatestVersion /* string */ = '';
                                 `--ffmpeg-location`,
                                 FFMPEG_PATH,
                                 `-f`,
-                                `bv[height<=1080]+ba`,
+                                `bv[height<=${DEFAULT_VIDEO_HEIGHT}]+ba`,
                                 `--merge-output-format`,
                                 `mp4`,
                                 `-o`,
@@ -1468,7 +868,7 @@ let projectLatestVersion /* string */ = '';
                         case 'twitch':
                             settings = [
                                 `-f`,
-                                `best[height<=1080]`,
+                                `best[height<=${DEFAULT_VIDEO_HEIGHT}]`,
                                 `-o`,
                                 OUTPUT_PATH,
                                 url
@@ -1484,7 +884,7 @@ let projectLatestVersion /* string */ = '';
                             const PERCENT = parseInt(MATCH[1]);
                             if (PERCENT > percent) {
                                 percent = PERCENT;
-                                mainWindow.webContents.send(
+                                getMainWindow().webContents.send(
                                     'replay-downloader-percent',
                                     PERCENT
                                 );
@@ -1494,7 +894,7 @@ let projectLatestVersion /* string */ = '';
 
                     DL.stderr.on('data', (data) => {
                         console.error(data.toString());
-                        mainWindow.webContents.send(
+                        getMainWindow().webContents.send(
                             'replay-downloader-error',
                             data.toString().split('ERROR: ')[1]
                         );
@@ -1511,7 +911,7 @@ let projectLatestVersion /* string */ = '';
                                     new Date()
                                 );
                             }
-                            mainWindow.webContents.send(
+                            getMainWindow().webContents.send(
                                 'replay-downloader-success',
                                 OUTPUT_PATH
                             );
@@ -1531,7 +931,7 @@ let projectLatestVersion /* string */ = '';
 
         // The front-end asks the server to return the web server port.
         ipcMain.handle('get-express-port', () => {
-            return PORT;
+            return getCurrentPort();
         });
 
         // The front-end asks the server to return the JWT token content.
@@ -1541,7 +941,7 @@ let projectLatestVersion /* string */ = '';
             );
 
             if (SETTINGS['jwt']) {
-                mainWindow.webContents.send(
+                getMainWindow().webContents.send(
                     'set-jwt-access-token',
                     SETTINGS['jwt'].access_token
                 );
@@ -1632,7 +1032,7 @@ let projectLatestVersion /* string */ = '';
                     const WORDPRESS_COOKIE = cookies.find((c) =>
                         c.name.startsWith('wordpress_logged_in')
                     );
-                    if (!isProd) {
+                    if (IS_DEV_MODE) {
                         return true;
                     }
                     return !!WORDPRESS_COOKIE;
@@ -1642,7 +1042,7 @@ let projectLatestVersion /* string */ = '';
         // The front-end asks the server to check JWT token.
         ipcMain.handle('check-jwt-token', () => {
             return new Promise((resolve) => {
-                checkJwtToken(() => {
+                checkJwtToken(getMainWindow, false, () => {
                     resolve();
                 });
             });
@@ -1650,28 +1050,7 @@ let projectLatestVersion /* string */ = '';
 
         // The front-end asks the server to logout.
         ipcMain.handle('logout', () => {
-            const SESSION = session.defaultSession;
-
-            fs.writeFileSync(SETTINGS_PATH, '{}', 'utf-8');
-
-            Promise.all([
-                SESSION.clearStorageData({
-                    storages: [
-                        'cookies',
-                        'localstorage',
-                        'indexdb',
-                        'websql',
-                        'serviceworkers'
-                    ]
-                }),
-                SESSION.clearCache()
-            ]).then(() => {
-                mainWindow.loadURL(
-                    `https://${EBP_DOMAIN}/${app.getLocale()}/login?app=cutter&redirect_uri=${encodeURIComponent(
-                        'http://localhost:' + PORT
-                    )}`
-                );
-            });
+            logout(getMainWindow);
         });
 
         // The front-end asks the server to extract the public player games.
@@ -1684,19 +1063,19 @@ let projectLatestVersion /* string */ = '';
                     skip,
                     timeToWait,
                     dialog,
-                    mainWindow,
+                    getMainWindow(),
                     async (games) => {
                         if (games.length > 0) {
                             const FILE_PATH = await exportGamesToExcel(
                                 games,
                                 'private'
                             );
-                            mainWindow.webContents.send(
+                            getMainWindow().webContents.send(
                                 'games-are-exported',
                                 FILE_PATH
                             );
                         } else {
-                            mainWindow.webContents.send(
+                            getMainWindow().webContents.send(
                                 'games-are-exported',
                                 undefined
                             );
@@ -1718,19 +1097,19 @@ let projectLatestVersion /* string */ = '';
                         skip,
                         timeToWait,
                         dialog,
-                        mainWindow,
+                        getMainWindow(),
                         async (games) => {
                             if (games.length > 0) {
                                 const FILE_PATH = await exportGamesToExcel(
                                     games,
                                     tag.split('#')[0]
                                 );
-                                mainWindow.webContents.send(
+                                getMainWindow().webContents.send(
                                     'games-are-exported',
                                     FILE_PATH
                                 );
                             } else {
-                                mainWindow.webContents.send(
+                                getMainWindow().webContents.send(
                                     'games-are-exported',
                                     undefined
                                 );
@@ -1754,94 +1133,91 @@ let projectLatestVersion /* string */ = '';
             );
         });
 
+        ipcMain.handle(
+            'set-video-resolution',
+            async (event, videoPath, width, height) => {
+                const FILE_EXTENSION = videoPath.split('.').pop().toLowerCase();
+                const VIDEO_DIR = path.dirname(videoPath);
+                const VIDEO_NAME = path.basename(
+                    videoPath,
+                    `.${FILE_EXTENSION}`
+                );
+                const OUTPUT_PATH = path.join(
+                    VIDEO_DIR,
+                    `${VIDEO_NAME} - ${height}p.${FILE_EXTENSION}`
+                );
+
+                await changeVideoResolution(
+                    videoPath,
+                    OUTPUT_PATH,
+                    width,
+                    height,
+                    (percent) => {
+                        getMainWindow().webContents.send(
+                            'set-upscale-percent',
+                            percent
+                        );
+                    }
+                );
+
+                deleteFloatingWindow(false);
+
+                return OUTPUT_PATH;
+            }
+        );
+
         // The front-end asks the server to cut a video file manualy edited.
         ipcMain.handle(
             'manual-cut-video-file',
             async (event, videoPath, chunks, notificationData) => {
-                if (mainWindow && !mainWindow.isDestroyed() && isProd) {
-                    mainWindow.hide();
+                if (
+                    getMainWindow() &&
+                    !getMainWindow().isDestroyed() &&
+                    !IS_DEV_MODE
+                ) {
+                    getMainWindow().hide();
                 }
-                createFloatingWindow(
-                    450,
-                    150,
-                    async () => {
-                        const SPLIT = videoPath.split('.');
-                        const FILE_EXTENSION = SPLIT[SPLIT.length - 1];
-                        const OUTPUT_FILE_PATH /* string */ = path.join(
-                            getOutputPath(
-                                'videoCutterOutputPath',
-                                path.join(os.homedir(), 'Downloads')
-                            ),
-                            `temp.${FILE_EXTENSION}`
-                        );
-                        unlinkSync(OUTPUT_FILE_PATH);
 
-                        await cutWithoutReencode(
-                            videoPath,
-                            OUTPUT_FILE_PATH,
-                            chunks
-                        );
-
-                        mainWindow.webContents.send(
-                            'set-video-file',
-                            OUTPUT_FILE_PATH
-                        );
-                    },
-                    notificationData
+                await createFloatingWindow(450, 150, notificationData);
+                const FILE_EXTENSION = videoPath.split('.').pop().toLowerCase();
+                const VIDEO_DIR = path.dirname(videoPath);
+                const VIDEO_NAME = path.basename(
+                    videoPath,
+                    `.${FILE_EXTENSION}`
                 );
+                const OUTPUT_FILE_PATH /* string */ = path.join(
+                    VIDEO_DIR,
+                    `${VIDEO_NAME} - manual cutted.${FILE_EXTENSION}`
+                );
+
+                if (fs.existsSync(OUTPUT_FILE_PATH)) {
+                    unlinkSync(OUTPUT_FILE_PATH);
+                }
+
+                await cutWithoutReencode(videoPath, OUTPUT_FILE_PATH, chunks);
+
+                return OUTPUT_FILE_PATH;
             }
         );
 
-        // The front-end asks the server to ask the user to choose a video file.
-        ipcMain.handle('open-video-file', async (event, videoPath) => {
-            // If the user indicates that they want to upscale their video source...
-            if (videoPath) {
-                const OUTPUT_FOLDER_PATH = getOutputPath(
-                    'videoCutterOutputPath',
-                    path.join(os.homedir(), 'Downloads')
+        // The front-end asks the server to ask the user to choose files with the computer explorer.
+        ipcMain.handle('open-files', async (event, extensions) => {
+            const { canceled, filePaths } = await dialog.showOpenDialog({
+                properties: ['openFile'],
+                filters: [{ name: 'EVA video', extensions: extensions }]
+            });
+
+            if (canceled || filePaths.length == 0) {
+                getMainWindow().webContents.send('global-message', undefined);
+                getMainWindow().webContents.send(
+                    'toast',
+                    'error',
+                    'view.replay_cutter.noFilesSelected'
                 );
-                const SPLIT = videoPath.split('.');
-                const FILE_EXTENSION = SPLIT[SPLIT.length - 1];
-                const OUTPUT_PATH = path.join(
-                    OUTPUT_FOLDER_PATH,
-                    `ebp_tools_temp.${FILE_EXTENSION}`
-                );
-                upscaleVideo(videoPath, OUTPUT_PATH, () => {
-                    mainWindow.webContents.send('set-video-file', OUTPUT_PATH);
-                });
-            } else {
-                const { canceled, filePaths } = await dialog.showOpenDialog({
-                    properties: ['openFile'],
-                    filters: [{ name: 'EVA video', extensions: ['mp4', 'mkv'] }]
-                });
-                if (canceled) {
-                    mainWindow.webContents.send('set-video-file', '');
-                    mainWindow.webContents.send(
-                        'error',
-                        'view.replay_cutter.noFilesSelected'
-                    );
-                } else {
-                    // Check that the video file resolution is correct.
-                    getVideoResolution(
-                        filePaths[0],
-                        (width, height, duration) => {
-                            const EXPECTED_HEIGHT /* number */ = 1080;
-                            if (height == EXPECTED_HEIGHT) {
-                                mainWindow.webContents.send(
-                                    'set-video-file',
-                                    filePaths[0]
-                                );
-                            } else {
-                                mainWindow.webContents.send(
-                                    'replay_cutter_upscale',
-                                    filePaths[0],
-                                    height
-                                );
-                            }
-                        }
-                    );
-                }
+                return [];
             }
+
+            return filePaths;
         });
 
         // The front-end asks the server to cut a video file.
@@ -1899,17 +1275,17 @@ let projectLatestVersion /* string */ = '';
                 sortedBluePlayersNames
             ) => {
                 // We check that the user is logged in.
-                checkJwtToken((isLoggedIn) => {
+                checkJwtToken(getMainWindow, false, (isLoggedIn) => {
                     if (isLoggedIn) {
                         // We cut the video...
-                        mainWindow.webContents.send(
+                        getMainWindow().webContents.send(
                             'global-message',
                             'view.replay_cutter.cuttingVideo'
                         );
                         cutVideoFile(game, videoPath, 'temp1').then(
                             (cuttedPath) => {
                                 // We crop the minimap of the video...
-                                mainWindow.webContents.send(
+                                getMainWindow().webContents.send(
                                     'global-message',
                                     'view.replay_cutter.croppingMap'
                                 );
@@ -1920,7 +1296,7 @@ let projectLatestVersion /* string */ = '';
                                     'temp2'
                                 ).then((croppedMapPath) => {
                                     // We crop the orange team infos of the video...
-                                    mainWindow.webContents.send(
+                                    getMainWindow().webContents.send(
                                         'global-message',
                                         'view.replay_cutter.croppingOrangeInfos'
                                     );
@@ -1931,7 +1307,7 @@ let projectLatestVersion /* string */ = '';
                                         'temp3'
                                     ).then((croppedOrangeInfosPath) => {
                                         // We crop the blue team infos of the video...
-                                        mainWindow.webContents.send(
+                                        getMainWindow().webContents.send(
                                             'global-message',
                                             'view.replay_cutter.croppingBlueInfos'
                                         );
@@ -1942,7 +1318,7 @@ let projectLatestVersion /* string */ = '';
                                             'temp4'
                                         ).then((croppedBlueInfosPath) => {
                                             // We crop the top infos of the video...
-                                            mainWindow.webContents.send(
+                                            getMainWindow().webContents.send(
                                                 'global-message',
                                                 'view.replay_cutter.croppingTopInfos'
                                             );
@@ -1960,7 +1336,7 @@ let projectLatestVersion /* string */ = '';
                                                     gameID,
                                                     (videoUploadURLs) => {
                                                         // We upload the minimap video...
-                                                        mainWindow.webContents.send(
+                                                        getMainWindow().webContents.send(
                                                             'global-message',
                                                             'view.replay_cutter.uploadingMap'
                                                         );
@@ -1974,7 +1350,7 @@ let projectLatestVersion /* string */ = '';
                                                                 );
 
                                                                 // We upload the orange infos video...
-                                                                mainWindow.webContents.send(
+                                                                getMainWindow().webContents.send(
                                                                     'global-message',
                                                                     'view.replay_cutter.uploadingOrangeInfos'
                                                                 );
@@ -1988,7 +1364,7 @@ let projectLatestVersion /* string */ = '';
                                                                         );
 
                                                                         // We upload the blue infos video...
-                                                                        mainWindow.webContents.send(
+                                                                        getMainWindow().webContents.send(
                                                                             'global-message',
                                                                             'view.replay_cutter.uploadingBlueInfos'
                                                                         );
@@ -2002,7 +1378,7 @@ let projectLatestVersion /* string */ = '';
                                                                                 );
 
                                                                                 // We upload the top infos video...
-                                                                                mainWindow.webContents.send(
+                                                                                getMainWindow().webContents.send(
                                                                                     'global-message',
                                                                                     'view.replay_cutter.uploadingTopInfos'
                                                                                 );
@@ -2022,7 +1398,7 @@ let projectLatestVersion /* string */ = '';
                                                                                             game._start *
                                                                                                 1000,
                                                                                             () => {
-                                                                                                mainWindow.webContents.send(
+                                                                                                getMainWindow().webContents.send(
                                                                                                     'game-is-uploaded'
                                                                                                 );
                                                                                             }
@@ -2045,6 +1421,22 @@ let projectLatestVersion /* string */ = '';
                         );
                     }
                 });
+            }
+        );
+
+        ipcMain.handle(
+            'remove-borders',
+            async (event, cropPosition, videoPath) => {
+                await removeBorders(videoPath, cropPosition);
+
+                getMainWindow().webContents.send('global-message', undefined);
+
+                deleteFloatingWindow();
+
+                if (getMainWindow() && !getMainWindow().isDestroyed()) {
+                    getMainWindow().show();
+                    getMainWindow().focus();
+                }
             }
         );
 
@@ -2086,7 +1478,9 @@ let projectLatestVersion /* string */ = '';
 
         app.on('activate', function () {
             // On macOS it's common to re-create a window in the app when the dock icon is clicked and there are no other windows open.
-            if (BrowserWindow.getAllWindows().length === 0) createWindow();
+            if (BrowserWindow.getAllWindows().length === 0) {
+                createWindow();
+            }
         });
     });
 

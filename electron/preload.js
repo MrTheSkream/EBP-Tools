@@ -17,7 +17,7 @@ contextBridge.exposeInMainWorld("electronAPI", {
   // The front-end asks the server to download a YouTube video.
   downloadReplay: (url, platform) => ipcRenderer.invoke("download-replay", url, platform),
   // The front-end asks the server to enables/disables debug mode.
-  debugMode: () => ipcRenderer.invoke("debug-mode"),
+  debugMode: () => ipcRenderer.invoke("switch-debug-mode"),
   // The front-end asks the server to open an url in the default browser.
   openURL: (url) => ipcRenderer.invoke("open-url", url),
   // The front-end asks the server to return the web server port.
@@ -46,8 +46,8 @@ contextBridge.exposeInMainWorld("electronAPI", {
   cutVideoFiles: (game, videoPath, customText) => ipcRenderer.invoke("cut-video-files", game, videoPath, customText),
   // The front-end asks the server to play a video file that has just been cut.
   openFile: (path) => ipcRenderer.invoke("open-file", path),
-  // The front-end asks the server to ask the user to select a video file.
-  openVideoFile: (videoPath) => ipcRenderer.invoke("open-video-file", videoPath),
+  // The front-end asks the server to ask the user to select files.
+  openFiles: (extensions) => ipcRenderer.invoke("open-files", extensions),
   // The front-end asks the server to extract the public player games.
   extractPublicPseudoGames: (tag, nbPages, seasonIndex, skip, timeToWait) => ipcRenderer.invoke("extract-public-pseudo-games", tag, nbPages, seasonIndex, skip, timeToWait),
   // The front-end asks the server to extract the private player games.
@@ -64,6 +64,8 @@ contextBridge.exposeInMainWorld("electronAPI", {
   removeNotification: (showMainWindow) => ipcRenderer.invoke("remove-notification", showMainWindow),
   // The front-end asks the server to save console logs to a text file.
   saveConsoleLogs: (logs) => ipcRenderer.invoke("save-console-logs", logs),
+  removeBorders: (cropperPosition, videoPath) => ipcRenderer.invoke("remove-borders", cropperPosition, videoPath),
+  setVideoResolution: (videoPath, width, height) => ipcRenderer.invoke("set-video-resolution", videoPath, width, height),
 
   //#endregion
 
@@ -73,18 +75,16 @@ contextBridge.exposeInMainWorld("electronAPI", {
   setManualCutPercent: (callback) => ipcRenderer.on("set-manual-cut-percent", (event, percent) => callback(percent)),
   // The server send the upscaling process percent to the font-end.
   setUpscalePercent: (callback) => ipcRenderer.on("set-upscale-percent", (event, percent) => callback(percent)),
+  // The server send the border removing process percent to the font-end.
+  setRemoveBordersPercent: (callback) => ipcRenderer.on("set-remove-borders-percent", (event, percent) => callback(percent)),
   // The server send the JWT value to the font-end.
   setJWTAccessToken: (callback) => ipcRenderer.on("set-jwt-access-token", (event, accessToken) => callback(accessToken)),
-  // The server asks the font-end if the user wants upscaling before analyzing.
-  replayCutterUpscale: (callback) => ipcRenderer.on("replay_cutter_upscale", (event, filePath, height) => callback(filePath, height)),
   // The server gives the path of the video file selected by the user.
   gameIsUploaded: (callback) => ipcRenderer.on("game-is-uploaded", (event) => callback()),
   // The server gives the path of the video file selected by the user.
   setVideoFile: (callback) => ipcRenderer.on("set-video-file", (event, value) => callback(value)),
   // The server informs the front-end that the games are exported.
   gamesAreExported: (callback) => ipcRenderer.on("games-are-exported", (event, filePath) => callback(filePath)),
-  // The server asks the font-end to display an error.
-  error: (callback) => ipcRenderer.on("error", (event, i18nPath, i18nVariables) => callback(i18nPath, i18nVariables)),
   // The server asks the font-end to display a replay downloader error.
   replayDownloaderError: (callback) => ipcRenderer.on("replay-downloader-error", (event, error) => callback(error)),
   // The server asks the font-end that the video is well downloaded.
@@ -95,6 +95,8 @@ contextBridge.exposeInMainWorld("electronAPI", {
   globalMessage: (callback) => ipcRenderer.on("global-message", (event, i18nPath, i18nVariables) => callback(i18nPath, i18nVariables)),
   // The server sends console logs to the front-end.
   onConsoleLog: (callback) => ipcRenderer.on("console-log", (event, logData) => callback(logData)),
+  // The server asks the font-end to display a toast.
+  toast: (callback) => ipcRenderer.on("toast", (event, type, i18nPath, i18nVariables) => callback(type, i18nPath, i18nVariables)),
 
   //#endregion
 });

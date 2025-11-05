@@ -104,6 +104,10 @@
           "date": "Data",
           "changeFrame": "Cambiare l’immagine",
           "description": "Associare il replay a una partita presente nella pagina <a>statistiche di EBP</a>.<br />Se non esiste, si prega di <b>crearla</b>."
+        },
+        "before-removing-borders": {
+          "description": "Il tuo replay contiene bordi da rimuovere prima dell’analisi?<br/>Puoi rimuoverli manualmente qui.<br/>L’elaborazione potrebbe richiedere un po’ di tempo.",
+          "title": "Rimuovere i bordi"
         }
       },
       "inputOfficialFile": "Clicca qui per tagliare manualmente il tuo file video ufficiale"
@@ -146,6 +150,9 @@
       "replay_downloader": {
         "fetching": "Le informazioni del video sono in fase di recupero…",
         "downloading": "Il video è in fase di download..."
+      },
+      "removing-border": {
+        "description": "Il tuo replay è in fase di elaborazione. Attendere prego..."
       }
     },
     "replay_downloader": {

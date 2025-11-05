@@ -104,6 +104,10 @@
           "date": "Datum",
           "changeFrame": "Bild ändern",
           "description": "Bitte ordnen Sie das Replay einem Spiel auf der Seite <a>EBP-Statistiken</a> zu.<br />Falls es nicht existiert, <b>erstellen Sie es bitte</b>."
+        },
+        "before-removing-borders": {
+          "description": "Enthält Ihr Replay Ränder, die vor der Analyse entfernt werden müssen?<br/>Sie können sie hier manuell entfernen.<br/>Die Verarbeitung kann etwas länger dauern.",
+          "title": "Ränder entfernen"
         }
       },
       "inputOfficialFile": "Klicken Sie hier, um Ihre offizielle Videodatei manuell zu schneiden"
@@ -146,6 +150,9 @@
       "replay_downloader": {
         "fetching": "Die Videoinformationen werden abgerufen…",
         "downloading": "Das Video wird heruntergeladen..."
+      },
+      "removing-border": {
+        "description": "Ihre Wiedergabe wird bearbeitet. Bitte warten Sie..."
       }
     },
     "replay_downloader": {

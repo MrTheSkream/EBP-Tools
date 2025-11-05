@@ -104,6 +104,10 @@
           "date": "Data",
           "changeFrame": "Schimbă imaginea",
           "description": "Asociați reluarea la un joc prezent pe pagina <a>statistici EBP</a>.<br />Dacă acesta nu există, vă rugăm să <b>îl creați</b>."
+        },
+        "before-removing-borders": {
+          "description": "Redarea ta conține margini care trebuie eliminate înainte de analiză?<br/>Le poți elimina manual aici.<br/>Procesarea poate dura puțin mai mult.",
+          "title": "Elimina marginile"
         }
       },
       "inputOfficialFile": "Faceți clic aici pentru a tăia manual fișierul video oficial"
@@ -146,6 +150,9 @@
       "replay_downloader": {
         "fetching": "Informațiile videoclipului sunt în curs de preluare…",
         "downloading": "Videoclipul se descarcă..."
+      },
+      "removing-border": {
+        "description": "Redarea dvs. este în curs de procesare. Vă rugăm să așteptați..."
       }
     },
     "replay_downloader": {

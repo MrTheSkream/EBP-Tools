@@ -45,7 +45,6 @@ import { ReplayCutterEditTeamNameDialog } from './dialogs/edit-team/edit-team.di
 import { distance } from 'fastest-levenshtein';
 import { ReplayCutterCheckPlayersOrderDialog } from './dialogs/check-players-order/check-players-order.dialog';
 import { ReplayCutterReplayUploadedDialog } from './dialogs/replay-uploaded/replay-uploaded.dialog';
-import { ReplayCutterBetaRequiredDialog } from './dialogs/beta-required/beta-required.dialog';
 import { ReplayCutterManualVideoCutDialog } from './dialogs/manual-video-cut/manual-video-cut.dialog';
 import { VideoChunk } from './models/video-chunk';
 import { KillFeedService } from './services/kill-feed.service';
@@ -53,6 +52,7 @@ import { ReplayCutterEditMapDialog } from './dialogs/edit-map/edit-map.dialog';
 import { NotificationService } from '../notification/services/notification.service';
 import { HeaderService } from '../../shared/header/services/header.service';
 import { CropperPositionAndFrame } from './models/CropperPosition';
+import { ReplayCutterBeforeRemovingBordersDialog } from './dialogs/before-removing-borders/before-removing-borders.dialog';
 
 //#endregion
 @Component({
@@ -86,6 +86,32 @@ export class ReplayCutterComponent implements OnInit, OnDestroy {
   private lastDetectedGamePlayingFrame?: number;
 
   private _videoPath: string | undefined;
+  public set videoPath(value: string | undefined) {
+    if (value) {
+      this.percent = 0;
+      this.globalService.loading = '';
+      console.log(`The user defined this video path: "${value}"`);
+      this.translateService
+        .get('view.replay_cutter.videoIsBeingAnalyzed', {
+          games: this._games.length
+        })
+        .subscribe((translated: string) => {
+          window.electronAPI.showNotification(
+            true,
+            500,
+            150,
+            JSON.stringify({
+              percent: 0,
+              infinite: false,
+              icon: undefined,
+              text: translated,
+              leftRounded: true
+            })
+          );
+        });
+    }
+    this._videoPath = value;
+  }
   public get videoPath(): string | undefined {
     return this._videoPath;
   }
@@ -152,7 +178,7 @@ export class ReplayCutterComponent implements OnInit, OnDestroy {
   //#region Functions
 
   ngOnInit(): void {
-    this._videoPath = undefined;
+    this.videoPath = undefined;
     window.electronAPI.removeNotification(false);
 
     this.initServices();
@@ -189,6 +215,25 @@ export class ReplayCutterComponent implements OnInit, OnDestroy {
       });
     });
 
+    // The server send the border removing process percent to the font-end.
+    window.electronAPI.setRemoveBordersPercent((percent: number) => {
+      this.ngZone.run(() => {
+        this.globalService.loading = '';
+
+        this.translateService
+          .get('view.notification.removing-border.description')
+          .subscribe((translated: string) => {
+            this.notificationService.sendMessage({
+              percent: percent,
+              infinite: false,
+              icon: undefined,
+              text: translated,
+              leftRounded: true
+            });
+          });
+      });
+    });
+
     // The server send the manual cut process percent to the font-end.
     window.electronAPI.setManualCutPercent((percent: number) => {
       this.ngZone.run(() => {
@@ -211,31 +256,11 @@ export class ReplayCutterComponent implements OnInit, OnDestroy {
 
     // The server gives the path of the video file selected by the user.
     window.electronAPI.setVideoFile((path: string) => {
+      window.electronAPI.removeNotification(false);
       this.ngZone.run(() => {
         if (this.training) {
           if (path) {
-            this.percent = 0;
-            this.globalService.loading = '';
-
-            this.translateService
-              .get('view.replay_cutter.videoIsBeingAnalyzed', {
-                games: this._games.length
-              })
-              .subscribe((translated: string) => {
-                window.electronAPI.showNotification(
-                  true,
-                  500,
-                  150,
-                  JSON.stringify({
-                    percent: 0,
-                    infinite: false,
-                    icon: undefined,
-                    text: translated
-                  })
-                );
-                console.log(`The user defined this video path: "${path}"`);
-                this._videoPath = encodeURIComponent(path);
-              });
+            this.videoPath = encodeURIComponent(path);
           }
         } else {
           if (path) {
@@ -281,46 +306,8 @@ export class ReplayCutterComponent implements OnInit, OnDestroy {
           this.globalService.loading = undefined;
         }
         this.miniMapPositionsByMap = {};
-        this.inputFileDisabled = false;
       });
     });
-
-    // The server asks the font-end if the user wants upscaling before analyzing.
-    window.electronAPI.replayCutterUpscale(
-      (videoPath: string, height: number) => {
-        this.dialogService
-          .open(ReplayCutterUpscaleConfirmationDialog, {
-            autoFocus: false,
-            disableClose: true,
-            data: height
-          })
-          .afterClosed()
-          .subscribe((upscale: boolean) => {
-            if (upscale) {
-              window.electronAPI.openVideoFile(videoPath);
-
-              this.translateService
-                .get('view.notification.upscaling.description')
-                .subscribe((translated: string) => {
-                  window.electronAPI.showNotification(
-                    true,
-                    550,
-                    150,
-                    JSON.stringify({
-                      percent: 0,
-                      infinite: false,
-                      icon: undefined,
-                      text: translated
-                    })
-                  );
-                });
-            } else {
-              this.globalService.loading = undefined;
-              this.inputFileDisabled = false;
-            }
-          });
-      }
-    );
   }
 
   ngOnDestroy(): void {
@@ -400,7 +387,6 @@ export class ReplayCutterComponent implements OnInit, OnDestroy {
     this.openCVService.isLoaded$.subscribe((loaded: boolean) => {
       if (loaded) {
         console.debug('OpenCV is loaded');
-        this.inputFileDisabled = false;
       } else {
         console.error("OpenCV isn't loaded");
         this.toastrService.error("Erreur lors du chargement d'OpenCV");
@@ -1499,6 +1485,33 @@ export class ReplayCutterComponent implements OnInit, OnDestroy {
   }
 
   /**
+   * Gets video information (width, height, duration) by creating a video element
+   */
+  public static getVideoInfo(
+    videoUrl: string
+  ): Promise<{ width: number; height: number; duration: number }> {
+    return new Promise((resolve, reject) => {
+      const VIDEO = document.createElement('video');
+      VIDEO.preload = 'metadata';
+      VIDEO.crossOrigin = 'anonymous';
+
+      VIDEO.onloadedmetadata = () => {
+        resolve({
+          width: VIDEO.videoWidth,
+          height: VIDEO.videoHeight,
+          duration: VIDEO.duration
+        });
+      };
+
+      VIDEO.onerror = () => {
+        reject(new Error('Failed to load video metadata'));
+      };
+
+      VIDEO.src = videoUrl;
+    });
+  }
+
+  /**
    * Handles the user's click on the file input to select a replay video.
    * Initializes the state for a new replay selection and opens the file dialog.
    * @param training Indicates whether the replay is for training mode.
@@ -1507,12 +1520,120 @@ export class ReplayCutterComponent implements OnInit, OnDestroy {
     if (!this.inputFileDisabled) {
       this.training = training;
       this.globalService.loading = '';
-      this._videoPath = undefined;
-      this.inputFileDisabled = true;
+      this.videoPath = undefined;
       this._games = [];
 
-      window.electronAPI.openVideoFile();
+      window.electronAPI
+        .openFiles(['mp4', 'mkv'])
+        .then((filesPath: string[]) => {
+          if (filesPath.length > 0) {
+            this.analyzeVideoFile(training, filesPath[0]);
+          }
+        });
     }
+  }
+
+  private analyzeVideoFile(training: boolean, videoFilePath: string): void {
+    this.videoURLToCanvas(
+      `http://localhost:${this.globalService.serverPort}/file?path=${videoFilePath}`,
+      15 * 1000,
+      (videoFrame?: HTMLCanvasElement) => {
+        if (videoFrame) {
+          const SIZE = this.getSourceSize(videoFrame);
+          const TARGET_WIDTH: number = 1920;
+          const TARGET_HEIGHT: number = 1080;
+
+          console.log(SIZE);
+
+          if (SIZE.width == TARGET_WIDTH && SIZE.height == TARGET_HEIGHT) {
+            if (training) {
+              this.videoPath = videoFilePath;
+            } else {
+              const DIALOG_WIDTH = 'calc(100vw - 12px * 4)';
+              this.dialogService
+                .open(ReplayCutterManualVideoCutDialog, {
+                  autoFocus: false,
+                  data: videoFilePath,
+                  width: DIALOG_WIDTH,
+                  maxWidth: DIALOG_WIDTH
+                })
+                .afterClosed()
+                .subscribe((response: VideoChunk[] | undefined) => {
+                  window.electronAPI.setWindowSize();
+                  if (response) {
+                    this.globalService.loading = '';
+
+                    setTimeout(() => {
+                      this.translateService
+                        .get('view.notification.manual-cutting.description')
+                        .subscribe(async (translated: string) => {
+                          const CUTTED_FILE_PATH =
+                            await window.electronAPI.manualCutVideoFile(
+                              videoFilePath,
+                              response,
+                              JSON.stringify({
+                                percent: 0,
+                                infinite: true,
+                                icon: 'fa-sharp fa-solid fa-scissors',
+                                text: translated,
+                                leftRounded: true
+                              })
+                            );
+                          console.log(CUTTED_FILE_PATH);
+                          if (CUTTED_FILE_PATH) {
+                            this.analyzeVideoFile(true, CUTTED_FILE_PATH);
+                          }
+                        });
+                    }, 1000);
+                  } else {
+                    this.globalService.loading = undefined;
+                  }
+                });
+            }
+          } else {
+            this.dialogService
+              .open(ReplayCutterUpscaleConfirmationDialog, {
+                autoFocus: false,
+                disableClose: true,
+                data: SIZE.height
+              })
+              .afterClosed()
+              .subscribe(async (upscale: boolean) => {
+                if (upscale) {
+                  this.translateService
+                    .get('view.notification.upscaling.description')
+                    .subscribe((translated: string) => {
+                      window.electronAPI.showNotification(
+                        true,
+                        550,
+                        150,
+                        JSON.stringify({
+                          percent: 0,
+                          infinite: false,
+                          icon: undefined,
+                          text: translated,
+                          leftRounded: true
+                        })
+                      );
+                    });
+
+                  const RESCALED_FILE_PATH =
+                    await window.electronAPI.setVideoResolution(
+                      videoFilePath,
+                      TARGET_WIDTH,
+                      TARGET_HEIGHT
+                    );
+                  if (RESCALED_FILE_PATH) {
+                    this.analyzeVideoFile(training, RESCALED_FILE_PATH);
+                  }
+                } else {
+                  this.globalService.loading = undefined;
+                }
+              });
+          }
+        }
+      }
+    );
   }
 
   /**
@@ -1590,7 +1711,7 @@ export class ReplayCutterComponent implements OnInit, OnDestroy {
                   if (MODE >= 0) {
                     this.justJumped = false;
                     const GAME: Game = new Game(MODE);
-                    GAME.end = NOW;
+                    GAME.end = NOW - 1;
                     //#region Orange team
 
                     const ORANGE_TEAM_NAME: string =
@@ -1941,7 +2062,7 @@ export class ReplayCutterComponent implements OnInit, OnDestroy {
                               const DIFFERENCE = Math.max(
                                 (this.settings.maxTimePerGame - MINUTES) * 60 -
                                   SECONDES -
-                                  5
+                                  20
                               );
                               if (!this._games[0].__debug__jumped) {
                                 this._games[0].__debug__jumped = true;
@@ -2190,7 +2311,7 @@ export class ReplayCutterComponent implements OnInit, OnDestroy {
    * @param game Game to cut.
    */
   protected async save(game: Game): Promise<void> {
-    if (this._videoPath === undefined) {
+    if (this.videoPath === undefined) {
       this.translateService
         .get('view.replay_cutter.toast.videoFileNotFound')
         .subscribe((translated: string) => {
@@ -2201,7 +2322,7 @@ export class ReplayCutterComponent implements OnInit, OnDestroy {
     this.globalService.loading = '';
     const FILE_PATH = await window.electronAPI.cutVideoFile(
       game,
-      decodeURIComponent(this._videoPath),
+      decodeURIComponent(this.videoPath),
       this.settings.freeText
     );
     this.globalService.loading = undefined;
@@ -2218,7 +2339,7 @@ export class ReplayCutterComponent implements OnInit, OnDestroy {
    * This function allows the user to cut all games with a single click.
    */
   protected async saveAll(): Promise<void> {
-    if (this._videoPath === undefined) {
+    if (this.videoPath === undefined) {
       this.translateService
         .get('view.replay_cutter.toast.videoFileNotFound')
         .subscribe((translated: string) => {
@@ -2229,7 +2350,7 @@ export class ReplayCutterComponent implements OnInit, OnDestroy {
     this.globalService.loading = '';
     const FILE_PATH = await window.electronAPI.cutVideoFiles(
       this._games.filter((game) => game.checked),
-      decodeURIComponent(this._videoPath),
+      decodeURIComponent(this.videoPath),
       this.settings.freeText
     );
 
@@ -3199,6 +3320,88 @@ export class ReplayCutterComponent implements OnInit, OnDestroy {
         this.creatingAGame = undefined;
       }
     }
+  }
+
+  protected openRemoveBorderDialog(): void {
+    this.dialogService
+      .open(ReplayCutterBeforeRemovingBordersDialog, {
+        autoFocus: false
+      })
+      .afterClosed()
+      .subscribe((crop: boolean | undefined) => {
+        if (crop === true) {
+          window.electronAPI
+            .openFiles(['mp4', 'mkv'])
+            .then((filesPath: string[]) => {
+              if (filesPath.length > 0) {
+                this.videoURLToCanvas(
+                  `http://localhost:${this.globalService.serverPort}/file?path=${filesPath[0]}`,
+                  15 * 1000,
+                  (videoFrame?: HTMLCanvasElement) => {
+                    if (videoFrame) {
+                      const DIALOG_WIDTH: string = 'calc(100vw - 12px * 4)';
+                      const DIALOG_HEIGHT: string = 'calc(100vh - 12px * 4)';
+                      const SIZE = this.getSourceSize(videoFrame);
+
+                      this.dialogService
+                        .open(ReplayCutterCropDialog, {
+                          data: {
+                            imgBase64: videoFrame.toDataURL('image/png'),
+                            initialCropperPosition: {
+                              x1: 0,
+                              y1: 0,
+                              x2: SIZE.width,
+                              y2: SIZE.height
+                            },
+                            component: this,
+                            gameIndex: -1
+                          },
+                          maxWidth: DIALOG_WIDTH,
+                          maxHeight: DIALOG_HEIGHT,
+                          width: DIALOG_WIDTH,
+                          height: DIALOG_HEIGHT,
+                          autoFocus: false
+                        })
+                        .afterClosed()
+                        .subscribe((positions: CropperPosition | undefined) => {
+                          window.electronAPI.setWindowSize();
+                          if (positions) {
+                            this.translateService
+                              .get(
+                                'view.notification.removing-border.description'
+                              )
+                              .subscribe((translated: string) => {
+                                window.electronAPI.showNotification(
+                                  true,
+                                  500,
+                                  150,
+                                  JSON.stringify({
+                                    percent: 0,
+                                    infinite: false,
+                                    icon: undefined,
+                                    text: translated,
+                                    leftRounded: true
+                                  })
+                                );
+                              });
+                            this.globalService.loading = '';
+                            window.electronAPI.removeBorders(
+                              positions,
+                              filesPath[0]
+                            );
+                          } else {
+                            this.globalService.loading = undefined;
+                          }
+                        });
+                    }
+                  }
+                );
+              }
+            });
+        } else {
+          this.globalService.loading = undefined;
+        }
+      });
   }
 
   //#endregion

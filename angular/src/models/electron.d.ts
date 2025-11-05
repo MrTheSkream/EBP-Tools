@@ -55,7 +55,7 @@ export interface ElectronAPI {
   logout: () => Promise<void>;
   checkJwtToken: () => Promise<void>;
   openFile: (pathFile: string) => Promise<void>;
-  openVideoFile: (videoPath?: string) => void;
+  openFiles: (extensions: string[]) => Promise<string[]>;
   openURL: (url: string) => void;
   setSetting: (setting: string) => Promise<string>;
   setVideoFile: (callback: (path: string) => void) => Promise<void>;
@@ -74,7 +74,7 @@ export interface ElectronAPI {
     videoPath?: string,
     chunks: VideoChunk[],
     notificationData: string
-  ) => void;
+  ) => Promise<string>;
   setLanguage: (language?: string) => void;
   showNotification: (
     hideMainWindow: boolean,
@@ -84,6 +84,12 @@ export interface ElectronAPI {
   ) => void;
   removeNotification: (showMainWindow: boolean) => void;
   saveConsoleLogs: (logs: ElectronLogData[]) => Promise<string>;
+  removeBorders: (cropperPosition: CropperPosition, videoPath: string) => void;
+  setVideoResolution: (
+    videoPath: string,
+    width: number,
+    height: number
+  ) => Promise<string>;
 
   //#endregion
 
@@ -91,20 +97,24 @@ export interface ElectronAPI {
 
   setManualCutPercent: (callback: (percent: number) => void) => void;
   setUpscalePercent: (callback: (percent: number) => void) => void;
+  setRemoveBordersPercent: (callback: (percent: number) => void) => void;
   setJWTAccessToken: (callback: (accessToken: string) => void) => void;
-  replayCutterUpscale: (
-    callback: (filePath: string, height: number) => void
-  ) => void;
   gameIsUploaded: (callback: () => void) => void;
   gamesAreExported: (callback: (filePath: string | undefined) => void) => void;
   replayDownloaderError: (callback: (error: string) => void) => void;
   replayDownloaderSuccess: (callback: (path: string) => void) => void;
   replayDownloaderPercent: (callback: (percent: number) => void) => void;
-  error: (callback: (i18nPath: string, i18nVariables: object) => void) => void;
   globalMessage: (
     callback: (i18nPath: string, i18nVariables: object) => void
   ) => void;
   onConsoleLog: (callback: (logData: ElectronLogData) => void) => void;
+  toast: (
+    callback: (
+      type: 'success' | 'error' | 'warning' | 'info',
+      i18nPath: string,
+      i18nVariables: object
+    ) => void
+  ) => void;
 
   //#endregion
 }

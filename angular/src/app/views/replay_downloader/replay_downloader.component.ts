@@ -140,9 +140,9 @@ export class ReplayDownloaderComponent implements OnInit {
     if (this.youTubeURL) {
       if (this.isYouTubeUrl(this.youTubeURL)) {
         this.percent = 0;
-        const cleanUrl = this.cleanYouTubeURL(this.youTubeURL);
-        window.electronAPI.downloadReplay(cleanUrl, VideoPlatform.YOUTUBE);
+        const CLEAN_URL = this.cleanYouTubeURL(this.youTubeURL);
         this.showNotification();
+        window.electronAPI.downloadReplay(CLEAN_URL, VideoPlatform.YOUTUBE);
       }
     }
   }
@@ -152,6 +152,7 @@ export class ReplayDownloaderComponent implements OnInit {
    * Validates the Twitch URL format, resets the progress indicator, and triggers the download through the Electron API. Shows a notification to inform the user that the download has started.
    */
   protected onDownloadTwitch(): void {
+    console.log(this.twitchURL);
     if (this.twitchURL) {
       if (this.isTwitchUrl(this.twitchURL)) {
         this.percent = 0;

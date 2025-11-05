@@ -104,6 +104,10 @@
           "date": "Date",
           "changeFrame": "Changer l’image",
           "description": "Veuillez associer le replay à une game présente dans la page <a>statistiques d'EBP</a>.<br />Si celle ci n'existe pas, veuillez <b>la créer</b>."
+        },
+        "before-removing-borders": {
+          "description": "Votre replay contient des bordures à supprimer avant analyse ?<br/>Vous pouvez les retirer manuellement ici.<br/>Le traitement risque d'être un peu long.",
+          "title": "Supprimer les bordures"
         }
       },
       "inputOfficialFile": "Cliquez ici pour découper manuellement votre fichier vidéo officiel"
@@ -141,11 +145,14 @@
         "description": "Votre replay est en cours de découpage. Veuillez patienter..."
       },
       "upscaling": {
-        "description": "Votre replay est en cours d'adaptation de résolution. Merci de patienter...."
+        "description": "Votre replay est en cours d'adaptation de résolution. Merci de patienter..."
       },
       "replay_downloader": {
         "fetching": "Les informations de la vidéo sont en cours de récupération...",
         "downloading": "La vidéo est en cours de téléchargement..."
+      },
+      "removing-border": {
+        "description": "Votre replay est en cours d'adaptation. Merci de patienter..."
       }
     },
     "replay_downloader": {

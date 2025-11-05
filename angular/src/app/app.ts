@@ -7,8 +7,6 @@
 import {
   Component,
   ElementRef,
-  HostListener,
-  isDevMode,
   NgZone,
   OnInit,
   ViewChild
@@ -90,119 +88,141 @@ export class App implements OnInit {
       }
     });
 
-    // Getting the user's operating system.
-    window.electronAPI?.getOS().then((os: NodeJS.Platform) => {
-      this.ngZone.run(() => {
-        this.globalService.os = os;
-
-        if (os == 'linux') {
-          if (SPLITED[1] != 'notification') {
-            this.dialogService.open(LinuxIntroDialog);
-          }
-        }
-      });
-    });
-
-    window.electronAPI?.isDevMode().then((devMode: boolean) => {
-      this.ngZone.run(() => {
-        this.globalService.devMode = devMode;
-      });
-    });
-
-    // Getting the project version.
-    window.electronAPI?.getVersion().then((versions: Versions) => {
-      this.ngZone.run(() => {
-        this.versions = new Versions(versions.current, versions.last);
-      });
-    });
-
     // Getting the web server port.
-    window.electronAPI?.getExpressPort().then((serverPort: number) => {
+    window.electronAPI.getExpressPort().then((serverPort: number) => {
       this.ngZone.run(() => {
         this.globalService.serverPort = serverPort;
       });
     });
 
-    window.electronAPI?.setJWTAccessToken((accessToken: string) => {
-      this.ngZone.run(() => {
-        this.identityService.set(accessToken);
+    if (SPLITED[1] != 'notification') {
+      // Getting the user's operating system.
+      window.electronAPI.getOS().then((os: NodeJS.Platform) => {
+        this.ngZone.run(() => {
+          this.globalService.os = os;
 
-        if (this.globalService.betaUsers === undefined) {
-          this.apiRestService
-            .getBetaUsers()
-            .subscribe((betaUsers: number[]) => {
-              this.globalService.betaUsers = betaUsers;
+          if (os == 'linux') {
+            if (SPLITED[1] != 'notification') {
+              this.dialogService.open(LinuxIntroDialog);
+            }
+          }
+        });
+      });
 
-              this.apiRestService.getMyTeams().subscribe((teams: Team[]) => {
-                this.identityService.teams = teams;
-              });
+      window.electronAPI.isDevMode().then((devMode: boolean) => {
+        this.ngZone.run(() => {
+          this.globalService.devMode = devMode;
+        });
+      });
 
-              // Get account accessibility settings
-              this.apiRestService
-                .getAccessibilitySettings()
-                .subscribe(
-                  (accessibilitySettings: AccessibilitySettingsDTO | null) => {
-                    if (accessibilitySettings) {
-                      this.identityService.accessibilitySettings.saturation =
-                        accessibilitySettings.saturation;
-                      this.identityService.accessibilitySettings.contrast =
-                        accessibilitySettings.contrast;
-                      this.identityService.accessibilitySettings.protanopia =
-                        accessibilitySettings.protanopia;
-                      this.identityService.accessibilitySettings.deuteranopia =
-                        accessibilitySettings.deuteranopia;
-                      this.identityService.accessibilitySettings.tritanopia =
-                        accessibilitySettings.tritanopia;
-                      this.updateAccessibilityFilter();
+      // Getting the project version.
+      window.electronAPI.getVersion().then((versions: Versions) => {
+        this.ngZone.run(() => {
+          this.versions = new Versions(versions.current, versions.last);
+        });
+      });
+
+      window.electronAPI.setJWTAccessToken((accessToken: string) => {
+        this.ngZone.run(() => {
+          this.identityService.set(accessToken);
+
+          if (this.globalService.betaUsers === undefined) {
+            this.apiRestService
+              .getBetaUsers()
+              .subscribe((betaUsers: number[]) => {
+                this.globalService.betaUsers = betaUsers;
+
+                this.apiRestService.getMyTeams().subscribe((teams: Team[]) => {
+                  this.identityService.teams = teams;
+                });
+
+                // Get account accessibility settings
+                this.apiRestService
+                  .getAccessibilitySettings()
+                  .subscribe(
+                    (
+                      accessibilitySettings: AccessibilitySettingsDTO | null
+                    ) => {
+                      if (accessibilitySettings) {
+                        this.identityService.accessibilitySettings.saturation =
+                          accessibilitySettings.saturation;
+                        this.identityService.accessibilitySettings.contrast =
+                          accessibilitySettings.contrast;
+                        this.identityService.accessibilitySettings.protanopia =
+                          accessibilitySettings.protanopia;
+                        this.identityService.accessibilitySettings.deuteranopia =
+                          accessibilitySettings.deuteranopia;
+                        this.identityService.accessibilitySettings.tritanopia =
+                          accessibilitySettings.tritanopia;
+                        this.updateAccessibilityFilter();
+                      }
                     }
-                  }
-                );
+                  );
 
-              // Get account coins
-              this.apiRestService.getMyCoins().subscribe((coins: number) => {
-                this.identityService.coins = coins;
-              });
-              setInterval(() => {
+                // Get account coins
                 this.apiRestService.getMyCoins().subscribe((coins: number) => {
                   this.identityService.coins = coins;
                 });
-              }, 60 * 1000);
-            });
-        }
-      });
-    });
-
-    // Getting logged user informations from his JWT.
-    window.electronAPI?.getJWTAccessToken();
-
-    window.electronAPI?.error((i18nPath: string, i18nVariables: object) => {
-      this.ngZone.run(() => {
-        this.globalService.loading = undefined;
-
-        this.translateService
-          .get(i18nPath, i18nVariables)
-          .subscribe((translated: string) => {
-            this.toastrService.error(translated);
-          });
-      });
-    });
-
-    window.electronAPI?.globalMessage(
-      (i18nPath: string, i18nVariables: object) => {
-        this.ngZone.run(() => {
-          this.translateService
-            .get(i18nPath, i18nVariables)
-            .subscribe((translated: string) => {
-              this.globalService.loading = translated;
-            });
+                setInterval(() => {
+                  this.apiRestService
+                    .getMyCoins()
+                    .subscribe((coins: number) => {
+                      this.identityService.coins = coins;
+                    });
+                }, 60 * 1000);
+              });
+          }
         });
-      }
-    );
+      });
 
-    window.electronAPI?.checkJwtToken();
+      window.electronAPI.toast(
+        (
+          type: 'success' | 'error' | 'warning' | 'info',
+          i18nPath: string,
+          i18nVariables: object
+        ) => {
+          this.ngZone.run(() => {
+            this.translateService
+              .get(i18nPath, i18nVariables)
+              .subscribe((translated: string) => {
+                switch (type) {
+                  case 'success':
+                    this.toastrService.success(translated);
+                    break;
+                  case 'error':
+                    this.toastrService.error(translated);
+                    break;
+                  case 'warning':
+                    this.toastrService.warning(translated);
+                    break;
+                  case 'info':
+                    this.toastrService.info(translated);
+                    break;
+                }
+              });
+          });
+        }
+      );
 
-    if (isDevMode()) {
-      window.electronAPI?.debugMode();
+      window.electronAPI.globalMessage(
+        (i18nPath: string, i18nVariables: object) => {
+          this.ngZone.run(() => {
+            if (i18nPath) {
+              this.translateService
+                .get(i18nPath, i18nVariables)
+                .subscribe((translated: string) => {
+                  this.globalService.loading = translated;
+                });
+            } else {
+              this.globalService.loading = undefined;
+            }
+          });
+        }
+      );
+
+      // Getting logged user informations from his JWT.
+      window.electronAPI.getJWTAccessToken();
+      window.electronAPI.checkJwtToken();
     }
   }
 
@@ -211,7 +231,7 @@ export class App implements OnInit {
    * This method is called when the user clicks on a new update notification link.
    */
   protected onNewUpdateLinkClick(): void {
-    window.electronAPI?.openURL(
+    window.electronAPI.openURL(
       'https://github.com/HeyHeyChicken/EBP-Tools/releases/latest'
     );
   }

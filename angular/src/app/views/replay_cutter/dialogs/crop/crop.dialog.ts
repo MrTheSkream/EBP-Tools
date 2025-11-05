@@ -26,6 +26,7 @@ import {
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { AssistantComponent } from '../../../../shared/assistant/assistant.component';
 import { ReplayCutterComponent } from '../../replay_cutter.component';
+import { GlobalService } from '../../../../core/services/global.service';
 
 //#endregion
 
@@ -71,10 +72,11 @@ export class ReplayCutterCropDialog implements OnInit {
 
   protected get disableSubmitButton(): boolean {
     if (
-      this.globalCropper.x2 - this.globalCropper.x1 >
+      (this.globalCropper.x2 - this.globalCropper.x1 >
         ReplayCutterCropDialog.DEFAULT_CROPPER.x2 ||
-      this.globalCropper.y2 - this.globalCropper.y1 >
-        ReplayCutterCropDialog.DEFAULT_CROPPER.y2
+        this.globalCropper.y2 - this.globalCropper.y1 >
+          ReplayCutterCropDialog.DEFAULT_CROPPER.y2) &&
+      this.data.gameIndex >= 0
     ) {
       return true;
     }
@@ -91,6 +93,7 @@ export class ReplayCutterCropDialog implements OnInit {
       component: ReplayCutterComponent;
       gameIndex: number;
     },
+    private readonly globalService: GlobalService,
     private readonly dialogRef: MatDialogRef<ReplayCutterCropDialog>
   ) {
     // We resize the window to full screen.
@@ -157,19 +160,21 @@ export class ReplayCutterCropDialog implements OnInit {
    * This method calculates a random timestamp within the game's start and end times, then uses the parent component's minimap detection to extract a frame and cropper position, which are then applied to reset the dialog state.
    */
   protected getNewImage(): void {
-    const MIN = this.data.component.games[this.data.gameIndex].start;
-    const MAX = this.data.component.games[this.data.gameIndex].end;
-    const RANDOM = Math.floor(Math.random() * (MAX - MIN + 1)) + MIN;
+    if (this.data.gameIndex >= 0) {
+      const MIN = this.data.component.games[this.data.gameIndex].start;
+      const MAX = this.data.component.games[this.data.gameIndex].end;
+      const RANDOM = Math.floor(Math.random() * (MAX - MIN + 1)) + MIN;
 
-    this.data.component.detectMinimap(
-      this.data.component.games[this.data.gameIndex],
-      (position: CropperPosition, videoFrame: HTMLCanvasElement) => {
-        this.reset();
-        this.currentImgBase64 = videoFrame.toDataURL('image/png');
-        this.data.initialCropperPosition = position;
-      },
-      RANDOM
-    );
+      this.data.component.detectMinimap(
+        this.data.component.games[this.data.gameIndex],
+        (position: CropperPosition, videoFrame: HTMLCanvasElement) => {
+          this.reset();
+          this.currentImgBase64 = videoFrame.toDataURL('image/png');
+          this.data.initialCropperPosition = position;
+        },
+        RANDOM
+      );
+    }
   }
 
   /**

@@ -53,6 +53,8 @@ export class Game {
   public orangeTeam: Team = new Team();
   public blueTeam: Team = new Team();
 
+  public sentForAnalysis: boolean = false;
+
   //#endregion
 
   constructor(public mode: number) {}

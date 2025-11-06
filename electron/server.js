@@ -1264,6 +1264,7 @@ let projectLatestVersion /* string */ = '';
             'upload-game-mini-map',
             (
                 event,
+                gameIndex,
                 game,
                 cropPosition,
                 videoPath,
@@ -1399,7 +1400,8 @@ let projectLatestVersion /* string */ = '';
                                                                                                 1000,
                                                                                             () => {
                                                                                                 getMainWindow().webContents.send(
-                                                                                                    'game-is-uploaded'
+                                                                                                    'game-is-uploaded',
+                                                                                                    gameIndex
                                                                                                 );
                                                                                             }
                                                                                         );

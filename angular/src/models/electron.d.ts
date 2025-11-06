@@ -60,6 +60,7 @@ export interface ElectronAPI {
   setSetting: (setting: string) => Promise<string>;
   setVideoFile: (callback: (path: string) => void) => Promise<void>;
   uploadGameMiniMap: (
+    gameIndex: number,
     game: Game,
     c: CropperPosition,
     videoPath: string,
@@ -99,7 +100,7 @@ export interface ElectronAPI {
   setUpscalePercent: (callback: (percent: number) => void) => void;
   setRemoveBordersPercent: (callback: (percent: number) => void) => void;
   setJWTAccessToken: (callback: (accessToken: string) => void) => void;
-  gameIsUploaded: (callback: () => void) => void;
+  gameIsUploaded: (callback: (gameIndex: number) => void) => void;
   gamesAreExported: (callback: (filePath: string | undefined) => void) => void;
   replayDownloaderError: (callback: (error: string) => void) => void;
   replayDownloaderSuccess: (callback: (path: string) => void) => void;

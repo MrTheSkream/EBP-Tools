@@ -53,7 +53,7 @@ contextBridge.exposeInMainWorld("electronAPI", {
   // The front-end asks the server to extract the private player games.
   extractPrivatePseudoGames: (tag, nbPages, seasonIndex, skip, timeToWait) => ipcRenderer.invoke("extract-private-pseudo-games", tag, nbPages, seasonIndex, skip, timeToWait),
   // The front-end asks the server to crop, cut and upload a video to the EBP's S3 server.
-  uploadGameMiniMap: (game, cropPosition, videoPath, gameID, orangeTeamInfosPosition, blueTeamInfosPosition, topInfosPosition, sortedOrangePlayersNames, sortedBluePlayersNames) => ipcRenderer.invoke("upload-game-mini-map", game, cropPosition, videoPath, gameID, orangeTeamInfosPosition, blueTeamInfosPosition, topInfosPosition, sortedOrangePlayersNames, sortedBluePlayersNames),
+  uploadGameMiniMap: (gameIndex, game, cropPosition, videoPath, gameID, orangeTeamInfosPosition, blueTeamInfosPosition, topInfosPosition, sortedOrangePlayersNames, sortedBluePlayersNames) => ipcRenderer.invoke("upload-game-mini-map", gameIndex, game, cropPosition, videoPath, gameID, orangeTeamInfosPosition, blueTeamInfosPosition, topInfosPosition, sortedOrangePlayersNames, sortedBluePlayersNames),
   // The front-end asks the server to cut a video file manualy edited.
   manualCutVideoFile: (videoPath, chunks, notificationData) => ipcRenderer.invoke("manual-cut-video-file", videoPath, chunks, notificationData),
   // The front-end asks the server to save the current language.
@@ -80,7 +80,7 @@ contextBridge.exposeInMainWorld("electronAPI", {
   // The server send the JWT value to the font-end.
   setJWTAccessToken: (callback) => ipcRenderer.on("set-jwt-access-token", (event, accessToken) => callback(accessToken)),
   // The server gives the path of the video file selected by the user.
-  gameIsUploaded: (callback) => ipcRenderer.on("game-is-uploaded", (event) => callback()),
+  gameIsUploaded: (callback) => ipcRenderer.on("game-is-uploaded", (event, gameIndex) => callback(gameIndex)),
   // The server gives the path of the video file selected by the user.
   setVideoFile: (callback) => ipcRenderer.on("set-video-file", (event, value) => callback(value)),
   // The server informs the front-end that the games are exported.

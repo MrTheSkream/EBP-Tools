@@ -176,7 +176,9 @@ See LICENSE for terms. Unauthorized use is prohibited.
                       </button>
                       <button
                         class="squared"
-                        [class.disabled]="disableUploadButton(game.map)"
+                        [class.disabled]="
+                          disableUploadButton(game.map) || game.sentForAnalysis
+                        "
                         (click)="selectWhichGameToAttachMinimap($index)"
                         matTooltip="{{
                           'view.replay_cutter.upload' | translate

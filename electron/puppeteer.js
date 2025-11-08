@@ -108,89 +108,123 @@ async function extractGames(
 ) {
     let index = 0;
     const GAMES = [];
+    let isExtractingStopped = false;
+    let loadIndex = 0;
+    const QUERY = '.btn-group > button:last-child';
+
+    // Detect when the user closes the page
+    page.on('close', () => {
+        console.log('Page closed by user');
+        isExtractingStopped = true;
+    });
+
+    // Detect when the user closes the browser
+    browser.on('disconnected', () => {
+        console.log('Browser closed by user');
+        isExtractingStopped = true;
+    });
+
+    // Detect page reload
+    page.on('load', async () => {
+        loadIndex++;
+        if (loadIndex > 1) {
+            console.log('Page reloaded by user');
+            isExtractingStopped = true;
+
+            page.close();
+        }
+    });
 
     page.on('request', async (request) => {
-        const URL = request.url();
-        if (URL.includes('graphql')) {
-            try {
-                const DATA = request.postData();
-                if (DATA) {
-                    const JSON_DATA = JSON.parse(DATA);
-                    if (JSON_DATA.operationName === 'listGameHistories') {
-                        JSON_DATA.variables.page.page += skip;
-                        JSON_DATA.variables.seasonId = seasonIndex;
-                        request.continue({
-                            headers: request.headers(),
-                            method: 'POST',
-                            postData: JSON.stringify(JSON_DATA)
-                        });
+        if (!isExtractingStopped) {
+            const URL = request.url();
+            if (URL.includes('graphql')) {
+                try {
+                    const DATA = request.postData();
+                    if (DATA) {
+                        const JSON_DATA = JSON.parse(DATA);
+                        if (JSON_DATA.operationName === 'listGameHistories') {
+                            if (JSON_DATA.variables.page.page == 1) {
+                                JSON_DATA.variables.page.page += skip;
+                            }
+                            JSON_DATA.variables.seasonId = seasonIndex;
+                            request.continue({
+                                headers: request.headers(),
+                                method: 'POST',
+                                postData: JSON.stringify(JSON_DATA)
+                            });
+                        } else {
+                            request.continue();
+                        }
                     } else {
                         request.continue();
                     }
-                } else {
-                    request.continue();
+                } catch (err) {
+                    dialog.showErrorBox('Error', err);
                 }
-            } catch (err) {
-                dialog.showErrorBox('Error', err);
+            } else {
+                request.continue();
             }
-        } else {
-            request.continue();
         }
     });
 
     await page.setRequestInterception(true);
     page.on('response', async (response) => {
-        if (response.status() === 403) {
-            console.log('❌ Accès refusé à l’API :', response.url());
-        }
-        if (response.url().includes('graphql')) {
-            try {
-                const JSON_DATA = await response.json();
-                if (
-                    JSON_DATA?.data?.gameHistories?.nodes &&
-                    Array.isArray(JSON_DATA.data.gameHistories.nodes)
-                ) {
-                    index++;
-                    const OLD_INDEX = index;
-                    JSON_DATA.data.gameHistories.nodes.forEach((game) => {
-                        addGame(GAMES, game);
-                    });
+        if (!isExtractingStopped) {
+            if (response.status() === 403) {
+                console.log('❌ Accès refusé à l’API :', response.url());
+            }
+            if (response.url().includes('graphql')) {
+                try {
+                    const JSON_DATA = await response.json();
+                    if (
+                        JSON_DATA?.data?.gameHistories?.nodes &&
+                        Array.isArray(JSON_DATA.data.gameHistories.nodes)
+                    ) {
+                        index++;
+                        const OLD_INDEX = index;
+                        JSON_DATA.data.gameHistories.nodes.forEach((game) => {
+                            addGame(GAMES, game);
+                        });
 
-                    if (index < nbPages) {
-                        const RANDOM = 200;
-                        const MIN = timeToWait * 1000 - RANDOM;
-                        const MAX = timeToWait * 1000 + RANDOM;
-                        setTimeout(
-                            async () => {
-                                const QUERY = '.btn-group > button:last-child';
-                                await page.waitForSelector(QUERY);
+                        if (index < nbPages) {
+                            const RANDOM = 200;
+                            const MIN = timeToWait * 1000 - RANDOM;
+                            const MAX = timeToWait * 1000 + RANDOM;
+                            setTimeout(
+                                async () => {
+                                    await page.waitForSelector(QUERY);
 
-                                const END =
-                                    (await page.$(QUERY + ':disabled')) !==
-                                    null;
-                                if (END) {
-                                    callback(GAMES);
-                                    browser.close();
-                                } else {
-                                    await page.click(QUERY);
+                                    const END =
+                                        (await page.$(QUERY + ':disabled')) !==
+                                        null;
+                                    if (END) {
+                                        callback(GAMES);
+                                        browser.close();
+                                    } else {
+                                        await page.click(QUERY);
 
-                                    setTimeout(async () => {
-                                        if (OLD_INDEX == index) {
-                                            await page.waitForSelector(QUERY);
-                                            await page.click(QUERY);
-                                        }
-                                    }, MAX + 1000);
-                                }
-                            },
-                            Math.floor(Math.random() * (MAX - MIN + 1)) + MIN
-                        );
-                    } else {
-                        callback(GAMES);
-                        browser.close();
+                                        setTimeout(async () => {
+                                            if (OLD_INDEX == index) {
+                                                await page.waitForSelector(
+                                                    QUERY
+                                                );
+                                                await page.click(QUERY);
+                                            }
+                                        }, MAX + 1000);
+                                    }
+                                },
+                                Math.floor(Math.random() * (MAX - MIN + 1)) +
+                                    MIN
+                            );
+                        } else {
+                            callback(GAMES);
+                            browser.close();
+                        }
                     }
+                } catch (err) {
+                    dialog.showErrorBox('Error', err);
                 }
-            } catch (err) {
-                dialog.showErrorBox('Error', err);
             }
         }
     });

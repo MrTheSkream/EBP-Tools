@@ -278,7 +278,7 @@ function switchDebugMode() {
     mainWindow.setResizable(false);
 
     // Center the window after resizing
-    centerWindow();
+    centerMainWindow();
 }
 
 /**

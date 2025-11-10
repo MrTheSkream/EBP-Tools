@@ -53,7 +53,7 @@ contextBridge.exposeInMainWorld("electronAPI", {
   // The front-end asks the server to extract the private player games.
   extractPrivatePseudoGames: (tag, nbPages, seasonIndex, skip, timeToWait) => ipcRenderer.invoke("extract-private-pseudo-games", tag, nbPages, seasonIndex, skip, timeToWait),
   // The front-end asks the server to crop, cut and upload a video to the EBP's S3 server.
-  uploadGameMiniMap: (gameIndex, game, cropPosition, videoPath, gameID, orangeTeamInfosPosition, blueTeamInfosPosition, topInfosPosition, sortedOrangePlayersNames, sortedBluePlayersNames) => ipcRenderer.invoke("upload-game-mini-map", gameIndex, game, cropPosition, videoPath, gameID, orangeTeamInfosPosition, blueTeamInfosPosition, topInfosPosition, sortedOrangePlayersNames, sortedBluePlayersNames),
+  uploadGameMiniMap: (gameIndex, game, cropPosition, margedCropPosition, videoPath, gameID, orangeTeamInfosPosition, blueTeamInfosPosition, topInfosPosition, sortedOrangePlayersNames, sortedBluePlayersNames) => ipcRenderer.invoke("upload-game-mini-map", gameIndex, game, cropPosition, margedCropPosition, videoPath, gameID, orangeTeamInfosPosition, blueTeamInfosPosition, topInfosPosition, sortedOrangePlayersNames, sortedBluePlayersNames),
   // The front-end asks the server to cut a video file manualy edited.
   manualCutVideoFile: (videoPath, chunks, notificationData) => ipcRenderer.invoke("manual-cut-video-file", videoPath, chunks, notificationData),
   // The front-end asks the server to save the current language.

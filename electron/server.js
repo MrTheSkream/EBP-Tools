@@ -247,6 +247,8 @@ let projectLatestVersion /* string */ = '';
         sortedOrangePlayersNames,
         sortedBluePlayersNames,
         gameStart,
+        cropPosition,
+        margedCropPosition,
         callback
     ) {
         const SETTINGS = JSON.parse(fs.readFileSync(SETTINGS_PATH, 'utf-8'));
@@ -271,7 +273,9 @@ let projectLatestVersion /* string */ = '';
         const REQUEST_BODY = JSON.stringify({
             orangePlayersNames: sortedOrangePlayersNames,
             bluePlayersNames: sortedBluePlayersNames,
-            gameStart: gameStart
+            gameStart: gameStart,
+            cropPosition: cropPosition,
+            margedCropPosition: margedCropPosition
         });
 
         const REQUEST = https.request(OPTIONS, (res) => {
@@ -1267,6 +1271,7 @@ let projectLatestVersion /* string */ = '';
                 gameIndex,
                 game,
                 cropPosition,
+                margedCropPosition,
                 videoPath,
                 gameID,
                 orangeTeamInfosPosition,
@@ -1293,7 +1298,7 @@ let projectLatestVersion /* string */ = '';
                                 cropVideoFile(
                                     game,
                                     cuttedPath,
-                                    cropPosition,
+                                    margedCropPosition,
                                     'temp2'
                                 ).then((croppedMapPath) => {
                                     // We crop the orange team infos of the video...
@@ -1398,6 +1403,8 @@ let projectLatestVersion /* string */ = '';
                                                                                             sortedBluePlayersNames,
                                                                                             game._start *
                                                                                                 1000,
+                                                                                            cropPosition,
+                                                                                            margedCropPosition,
                                                                                             () => {
                                                                                                 getMainWindow().webContents.send(
                                                                                                     'game-is-uploaded',

@@ -132,7 +132,9 @@ export class ReplayCutterComponent implements OnInit, OnDestroy {
 
   private training: boolean | undefined;
 
-  private miniMapPositionsByMap: { [mapName: string]: CropperPosition } = {};
+  private miniMapPositionsByMap: {
+    [mapName: string]: [CropperPosition, CropperPosition];
+  } = {};
 
   protected maps: Map[] = [
     new Map('Artefact', ['artefact'], [4, 1, 6, 1], [38, 18, 390, 223]), // v
@@ -890,7 +892,8 @@ export class ReplayCutterComponent implements OnInit, OnDestroy {
     if (this.miniMapPositionsByMap[MAP_NAME]) {
       this.uploadGameMiniMap(
         gameIndex,
-        this.miniMapPositionsByMap[MAP_NAME],
+        this.miniMapPositionsByMap[MAP_NAME][0],
+        this.miniMapPositionsByMap[MAP_NAME][1],
         gameFromStatistics,
         orangeTeamInfosPosition,
         blueTeamInfosPosition,
@@ -929,6 +932,9 @@ export class ReplayCutterComponent implements OnInit, OnDestroy {
               );
 
               if (MAP) {
+                let margedMiniMapPositions = JSON.parse(
+                  JSON.stringify(miniMapPositions)
+                );
                 if (MAP.mapMargins) {
                   const HEIGHT = miniMapPositions.y2 - miniMapPositions.y1;
                   const WIDTH = miniMapPositions.x2 - miniMapPositions.x1;
@@ -941,7 +947,7 @@ export class ReplayCutterComponent implements OnInit, OnDestroy {
                     (HEIGHT * MAP.mapMargins[0]) / 100
                   );
 
-                  const MARGED_MINI_MAP_POSITIONS = {
+                  margedMiniMapPositions = {
                     x1: miniMapPositions.x1 - X,
                     x2:
                       miniMapPositions.x2 +
@@ -955,8 +961,6 @@ export class ReplayCutterComponent implements OnInit, OnDestroy {
                         ? Y
                         : (HEIGHT * MAP.mapMargins[2]) / 100)
                   };
-
-                  miniMapPositions = MARGED_MINI_MAP_POSITIONS;
                 }
 
                 miniMapPositions = {
@@ -966,10 +970,14 @@ export class ReplayCutterComponent implements OnInit, OnDestroy {
                   y2: Math.round(miniMapPositions.y2)
                 };
 
-                this.miniMapPositionsByMap[MAP_NAME] = miniMapPositions;
+                this.miniMapPositionsByMap[MAP_NAME] = [
+                  miniMapPositions,
+                  margedMiniMapPositions
+                ];
                 this.uploadGameMiniMap(
                   gameIndex,
                   miniMapPositions,
+                  margedMiniMapPositions,
                   gameFromStatistics,
                   orangeTeamInfosPosition,
                   blueTeamInfosPosition,
@@ -1340,6 +1348,7 @@ export class ReplayCutterComponent implements OnInit, OnDestroy {
   private uploadGameMiniMap(
     gameIndex: number,
     miniMapPositions: CropperPosition,
+    margedMiniMapPositions: CropperPosition,
     gameFromStatistics: RestGame,
     orangeTeamInfosPosition: CropperPosition,
     blueTeamInfosPosition: CropperPosition,
@@ -1390,6 +1399,7 @@ export class ReplayCutterComponent implements OnInit, OnDestroy {
                     gameIndex,
                     this._games[gameIndex],
                     miniMapPositions,
+                    margedMiniMapPositions,
                     decodeURIComponent(this._videoPath!),
                     gameFromStatistics.ID,
                     orangeTeamInfosPosition,

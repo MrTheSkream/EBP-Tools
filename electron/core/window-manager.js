@@ -32,6 +32,25 @@ let floatingWindow = null;
 let debugMode = false;
 
 /**
+ * Centers the main window on the primary display.
+ */
+function centerMainWindow() {
+    if (!mainWindow || mainWindow.isDestroyed()) return;
+
+    const PRIMARY_DISPLAY = screen.getPrimaryDisplay();
+    const [windowWidth, windowHeight] = mainWindow.getSize();
+
+    const X =
+        Math.floor((PRIMARY_DISPLAY.workAreaSize.width - windowWidth) / 2) +
+        PRIMARY_DISPLAY.workArea.x;
+    const Y =
+        Math.floor((PRIMARY_DISPLAY.workAreaSize.height - windowHeight) / 2) +
+        PRIMARY_DISPLAY.workArea.y;
+
+    mainWindow.setPosition(X, Y);
+}
+
+/**
  * Sets the main window size based on provided dimensions or defaults.
  * @param {number|undefined} width Target width.
  * @param {number|undefined} height Target height.
@@ -66,6 +85,9 @@ function setWindowSize(width, height) {
     mainWindow.setResizable(true);
     mainWindow.setSize(targetWidth, targetHeight);
     mainWindow.setResizable(false);
+
+    // Center the window after resizing
+    centerMainWindow();
 }
 
 /**
@@ -254,6 +276,9 @@ function switchDebugMode() {
         Math.min(PRIMARY_DISPLAY.workAreaSize.height, WINDOW_HEIGHT)
     );
     mainWindow.setResizable(false);
+
+    // Center the window after resizing
+    centerWindow();
 }
 
 /**

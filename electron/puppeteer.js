@@ -94,6 +94,7 @@ function getBrowserPath(mainWindow, callback) {
  * @param {*} nbPages Number of game pages to extract.
  * @param {*} tag Player Name.
  * @param {*} seasonIndex Season ID to extract.
+ * @param {*} publicMode
  * @param {*} callback Callback function
  */
 async function extractGames(
@@ -104,6 +105,7 @@ async function extractGames(
     skip,
     timeToWait,
     dialog,
+    publicMode,
     callback
 ) {
     let index = 0;
@@ -127,7 +129,7 @@ async function extractGames(
     // Detect page reload
     page.on('load', async () => {
         loadIndex++;
-        if (loadIndex > 1) {
+        if (loadIndex > (publicMode ? 1 : 2)) {
             console.log('Page reloaded by user');
             isExtractingStopped = true;
 
@@ -259,6 +261,7 @@ function extractPublicPseudoGames(
                 skip,
                 timeToWait,
                 dialog,
+                true,
                 callback
             );
 
@@ -328,6 +331,7 @@ async function extractPrivatePseudoGames(
                 skip,
                 timeToWait,
                 dialog,
+                false,
                 callback
             );
 

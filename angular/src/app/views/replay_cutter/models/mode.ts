@@ -63,7 +63,7 @@ class Mode {
     public scoreFrame: ScoreFrame,
     public endFrame: EndFrame,
     public gameFrame: GameFrame,
-    public loadingFrame: LoadingFrame
+    public loadingFrames: LoadingFrame[]
   ) {}
 }
 
@@ -98,16 +98,28 @@ export const MODES = [
         [980, 1004]
       ] // playersY
     ),
-    new LoadingFrame(
-      new Position(958, 427),
-      new Position(857, 653),
-      new Position(1060, 653),
-      new Position(958, 642),
-      new Position(958, 463),
-      new Position(880, 653),
-      new Position(1037, 653),
-      new Position(958, 610)
-    )
+    [
+      new LoadingFrame(
+        new Position(958, 427),
+        new Position(857, 653),
+        new Position(1060, 653),
+        new Position(958, 642),
+        new Position(958, 463),
+        new Position(880, 653),
+        new Position(1037, 653),
+        new Position(958, 610)
+      ),
+      new LoadingFrame(
+        new Position(959, 484),
+        new Position(908, 596),
+        new Position(1010, 596),
+        new Position(959, 589),
+        new Position(959, 503),
+        new Position(920, 596),
+        new Position(996, 596),
+        new Position(959, 573)
+      )
+    ]
   ),
 
   //#endregion
@@ -141,16 +153,28 @@ export const MODES = [
         [973, 998]
       ] // playersY
     ),
-    new LoadingFrame(
-      new Position(958, 427),
-      new Position(857, 653),
-      new Position(1060, 653),
-      new Position(958, 642),
-      new Position(958, 463),
-      new Position(880, 653),
-      new Position(1037, 653),
-      new Position(958, 610)
-    )
+    [
+      new LoadingFrame(
+        new Position(958, 427),
+        new Position(857, 653),
+        new Position(1060, 653),
+        new Position(958, 642),
+        new Position(958, 463),
+        new Position(880, 653),
+        new Position(1037, 653),
+        new Position(958, 610)
+      ),
+      new LoadingFrame(
+        new Position(959, 484),
+        new Position(908, 596),
+        new Position(1010, 596),
+        new Position(959, 589),
+        new Position(959, 503),
+        new Position(920, 596),
+        new Position(996, 596),
+        new Position(959, 573)
+      )
+    ]
   ),
 
   //#endregion
@@ -184,16 +208,28 @@ export const MODES = [
         [974, 998]
       ] // playersY
     ),
-    new LoadingFrame(
-      new Position(958, 427),
-      new Position(857, 653),
-      new Position(1060, 653),
-      new Position(958, 642),
-      new Position(958, 463),
-      new Position(880, 653),
-      new Position(1037, 653),
-      new Position(958, 610)
-    )
+    [
+      new LoadingFrame(
+        new Position(958, 427),
+        new Position(857, 653),
+        new Position(1060, 653),
+        new Position(958, 642),
+        new Position(958, 463),
+        new Position(880, 653),
+        new Position(1037, 653),
+        new Position(958, 610)
+      ),
+      new LoadingFrame(
+        new Position(959, 484),
+        new Position(908, 596),
+        new Position(1010, 596),
+        new Position(959, 589),
+        new Position(959, 503),
+        new Position(920, 596),
+        new Position(996, 596),
+        new Position(959, 573)
+      )
+    ]
   ),
 
   //#endregion
@@ -228,16 +264,28 @@ export const MODES = [
         [980, 1004]
       ] // playersY
     ),
-    new LoadingFrame(
-      new Position(958, 427),
-      new Position(857, 653),
-      new Position(1060, 653),
-      new Position(958, 642),
-      new Position(958, 463),
-      new Position(880, 653),
-      new Position(1037, 653),
-      new Position(958, 610)
-    )
+    [
+      new LoadingFrame(
+        new Position(958, 427),
+        new Position(857, 653),
+        new Position(1060, 653),
+        new Position(958, 642),
+        new Position(958, 463),
+        new Position(880, 653),
+        new Position(1037, 653),
+        new Position(958, 610)
+      ),
+      new LoadingFrame(
+        new Position(959, 484),
+        new Position(908, 596),
+        new Position(1010, 596),
+        new Position(959, 589),
+        new Position(959, 503),
+        new Position(920, 596),
+        new Position(996, 596),
+        new Position(959, 573)
+      )
+    ]
   )
 
   //#endregion

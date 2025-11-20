@@ -2414,74 +2414,80 @@ export class ReplayCutterComponent implements OnInit, OnDestroy {
     games: Game[]
   ): boolean {
     if (games.length > 0 && games[0].end != -1 && games[0].start == -1) {
-      if (
-        /* Logo top */ this.colorSimilarity(
-          this.getPixelColor(
-            video,
-            MODES[games[0].mode].loadingFrame.logoTop.x,
-            MODES[games[0].mode].loadingFrame.logoTop.y
-          ),
-          new RGB(255, 255, 255)
-        ) &&
-        /* Logo left */ this.colorSimilarity(
-          this.getPixelColor(
-            video,
-            MODES[games[0].mode].loadingFrame.logoLeft.x,
-            MODES[games[0].mode].loadingFrame.logoLeft.y
-          ),
-          new RGB(255, 255, 255)
-        ) &&
-        /* Logo right */ this.colorSimilarity(
-          this.getPixelColor(
-            video,
-            MODES[games[0].mode].loadingFrame.logoRight.x,
-            MODES[games[0].mode].loadingFrame.logoRight.y
-          ),
-          new RGB(255, 255, 255)
-        ) &&
-        /* Logo middle */ this.colorSimilarity(
-          this.getPixelColor(
-            video,
-            MODES[games[0].mode].loadingFrame.logoMiddle.x,
-            MODES[games[0].mode].loadingFrame.logoMiddle.y
-          ),
-          new RGB(255, 255, 255)
-        ) &&
-        /* Logo black 1 */ this.colorSimilarity(
-          this.getPixelColor(
-            video,
-            MODES[games[0].mode].loadingFrame.logoBlack1.x,
-            MODES[games[0].mode].loadingFrame.logoBlack1.y
-          ),
-          new RGB(0, 0, 0)
-        ) &&
-        /* Logo black 2 */ this.colorSimilarity(
-          this.getPixelColor(
-            video,
-            MODES[games[0].mode].loadingFrame.logoBlack2.x,
-            MODES[games[0].mode].loadingFrame.logoBlack2.y
-          ),
-          new RGB(0, 0, 0)
-        ) &&
-        /* Logo black 3 */ this.colorSimilarity(
-          this.getPixelColor(
-            video,
-            MODES[games[0].mode].loadingFrame.logoBlack3.x,
-            MODES[games[0].mode].loadingFrame.logoBlack3.y
-          ),
-          new RGB(0, 0, 0)
-        ) &&
-        /* Logo black 4 */ this.colorSimilarity(
-          this.getPixelColor(
-            video,
-            MODES[games[0].mode].loadingFrame.logoBlack4.x,
-            MODES[games[0].mode].loadingFrame.logoBlack4.y
-          ),
-          new RGB(0, 0, 0)
-        )
+      for (
+        let index: number = 0;
+        index < MODES[games[0].mode].loadingFrames.length;
+        index++
       ) {
-        console.log('Game loading frame detected.');
-        return true;
+        if (
+          /* Logo top */ this.colorSimilarity(
+            this.getPixelColor(
+              video,
+              MODES[games[0].mode].loadingFrames[index].logoTop.x,
+              MODES[games[0].mode].loadingFrames[index].logoTop.y
+            ),
+            new RGB(255, 255, 255)
+          ) &&
+          /* Logo left */ this.colorSimilarity(
+            this.getPixelColor(
+              video,
+              MODES[games[0].mode].loadingFrames[index].logoLeft.x,
+              MODES[games[0].mode].loadingFrames[index].logoLeft.y
+            ),
+            new RGB(255, 255, 255)
+          ) &&
+          /* Logo right */ this.colorSimilarity(
+            this.getPixelColor(
+              video,
+              MODES[games[0].mode].loadingFrames[index].logoRight.x,
+              MODES[games[0].mode].loadingFrames[index].logoRight.y
+            ),
+            new RGB(255, 255, 255)
+          ) &&
+          /* Logo middle */ this.colorSimilarity(
+            this.getPixelColor(
+              video,
+              MODES[games[0].mode].loadingFrames[index].logoMiddle.x,
+              MODES[games[0].mode].loadingFrames[index].logoMiddle.y
+            ),
+            new RGB(255, 255, 255)
+          ) &&
+          /* Logo black 1 */ this.colorSimilarity(
+            this.getPixelColor(
+              video,
+              MODES[games[0].mode].loadingFrames[index].logoBlack1.x,
+              MODES[games[0].mode].loadingFrames[index].logoBlack1.y
+            ),
+            new RGB(0, 0, 0)
+          ) &&
+          /* Logo black 2 */ this.colorSimilarity(
+            this.getPixelColor(
+              video,
+              MODES[games[0].mode].loadingFrames[index].logoBlack2.x,
+              MODES[games[0].mode].loadingFrames[index].logoBlack2.y
+            ),
+            new RGB(0, 0, 0)
+          ) &&
+          /* Logo black 3 */ this.colorSimilarity(
+            this.getPixelColor(
+              video,
+              MODES[games[0].mode].loadingFrames[index].logoBlack3.x,
+              MODES[games[0].mode].loadingFrames[index].logoBlack3.y
+            ),
+            new RGB(0, 0, 0)
+          ) &&
+          /* Logo black 4 */ this.colorSimilarity(
+            this.getPixelColor(
+              video,
+              MODES[games[0].mode].loadingFrames[index].logoBlack4.x,
+              MODES[games[0].mode].loadingFrames[index].logoBlack4.y
+            ),
+            new RGB(0, 0, 0)
+          )
+        ) {
+          console.log('Game loading frame detected.');
+          return true;
+        }
       }
     }
     return false;

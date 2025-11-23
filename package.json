@@ -1,6 +1,6 @@
 {
     "name": "ebp-tools",
-    "version": "1.6.56",
+    "version": "1.6.57",
     "description": "",
     "main": ".webpack/main",
     "scripts": {
@@ -10,9 +10,19 @@
         "make": "cd ./angular && npx ng build && cd ../ && electron-forge make",
         "start": "concurrently \"cd ./angular && npx ng serve\" \"electron ./electron/server.js\"",
         "start-ubuntu": "concurrently \"cd ./angular && npx ng serve\" \"electron ./electron/server.js --no-sandbox\"",
-        "test": "cd angular && npx jest"
+        "test": "cd angular && npx jest",
+        "start_live_client_windows": "ffmpeg -f gdigrab -framerate 10 -i desktop -vcodec libx264 -preset ultrafast -tune zerolatency -rtsp_transport tcp -f rtsp rtsp://192.168.1.30:8554/live",
+        "start_live_client_macos": "ffmpeg -f avfoundation -framerate 10 -i \"3\" -vcodec libx264 -preset ultrafast -tune zerolatency -rtsp_transport tcp -f rtsp rtsp://192.168.1.30:8554/live"
     },
-    "repository": "https://github.com/HeyHeyChicken/EBP-Tools",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/HeyHeyChicken/EBP-Tools.git"
+    },
+    "publish": {
+        "provider": "github",
+        "owner": "HeyHeyChicken",
+        "repo": "EBP-Tools"
+    },
     "keywords": [],
     "author": "Antoine Duval",
     "license": "See LICENSE.txt",
@@ -39,6 +49,7 @@
     },
     "dependencies": {
         "discord-rpc": "^4.0.1",
+        "electron-updater": "^6.6.2",
         "exceljs": "^4.4.0",
         "express": "^5.1.0",
         "get-port": "^7.1.0",

@@ -12,6 +12,7 @@ const {
     dialog,
     shell
 } = require('electron');
+const { autoUpdater } = require('electron-updater');
 
 // When in installation mode, close the application.
 if (require('electron-squirrel-startup')) {
@@ -771,6 +772,15 @@ let projectLatestVersion /* string */ = '';
                 createWindow();
             });
         } else {
+            // Check for updates every 4 hours
+            autoUpdater.checkForUpdatesAndNotify();
+            setInterval(
+                () => {
+                    autoUpdater.checkForUpdatesAndNotify();
+                },
+                4 * 60 * 60 * 1000
+            );
+
             // We immediately create the window that will contain the HMI.
             createWindow();
 

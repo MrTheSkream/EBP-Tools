@@ -72,7 +72,7 @@ jobs:
             - name: Rename .dmg
               run: |
                   file=$(find out/make -type f -name "*.dmg" | head -n 1)
-                  mv "$file" out/make/macos.dmg
+                  mv "$file" out/make/EBP-Tools-${GITHUB_REF_NAME}.dmg
 
             # Upload the created binary.
             - name: Upload artifact
@@ -103,13 +103,13 @@ jobs:
             - name: Rename .exe
               run: |
                   $file = Get-ChildItem -Path "out/make/squirrel.windows/x64/" -Filter *.exe | Select-Object -First 1
-                  Rename-Item -Path $file.FullName -NewName "windows.exe"
+                  Rename-Item -Path $file.FullName -NewName "EBP-Tools-$env:GITHUB_REF_NAME.exe"
             # Upload the created binary.
             - name: Upload artifact
               uses: actions/upload-artifact@v4
               with:
                   name: windows
-                  path: out/make/squirrel.windows/x64/*.exe
+                  path: out/make/squirrel.windows/x64/*
 
     # Deploy the new version.
     deploy-builds:
@@ -141,5 +141,7 @@ jobs:
                   draft: false
                   prerelease: false
                   files: |
-                      ./release/macos.dmg
-                      ./release/windows.exe
+                      ./release/EBP-Tools-*.dmg
+                      ./release/EBP-Tools-*.exe
+                      ./release/RELEASES
+                      ./release/*.nupkg

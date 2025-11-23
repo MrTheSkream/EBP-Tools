@@ -762,7 +762,6 @@ let projectLatestVersion /* string */ = '';
         } else {
             // Configure auto-updater logger
             autoUpdater.logger = console;
-            autoUpdater.logger.transports.file.level = 'info';
 
             // Auto-updater event handlers
             autoUpdater.on('checking-for-update', () => {
@@ -771,7 +770,9 @@ let projectLatestVersion /* string */ = '';
 
             autoUpdater.on('update-available', (info) => {
                 console.log('[AUTO-UPDATER] Update available:', info);
-                console.log('[AUTO-UPDATER] Downloading update automatically...');
+                console.log(
+                    '[AUTO-UPDATER] Downloading update automatically...'
+                );
             });
 
             autoUpdater.on('update-not-available', (info) => {
@@ -783,12 +784,16 @@ let projectLatestVersion /* string */ = '';
             });
 
             autoUpdater.on('download-progress', (progressObj) => {
-                console.log(`[AUTO-UPDATER] Download progress: ${progressObj.percent}%`);
+                console.log(
+                    `[AUTO-UPDATER] Download progress: ${progressObj.percent}%`
+                );
             });
 
             autoUpdater.on('update-downloaded', (info) => {
                 console.log('[AUTO-UPDATER] Update downloaded:', info);
-                console.log('[AUTO-UPDATER] Restarting application to install update...');
+                console.log(
+                    '[AUTO-UPDATER] Restarting application to install update...'
+                );
                 autoUpdater.quitAndInstall(false, true);
             });
 

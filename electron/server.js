@@ -14,6 +14,10 @@ const {
 } = require('electron');
 const { autoUpdater } = require('electron-updater');
 
+// Configure auto-updater
+autoUpdater.autoDownload = true;
+autoUpdater.autoInstallOnAppQuit = false;
+
 // When in installation mode, close the application.
 if (require('electron-squirrel-startup')) {
     app.quit();
@@ -756,6 +760,38 @@ let projectLatestVersion /* string */ = '';
                 createWindow();
             });
         } else {
+            // Configure auto-updater logger
+            autoUpdater.logger = console;
+            autoUpdater.logger.transports.file.level = 'info';
+
+            // Auto-updater event handlers
+            autoUpdater.on('checking-for-update', () => {
+                console.log('[AUTO-UPDATER] Checking for update...');
+            });
+
+            autoUpdater.on('update-available', (info) => {
+                console.log('[AUTO-UPDATER] Update available:', info);
+                console.log('[AUTO-UPDATER] Downloading update automatically...');
+            });
+
+            autoUpdater.on('update-not-available', (info) => {
+                console.log('[AUTO-UPDATER] Update not available:', info);
+            });
+
+            autoUpdater.on('error', (err) => {
+                console.error('[AUTO-UPDATER] Error:', err);
+            });
+
+            autoUpdater.on('download-progress', (progressObj) => {
+                console.log(`[AUTO-UPDATER] Download progress: ${progressObj.percent}%`);
+            });
+
+            autoUpdater.on('update-downloaded', (info) => {
+                console.log('[AUTO-UPDATER] Update downloaded:', info);
+                console.log('[AUTO-UPDATER] Restarting application to install update...');
+                autoUpdater.quitAndInstall(false, true);
+            });
+
             // Check for updates every 4 hours
             autoUpdater.checkForUpdatesAndNotify();
             setInterval(
@@ -960,6 +996,11 @@ let projectLatestVersion /* string */ = '';
             checkYTDLPVersion();
 
             //#endregion
+
+            console.log({
+                current: version,
+                last: projectLatestVersion
+            });
 
             return {
                 current: version,

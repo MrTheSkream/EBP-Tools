@@ -74,12 +74,18 @@ jobs:
                   file=$(find out/make -type f -name "*.dmg" | head -n 1)
                   mv "$file" out/make/EBP-Tools-${GITHUB_REF_NAME}.dmg
 
+            # Generate update metadata files
+            - name: Generate update metadata
+              run: node scripts/generate-update-metadata.js ${GITHUB_REF_NAME} darwin
+
             # Upload the created binary.
             - name: Upload artifact
               uses: actions/upload-artifact@v4
               with:
                   name: macos
-                  path: out/make/*.dmg
+                  path: |
+                      out/make/*.dmg
+                      out/make/latest-mac.yml
 
     # Create the Windows version of the application.
     build-windows:
@@ -104,6 +110,9 @@ jobs:
               run: |
                   $file = Get-ChildItem -Path "out/make/squirrel.windows/x64/" -Filter *.exe | Select-Object -First 1
                   Rename-Item -Path $file.FullName -NewName "EBP-Tools-$env:GITHUB_REF_NAME.exe"
+            # Generate update metadata files
+            - name: Generate update metadata
+              run: node scripts/generate-update-metadata.js $env:GITHUB_REF_NAME win32
             # Upload the created binary.
             - name: Upload artifact
               uses: actions/upload-artifact@v4
@@ -145,3 +154,5 @@ jobs:
                       ./release/EBP-Tools-*.exe
                       ./release/RELEASES
                       ./release/*.nupkg
+                      ./release/latest-mac.yml
+                      ./release/latest.yml

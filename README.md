@@ -15,7 +15,7 @@
 
 ## 😀 You are an EVA player
 
-Just download the software [here](//github.com/HeyHeyChicken/EBP-Tools/releases/latest/).<br/>
+Just download the software [here](//evabattleplan.com/en/tools/tools).<br/>
 I provide support for all users through [Discord](//discord.gg/tAHAc9q3aX).
 
 ## 🤓 You are a developper

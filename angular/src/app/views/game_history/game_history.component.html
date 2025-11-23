@@ -118,13 +118,27 @@ See LICENSE for terms. Unauthorized use is prohibited.
                 'view.game_history.playerTag' | translate
               }}</mat-label>
               <input
-                matInput
                 type="text"
-                [ngModelOptions]="{ standalone: true }"
                 [placeholder]="tagPlaceholder"
+                matInput
+                [ngModelOptions]="{ standalone: true }"
                 [(ngModel)]="publicPseudo"
+                [matAutocomplete]="auto"
                 (paste)="onPublicPseudoPaste($event)"
               />
+              <mat-autocomplete autoActiveFirstOption #auto="matAutocomplete">
+                @for (pseudo of filtredPublicPseudos; track pseudo) {
+                  <mat-option [value]="pseudo">
+                    <button
+                      class="squared"
+                      (click)="removePublicPlayer($event, pseudo)"
+                    >
+                      <i class="fa-sharp fa-solid fa-xmark"></i>
+                    </button>
+                    {{ pseudo }}
+                  </mat-option>
+                }
+              </mat-autocomplete>
             </mat-form-field>
           </div>
           <button

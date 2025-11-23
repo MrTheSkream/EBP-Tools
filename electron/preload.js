@@ -66,6 +66,8 @@ contextBridge.exposeInMainWorld("electronAPI", {
   saveConsoleLogs: (logs) => ipcRenderer.invoke("save-console-logs", logs),
   removeBorders: (cropperPosition, videoPath) => ipcRenderer.invoke("remove-borders", cropperPosition, videoPath),
   setVideoResolution: (videoPath, width, height) => ipcRenderer.invoke("set-video-resolution", videoPath, width, height),
+  getSettings: (key) => ipcRenderer.invoke("get-settings", key),
+  setSettings: (key, value) => ipcRenderer.invoke("set-settings", key, value),
 
   //#endregion
 

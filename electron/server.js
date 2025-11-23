@@ -89,16 +89,6 @@ let projectLatestVersion /* string */ = '';
     );
 
     /**
-     * This function returns the value of a path in the settings.
-     * @param {*} name Settings key.
-     * @param {*} defaultPath Default value.
-     * @returns
-     */
-    function getOutputPath(name, defaultPath) {
-        return StorageManager.settings[name] ?? defaultPath;
-    }
-
-    /**
      * This function allows you to wait for an HTTP:PORT address to respond.
      * @param {number} port Port of address to wait.
      * @param {string} host (optional) Host of address to wait.
@@ -157,7 +147,7 @@ let projectLatestVersion /* string */ = '';
         const EXTENSION = videoPath.split('.').pop().toLowerCase();
         // A unique number is added to the end of the file name to ensure that an existing file is not overwritten.
         const OUTPUT_FILE_PATH /* string */ = path.join(
-            getOutputPath(
+            StorageManager.getSettingsValue(
                 'videoCutterOutputPath',
                 path.join(os.homedir(), 'Downloads')
             ),
@@ -367,7 +357,7 @@ let projectLatestVersion /* string */ = '';
         const EXTENSION = videoPath.split('.').pop().toLowerCase();
         // If "fileName" is not set, a unique number is added to the end of the file name to ensure that an existing file is not overwritten.
         const OUTPUT_FILE_PATH /* string */ = path.join(
-            getOutputPath(
+            StorageManager.getSettingsValue(
                 'videoCutterOutputPath',
                 path.join(os.homedir(), 'Downloads')
             ),
@@ -458,11 +448,10 @@ let projectLatestVersion /* string */ = '';
 
         for (let i = 0; i < KEEP.length; i++) {
             const TEMP_FILE = path.join(
-                getOutputPath(
+                StorageManager.getSettingsValue(
                     'videoCutterOutputPath',
                     path.join(os.homedir(), 'Downloads')
-                ),
-                `ebp_temp_part_${i}.mp4`
+                )`ebp_temp_part_${i}.mp4`
             );
             TEMP_FILES.push(TEMP_FILE);
 
@@ -526,7 +515,7 @@ let projectLatestVersion /* string */ = '';
         }
 
         const CONCAT_FILE = path.join(
-            getOutputPath(
+            StorageManager.getSettingsValue(
                 'videoCutterOutputPath',
                 path.join(os.homedir(), 'Downloads')
             ),
@@ -737,7 +726,7 @@ let projectLatestVersion /* string */ = '';
         });
 
         const FILE_PATH = path.join(
-            getOutputPath(
+            StorageManager.getSettingsValue(
                 'gameHistoryOutputPath',
                 path.join(os.homedir(), 'Downloads')
             ),
@@ -852,7 +841,7 @@ let projectLatestVersion /* string */ = '';
 
                     const VIDEO_TITLE = stdout.trim();
                     const OUTPUT_PATH = path.join(
-                        getOutputPath(
+                        StorageManager.getSettingsValue(
                             'replayDownloaderOutputPath',
                             path.join(os.homedir(), 'Downloads')
                         ),
@@ -980,7 +969,7 @@ let projectLatestVersion /* string */ = '';
 
         // The front-end asks the server to edit the video cutter output path.
         ipcMain.handle('set-setting', async (event, setting) => {
-            const PATH = getOutputPath(
+            const PATH = StorageManager.getSettingsValue(
                 'videoCutterOutputPath',
                 path.join(os.homedir(), 'Downloads')
             );
@@ -1001,7 +990,7 @@ let projectLatestVersion /* string */ = '';
 
         // The front-end asks the server to return the game-history output path.
         ipcMain.handle('get-game-history-output-path', () => {
-            return getOutputPath(
+            return StorageManager.getSettingsValue(
                 'gameHistoryOutputPath',
                 path.join(os.homedir(), 'Downloads')
             );
@@ -1009,7 +998,7 @@ let projectLatestVersion /* string */ = '';
 
         // The front-end asks the server to return the video cutter output path.
         ipcMain.handle('get-replay-downloader-output-path', () => {
-            return getOutputPath(
+            return StorageManager.getSettingsValue(
                 'replayDownloaderOutputPath',
                 path.join(os.homedir(), 'Downloads')
             );
@@ -1017,7 +1006,7 @@ let projectLatestVersion /* string */ = '';
 
         // The front-end asks the server to return the video cutter output path.
         ipcMain.handle('get-video-cutter-output-path', () => {
-            return getOutputPath(
+            return StorageManager.getSettingsValue(
                 'videoCutterOutputPath',
                 path.join(os.homedir(), 'Downloads')
             );
@@ -1050,6 +1039,16 @@ let projectLatestVersion /* string */ = '';
         // The front-end asks the server to logout.
         ipcMain.handle('logout', () => {
             logout(getMainWindow);
+        });
+
+        // The front-end asks the server return a setting value by key.
+        ipcMain.handle('get-settings', (event, key) => {
+            return StorageManager.getSettingsValue(key);
+        });
+
+        // The front-end asks the server to set a setting value by key.
+        ipcMain.handle('set-settings', (event, key, value) => {
+            StorageManager.setSettingsValue(key, value);
         });
 
         // The front-end asks the server to extract the public player games.
@@ -1103,6 +1102,14 @@ let projectLatestVersion /* string */ = '';
                                     games,
                                     tag.split('#')[0]
                                 );
+
+                                const KEY = 'public-pseudos';
+                                const SETTINGS = StorageManager.settings;
+                                if (!SETTINGS[KEY]) SETTINGS[KEY] = [];
+                                if (!SETTINGS[KEY].includes(tag))
+                                    SETTINGS[KEY].push(tag);
+                                StorageManager.settings = SETTINGS;
+
                                 getMainWindow().webContents.send(
                                     'games-are-exported',
                                     FILE_PATH
@@ -1220,7 +1227,7 @@ let projectLatestVersion /* string */ = '';
                 for (const game of games) {
                     await cutVideoFile(game, videoPath, undefined, customText);
                 }
-                return getOutputPath(
+                return StorageManager.getSettingsValue(
                     'videoCutterOutputPath',
                     path.join(os.homedir(), 'Downloads')
                 );
@@ -1441,7 +1448,7 @@ let projectLatestVersion /* string */ = '';
         // The front-end asks the server to save console logs to a text file.
         ipcMain.handle('save-console-logs', async (event, logs) => {
             try {
-                const FOLDER_PATH = getOutputPath(
+                const FOLDER_PATH = StorageManager.getSettingsValue(
                     'videoCutterOutputPath',
                     path.join(os.homedir(), 'Downloads')
                 );

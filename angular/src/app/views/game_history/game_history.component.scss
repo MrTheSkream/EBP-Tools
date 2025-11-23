@@ -2,7 +2,28 @@
 // This file is part of a source-visible project.
 // See LICENSE for terms. Unauthorized use is prohibited.
 
-@use "../../../styles/imports/variables" as variables;
+@use '../../../styles/imports/variables' as variables;
+@use '../../../styles/imports/material_colors' as material_colors;
+
+::ng-deep {
+  mat-option {
+    height: variables.$form_height;
+    max-height: variables.$form_height;
+    min-height: variables.$form_height !important;
+
+    > span {
+      padding-left: variables.$form_height;
+
+      > button {
+        position: absolute !important;
+        top: 0;
+        left: 0;
+        border-width: 0 1px 0 0 !important;
+        color: material_colors.$material_red_500 !important;
+      }
+    }
+  }
+}
 
 .box {
   background-color: variables.$dark_color;

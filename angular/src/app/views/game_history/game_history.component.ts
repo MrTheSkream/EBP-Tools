@@ -17,6 +17,7 @@ import { GlobalService } from '../../core/services/global.service';
 import { MatDialog } from '@angular/material/dialog';
 import { ConfirmationDialog } from './dialogs/confirmation/confirmation.dialog';
 import { MessageComponent } from '../../shared/message/message.component';
+import { MatAutocompleteModule } from '@angular/material/autocomplete';
 
 //#endregion
 
@@ -34,13 +35,20 @@ import { MessageComponent } from '../../shared/message/message.component';
     FormsModule,
     MatTooltipModule,
     MatSelectModule,
-    MessageComponent
+    MessageComponent,
+    MatAutocompleteModule
   ]
 })
 export class GameHistoryComponent implements OnInit {
   //#region Attributes
 
-  protected publicPseudo?: string = undefined;
+  protected publicPseudo: string = '';
+
+  private publicPseudos: string[] = [];
+
+  protected get filtredPublicPseudos(): string[] {
+    return this.publicPseudos.filter((x) => x.includes(this.publicPseudo));
+  }
 
   protected outputPath: string | undefined;
 
@@ -76,6 +84,8 @@ export class GameHistoryComponent implements OnInit {
       });
     });
 
+    this.fetchPublicPseudos();
+
     window.electronAPI.gamesAreExported((filePath?: string) => {
       console.log(`The user exported his games here: "${filePath}"`);
       this.ngZone.run(() => {
@@ -86,9 +96,31 @@ export class GameHistoryComponent implements OnInit {
             .onTap.subscribe(() => {
               window.electronAPI.openFile(filePath);
             });
+          this.fetchPublicPseudos();
         }
       });
     });
+  }
+
+  private fetchPublicPseudos(): void {
+    window.electronAPI
+      .getSettings('public-pseudos')
+      .then((pseudos: any | undefined) => {
+        this.ngZone.run(() => {
+          if (pseudos) {
+            this.publicPseudos = pseudos;
+          }
+        });
+      });
+  }
+
+  protected removePublicPlayer(
+    event: PointerEvent,
+    publicPseudo: string
+  ): void {
+    event.stopPropagation();
+    this.publicPseudos = this.publicPseudos.filter((x) => x != publicPseudo);
+    window.electronAPI.setSettings('public-pseudos', this.publicPseudos);
   }
 
   /**

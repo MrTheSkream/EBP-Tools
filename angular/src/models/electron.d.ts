@@ -92,6 +92,8 @@ export interface ElectronAPI {
     width: number,
     height: number
   ) => Promise<string>;
+  getSettings: (key: string) => Promise<any | undefined>;
+  setSettings: (key: string, value: any) => void;
 
   //#endregion
 

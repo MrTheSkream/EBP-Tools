@@ -15,10 +15,10 @@ const {
     WINDOW_WIDTH,
     WINDOW_DEV_PANEL_WIDTH,
     WINDOW_HEIGHT,
-    SETTINGS_PATH,
     getCurrentPort
 } = require('../config/constants');
 const { checkJwtToken } = require('../services/auth-service');
+const StorageManager = require('./storage-manager');
 
 //#endregion
 
@@ -98,7 +98,6 @@ function setWindowSize(width, height) {
  */
 function createFloatingWindow(width, height, data) {
     return new Promise((resolve) => {
-        const SETTINGS = JSON.parse(fs.readFileSync(SETTINGS_PATH, 'utf-8'));
         const PRIMARY_DISPLAY = screen.getPrimaryDisplay();
         const WIDTH = Math.min(PRIMARY_DISPLAY.workAreaSize.width, width);
         const HEIGHT = Math.min(PRIMARY_DISPLAY.workAreaSize.height, height);
@@ -138,7 +137,7 @@ function createFloatingWindow(width, height, data) {
             }, 100);
         });
 
-        const URL = `http://localhost:${IS_DEV_MODE ? '4200' : getCurrentPort()}/${SETTINGS['language'] ?? 'aa'}/notification?data=${encodeURIComponent(data)}`;
+        const URL = `http://localhost:${IS_DEV_MODE ? '4200' : getCurrentPort()}/${StorageManager.settings['language'] ?? 'aa'}/notification?data=${encodeURIComponent(data)}`;
 
         floatingWindow.loadURL(URL);
     });
@@ -176,8 +175,7 @@ function createWindow() {
         }
     });
 
-    const SETTINGS = JSON.parse(fs.readFileSync(SETTINGS_PATH, 'utf-8'));
-    let language = SETTINGS['language'];
+    let language = StorageManager.settings['language'];
     if (!language) {
         language = app.getLocale();
     }

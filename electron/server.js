@@ -41,7 +41,6 @@ const {
     DEFAULT_VIDEO_HEIGHT,
     FFMPEG_PATH,
     YTDLP_PATH,
-    SETTINGS_PATH,
     getCurrentPort
 } = require('./config/constants');
 const {
@@ -53,6 +52,7 @@ const {
     getMainWindow,
     setDebugMode
 } = require('./core/window-manager');
+const StorageManager = require('./core/storage-manager');
 const { checkJwtToken, logout } = require('./services/auth-service');
 const { setupExpressServer } = require('./express/express-server');
 const {
@@ -95,8 +95,7 @@ let projectLatestVersion /* string */ = '';
      * @returns
      */
     function getOutputPath(name, defaultPath) {
-        const SETTINGS = JSON.parse(fs.readFileSync(SETTINGS_PATH, 'utf-8'));
-        return SETTINGS[name] ?? defaultPath;
+        return StorageManager.settings[name] ?? defaultPath;
     }
 
     /**
@@ -252,8 +251,6 @@ let projectLatestVersion /* string */ = '';
         margedCropPosition,
         callback
     ) {
-        const SETTINGS = JSON.parse(fs.readFileSync(SETTINGS_PATH, 'utf-8'));
-
         const URL_PARAMS = new URLSearchParams({
             r: 's3_uploaded',
             gameID: gameID,
@@ -266,7 +263,7 @@ let projectLatestVersion /* string */ = '';
             path: `/back/api-tools/?${URL_PARAMS.toString()}`,
             method: 'PUT',
             headers: {
-                Authorization: `Bearer ${SETTINGS['jwt'].access_token}`,
+                Authorization: `Bearer ${StorageManager.settings['jwt'].access_token}`,
                 'Content-Type': 'application/json'
             }
         };
@@ -307,8 +304,6 @@ let projectLatestVersion /* string */ = '';
      * @param {*} callback Callback function.
      */
     function getVideoUploadURLs(gameID, callback) {
-        const SETTINGS = JSON.parse(fs.readFileSync(SETTINGS_PATH, 'utf-8'));
-
         const PARAMS = new URLSearchParams({
             r: 's3_create_video_url',
             gameID: gameID
@@ -320,7 +315,7 @@ let projectLatestVersion /* string */ = '';
             path: `/back/api-tools/?${PARAMS.toString()}`,
             method: 'GET',
             headers: {
-                Authorization: `Bearer ${SETTINGS['jwt'].access_token}`,
+                Authorization: `Bearer ${StorageManager.settings['jwt'].access_token}`,
                 'Content-Type': 'application/json'
             }
         };
@@ -950,14 +945,11 @@ let projectLatestVersion /* string */ = '';
 
         // The front-end asks the server to return the JWT token content.
         ipcMain.handle('get-jwt-access-token', () => {
-            const SETTINGS = JSON.parse(
-                fs.readFileSync(SETTINGS_PATH, 'utf-8')
-            );
-
-            if (SETTINGS['jwt']) {
+            const JWT = StorageManager.settings['jwt'];
+            if (JWT) {
                 getMainWindow().webContents.send(
                     'set-jwt-access-token',
-                    SETTINGS['jwt'].access_token
+                    JWT.access_token
                 );
             }
 
@@ -998,16 +990,9 @@ let projectLatestVersion /* string */ = '';
                 defaultPath: PATH
             });
             if (!canceled && filePaths.length == 1) {
-                const SETTINGS = JSON.parse(
-                    fs.readFileSync(SETTINGS_PATH, 'utf-8')
-                );
+                const SETTINGS = StorageManager.settings;
                 SETTINGS[setting] = filePaths[0];
-
-                fs.writeFileSync(
-                    SETTINGS_PATH,
-                    JSON.stringify(SETTINGS, null, 2),
-                    'utf-8'
-                );
+                StorageManager.settings = SETTINGS;
                 return filePaths[0];
             } else {
                 return undefined;
@@ -1136,15 +1121,9 @@ let projectLatestVersion /* string */ = '';
 
         // The front-end asks the server to save the current language.
         ipcMain.handle('set-language', async (event, language) => {
-            const SETTINGS = JSON.parse(
-                fs.readFileSync(SETTINGS_PATH, 'utf-8')
-            );
+            const SETTINGS = StorageManager.settings;
             SETTINGS['language'] = language;
-            fs.writeFileSync(
-                SETTINGS_PATH,
-                JSON.stringify(SETTINGS, null, 2),
-                'utf-8'
-            );
+            StorageManager.settings = SETTINGS;
         });
 
         ipcMain.handle(

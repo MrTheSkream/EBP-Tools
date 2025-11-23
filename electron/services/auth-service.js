@@ -7,11 +7,8 @@
 const fs = require('fs');
 const https = require('https');
 const { app, session } = require('electron');
-const {
-    EBP_DOMAIN,
-    SETTINGS_PATH,
-    getCurrentPort
-} = require('../config/constants');
+const { EBP_DOMAIN, getCurrentPort } = require('../config/constants');
+const StorageManager = require('../core/storage-manager');
 
 //#endregion
 
@@ -21,9 +18,9 @@ const {
  */
 function isJwtAccessTokenOk() {
     console.log(`Checking access token...`);
-    const SETTINGS = JSON.parse(fs.readFileSync(SETTINGS_PATH, 'utf-8'));
-    if (SETTINGS['jwt']) {
-        if (Date.now() < SETTINGS['jwt'].access_expires_in) {
+    const JWT = StorageManager.settings['jwt'];
+    if (JWT) {
+        if (Date.now() < JWT.access_expires_in) {
             console.log('Access token is ok.');
             return true;
         }
@@ -38,9 +35,9 @@ function isJwtAccessTokenOk() {
  */
 function isJwtRefreshTokenOk() {
     console.log(`Checking refresh token...`);
-    const SETTINGS = JSON.parse(fs.readFileSync(SETTINGS_PATH, 'utf-8'));
-    if (SETTINGS['jwt']) {
-        if (Date.now() < SETTINGS['jwt'].refresh_expires_in) {
+    const JWT = StorageManager.settings['jwt'];
+    if (JWT) {
+        if (Date.now() < JWT.refresh_expires_in) {
             console.log('Refresh token is ok.');
             return true;
         }
@@ -65,9 +62,7 @@ async function checkJwtToken(getMainWindow, justLoggedFromWordpress, callback) {
     } else {
         const IS_JWT_REFRESH_TOKEN_OK = isJwtRefreshTokenOk();
         if (IS_JWT_REFRESH_TOKEN_OK || justLoggedFromWordpress) {
-            const SETTINGS = JSON.parse(
-                fs.readFileSync(SETTINGS_PATH, 'utf-8')
-            );
+            const SETTINGS = StorageManager.settings;
 
             // We retrieve cookies from the main window.
             const COOKIES =
@@ -111,11 +106,7 @@ async function checkJwtToken(getMainWindow, justLoggedFromWordpress, callback) {
                             DATA.refresh_expires_in * 1000 + Date.now();
 
                         SETTINGS['jwt'] = DATA;
-                        fs.writeFileSync(
-                            SETTINGS_PATH,
-                            JSON.stringify(SETTINGS, null, 2),
-                            'utf-8'
-                        );
+                        StorageManager.settings = SETTINGS;
 
                         getMainWindow().webContents.send(
                             'set-jwt-access-token',
@@ -157,7 +148,7 @@ async function checkJwtToken(getMainWindow, justLoggedFromWordpress, callback) {
 function logout(getMainWindow) {
     const SESSION = session.defaultSession;
 
-    fs.writeFileSync(SETTINGS_PATH, '{}', 'utf-8');
+    StorageManager.settings = {};
 
     Promise.all([
         SESSION.clearStorageData({

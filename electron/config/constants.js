@@ -6,6 +6,7 @@ const os = require('os');
 const path = require('node:path');
 const { execSync } = require('child_process');
 const { default: getPort } = require('get-port');
+const { app } = require('electron');
 
 /**
  * Application constants and configuration values
@@ -69,7 +70,7 @@ const ROOT_PATH = IS_DEV_MODE ? path.dirname(__dirname) : process.resourcesPath;
 const OS_PLATFORM = os.platform();
 const FFMPEG_PATH = getFFmpegPath(OS_PLATFORM, IS_DEV_MODE, ROOT_PATH);
 const YTDLP_PATH = getYtDlpPath(OS_PLATFORM, IS_DEV_MODE, ROOT_PATH);
-const SETTINGS_PATH = path.join(ROOT_PATH, 'settings.json');
+const SETTINGS_PATH = path.join(app.getPath('userData'), 'settings.json');
 const BROWSER_PATH = path.join(ROOT_PATH, 'browser');
 
 //#region Window Constants

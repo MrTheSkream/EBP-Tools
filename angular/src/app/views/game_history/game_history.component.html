@@ -128,7 +128,7 @@ See LICENSE for terms. Unauthorized use is prohibited.
               />
               <mat-autocomplete autoActiveFirstOption #auto="matAutocomplete">
                 @for (pseudo of filtredPublicPseudos; track pseudo) {
-                  <mat-option [value]="pseudo">
+                  <mat-option [value]="pseudo" class="public-pseudo-option">
                     <button
                       class="squared"
                       (click)="removePublicPlayer($event, pseudo)"

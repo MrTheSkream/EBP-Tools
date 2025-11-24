@@ -6,7 +6,7 @@
 @use '../../../styles/imports/material_colors' as material_colors;
 
 ::ng-deep {
-  mat-option {
+  .public-pseudo-option {
     height: variables.$form_height;
     max-height: variables.$form_height;
     min-height: variables.$form_height !important;

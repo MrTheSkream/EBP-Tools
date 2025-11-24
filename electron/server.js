@@ -45,6 +45,7 @@ const {
     DEFAULT_VIDEO_HEIGHT,
     FFMPEG_PATH,
     YTDLP_PATH,
+    PROTOCOL_NAME,
     getCurrentPort
 } = require('./config/constants');
 const {
@@ -68,6 +69,21 @@ const {
 
 // Initialize debug mode
 setDebugMode(IS_DEV_MODE);
+
+//#region tools://
+
+if (process.defaultApp) {
+    if (process.argv.length >= 2) {
+        app.setAsDefaultProtocolClient(PROTOCOL_NAME, process.execPath, [
+            path.resolve(process.argv[1])
+        ]);
+    }
+} else {
+    app.setAsDefaultProtocolClient(PROTOCOL_NAME);
+}
+
+//#endregion
+
 const APP_GOT_THE_LOCK = app.requestSingleInstanceLock();
 
 if (!APP_GOT_THE_LOCK) {
@@ -76,6 +92,30 @@ if (!APP_GOT_THE_LOCK) {
 }
 
 let projectLatestVersion /* string */ = '';
+
+/**
+ * Handle deep link URL (ebp://...)
+ * @param {string} url The deep link URL to handle
+ */
+function handleDeepLink(url) {
+    console.log('[DEEP-LINK] Received URL:', url);
+
+    if (!url || !url.startsWith(`${PROTOCOL_NAME}://`)) {
+        return;
+    }
+
+    // Remove protocol prefix (ebp://)
+    const PATH = url.replace(`${PROTOCOL_NAME}://`, '');
+    console.log('[DEEP-LINK] Path:', PATH);
+
+    // Parse the URL to extract action and parameters
+    // Example: ebp://open-game/12345
+    const PARTS = PATH.split('/');
+    const ACTION = PARTS[0];
+    const PARAMS = PARTS.slice(1);
+
+    console.log('[DEEP-LINK] Action:', ACTION, 'Params:', PARAMS);
+}
 
 (async () => {
     //#region Express Server Setup
@@ -750,6 +790,25 @@ let projectLatestVersion /* string */ = '';
         );
     }
 
+    // Handle deep link on macOS (when app is already open)
+    app.on('open-url', (event, url) => {
+        event.preventDefault();
+        handleDeepLink(url);
+    });
+
+    // Handle deep link on Windows when app is first launched
+    if (process.platform === 'win32') {
+        const DEEP_LINK_URL = process.argv.find((arg) =>
+            arg.startsWith(`${PROTOCOL_NAME}://`)
+        );
+        if (DEEP_LINK_URL) {
+            // Store URL to handle it after window is ready
+            app.once('browser-window-created', () => {
+                setTimeout(() => handleDeepLink(DEEP_LINK_URL), 1000);
+            });
+        }
+    }
+
     /**
      * This method will be called when Electron has finished initialization and is ready to create browser windows.
      */
@@ -810,8 +869,14 @@ let projectLatestVersion /* string */ = '';
             createWindow();
 
             // If a second instance is launched, the first is displayed.
-            app.on('second-instance', (event, argv, workingDirectory) => {
-                if (getMainWindow() && !getMainWindow().isDestroyed()) {
+            app.on('second-instance', (event, commandLine) => {
+                // Handle deep link on Windows when app is already running
+                const DEEP_LINK_URL = commandLine.find((arg) =>
+                    arg.startsWith(`${PROTOCOL_NAME}://`)
+                );
+                if (DEEP_LINK_URL) {
+                    handleDeepLink(DEEP_LINK_URL);
+                } else if (getMainWindow() && !getMainWindow().isDestroyed()) {
                     getMainWindow().show();
                     getMainWindow().focus();
                 }

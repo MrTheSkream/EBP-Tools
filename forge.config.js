@@ -20,6 +20,12 @@ module.exports = {
         icon: 'electron/assets/icon',
         name: 'EBP - Tools',
         executableName: 'ebp-tools',
+        protocols: [
+            {
+                name: 'EBP Tools Protocol',
+                schemes: ['tools']
+            }
+        ],
         osxSign: process.env.SKIP_NOTARIZATION
             ? false
             : {

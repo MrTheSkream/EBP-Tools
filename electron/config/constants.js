@@ -72,6 +72,7 @@ const FFMPEG_PATH = getFFmpegPath(OS_PLATFORM, IS_DEV_MODE, ROOT_PATH);
 const YTDLP_PATH = getYtDlpPath(OS_PLATFORM, IS_DEV_MODE, ROOT_PATH);
 const SETTINGS_PATH = path.join(app.getPath('userData'), 'settings.json');
 const BROWSER_PATH = path.join(ROOT_PATH, 'browser');
+const PROTOCOL_NAME = 'tools';
 
 //#region Window Constants
 
@@ -126,6 +127,7 @@ module.exports = {
 
     SETTINGS_PATH,
     BROWSER_PATH,
+    PROTOCOL_NAME,
 
     initializePort,
     getCurrentPort,

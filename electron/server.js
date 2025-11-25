@@ -896,6 +896,7 @@ let projectLatestVersion /* string */ = '';
     // Handle deep link on macOS (when app is already open)
     app.on('open-url', (event, url) => {
         event.preventDefault();
+        getMainWindow().hide();
         handleDeepLink(url);
     });
 

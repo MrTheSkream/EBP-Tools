@@ -15,7 +15,8 @@ const {
     WINDOW_WIDTH,
     WINDOW_DEV_PANEL_WIDTH,
     WINDOW_HEIGHT,
-    getCurrentPort
+    getCurrentPort,
+    PROTOCOL_NAME
 } = require('../config/constants');
 const { checkJwtToken } = require('../services/auth-service');
 const StorageManager = require('./storage-manager');
@@ -161,11 +162,17 @@ function createWindow() {
     const PRIMARY_DISPLAY = screen.getPrimaryDisplay();
     const APP_ARGS = process.argv;
 
+    // Check if launched via deep link (Windows)
+    const HAS_DEEP_LINK = APP_ARGS.some((arg) =>
+        arg.startsWith(`${PROTOCOL_NAME}://`)
+    );
+    const IS_STARTUP_MODE = APP_ARGS.includes('--mode=startup');
+
     mainWindow = new BrowserWindow({
         width: Math.min(PRIMARY_DISPLAY.workAreaSize.width, WINDOW_WIDTH),
         height: Math.min(PRIMARY_DISPLAY.workAreaSize.height, WINDOW_HEIGHT),
-        show: !APP_ARGS.includes('--mode=startup'),
-        skipTaskbar: APP_ARGS.includes('--mode=startup'),
+        show: !IS_STARTUP_MODE && !HAS_DEEP_LINK,
+        skipTaskbar: IS_STARTUP_MODE || HAS_DEEP_LINK,
         resizable: false,
         contextIsolation: true,
         webPreferences: {

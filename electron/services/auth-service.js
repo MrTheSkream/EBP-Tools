@@ -4,7 +4,6 @@
 
 //#region Imports
 
-const fs = require('fs');
 const https = require('https');
 const { app, session } = require('electron');
 const { EBP_DOMAIN, getCurrentPort } = require('../config/constants');

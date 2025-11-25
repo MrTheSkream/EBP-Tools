@@ -186,7 +186,7 @@ function createWindow() {
     // When the user clicks on the close cross, we hide the application.
     mainWindow.on('close', (event) => {
         event.preventDefault();
-        if (mainWindow && !mainWindow.isDestroyed() && !IS_DEV_MODE) {
+        if (mainWindow && !mainWindow.isDestroyed()) {
             mainWindow.hide();
         }
     });

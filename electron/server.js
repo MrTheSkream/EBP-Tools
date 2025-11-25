@@ -58,6 +58,7 @@ const {
     setDebugMode
 } = require('./core/window-manager');
 const StorageManager = require('./core/storage-manager');
+const socketEmit = require('./services/socket-service');
 const { checkJwtToken, logout } = require('./services/auth-service');
 const { setupExpressServer } = require('./express/express-server');
 const {
@@ -93,30 +94,6 @@ if (!APP_GOT_THE_LOCK) {
 
 let projectLatestVersion /* string */ = '';
 
-/**
- * Handle deep link URL (ebp://...)
- * @param {string} url The deep link URL to handle
- */
-function handleDeepLink(url) {
-    console.log('[DEEP-LINK] Received URL:', url);
-
-    if (!url || !url.startsWith(`${PROTOCOL_NAME}://`)) {
-        return;
-    }
-
-    // Remove protocol prefix (ebp://)
-    const PATH = url.replace(`${PROTOCOL_NAME}://`, '');
-    console.log('[DEEP-LINK] Path:', PATH);
-
-    // Parse the URL to extract action and parameters
-    // Example: ebp://open-game/12345
-    const PARTS = PATH.split('/');
-    const ACTION = PARTS[0];
-    const PARAMS = PARTS.slice(1);
-
-    console.log('[DEEP-LINK] Action:', ACTION, 'Params:', PARAMS);
-}
-
 (async () => {
     //#region Express Server Setup
 
@@ -131,6 +108,99 @@ function handleDeepLink(url) {
         },
         1000 * 60 * 60
     );
+
+    /**
+     * Handle deep link URL (ebp://...)
+     * @param {string} url The deep link URL to handle
+     */
+    async function handleDeepLink(url) {
+        console.log('[DEEP-LINK] Received URL:', url);
+
+        if (!url || !url.startsWith(`${PROTOCOL_NAME}://`)) {
+            return;
+        }
+
+        // Remove protocol prefix (ebp://)
+        const PATH = url.replace(`${PROTOCOL_NAME}://`, '');
+        console.log('[DEEP-LINK] Path:', PATH);
+
+        // Parse the URL to extract action and parameters
+        // Example: ebp://open-game/12345
+        const PARTS = PATH.split('/');
+        const ACTION = PARTS[0];
+        const PARAMS = PARTS.slice(1);
+
+        const DATA = JSON.parse(decodeURIComponent(PARAMS));
+        console.log('[DEEP-LINK] Action:', ACTION, 'Params:', DATA);
+
+        switch (ACTION) {
+            case 'openFolder':
+                openDirectory((directoryPath) => {
+                    socketEmit(DATA.socket, 'openFolder', directoryPath);
+                });
+                break;
+            case 'exportGames':
+                if (DATA.publicPseudo) {
+                    extractPublicPseudoGames(
+                        DATA.publicPseudo,
+                        DATA.nbPages,
+                        DATA.seasonIndex,
+                        DATA.skip,
+                        DATA.timeToWait,
+                        dialog,
+                        getMainWindow(),
+                        async (games) => {
+                            socketEmit(DATA.socket, 'exportGames', games);
+
+                            if (
+                                games.length > 0 &&
+                                DATA.excelDestinationFolder
+                            ) {
+                                exportGamesToExcel(
+                                    games,
+                                    DATA.publicPseudo.split('#')[0],
+                                    DATA.excelDestinationFolder
+                                );
+                            }
+                        }
+                    );
+                } else {
+                    extractPrivatePseudoGames(
+                        DATA.nbPages,
+                        DATA.seasonIndex,
+                        DATA.skip,
+                        DATA.timeToWait,
+                        dialog,
+                        getMainWindow(),
+                        async (games) => {
+                            socketEmit(DATA.socket, 'exportGames', games);
+
+                            if (
+                                games.length > 0 &&
+                                DATA.excelDestinationFolder
+                            ) {
+                                exportGamesToExcel(
+                                    games,
+                                    'private',
+                                    DATA.excelDestinationFolder
+                                );
+                            }
+                        }
+                    );
+                }
+                break;
+            case 'analyzeVideoFile':
+                const FILES_PATHS = await openFiles(DATA.filesExtensions);
+                if (FILES_PATHS.length == 1) {
+                    getMainWindow().webContents.send(
+                        'analyze-video-file',
+                        FILES_PATHS[0],
+                        true
+                    );
+                }
+                break;
+        }
+    }
 
     /**
      * This function allows you to wait for an HTTP:PORT address to respond.
@@ -173,6 +243,37 @@ function handleDeepLink(url) {
 
             CHECK();
         });
+    }
+
+    async function openDirectory(callback) {
+        const { canceled, filePaths } = await dialog.showOpenDialog({
+            properties: ['openDirectory'],
+            defaultPath: path.join(os.homedir(), 'Downloads')
+        });
+        if (!canceled && filePaths.length == 1) {
+            callback(filePaths[0]);
+        } else {
+            callback(undefined);
+        }
+    }
+
+    async function openFiles(extensions) {
+        const { canceled, filePaths } = await dialog.showOpenDialog({
+            properties: ['openFile'],
+            filters: [{ name: 'EVA video', extensions: extensions }]
+        });
+
+        if (canceled || filePaths.length == 0) {
+            getMainWindow().webContents.send('global-message', undefined);
+            getMainWindow().webContents.send(
+                'toast',
+                'error',
+                'view.replay_cutter.noFilesSelected'
+            );
+            return [];
+        }
+
+        return filePaths;
     }
 
     /**
@@ -687,9 +788,10 @@ function handleDeepLink(url) {
      * Exports game statistics to an Excel file using a predefined template.
      * @param games Array of game objects containing match data to export.
      * @param playerName Name of the player being exported.
+     * @param folderPath
      * @returns Promise that resolves when the Excel file has been generated and saved.
      */
-    async function exportGamesToExcel(games, playerName) {
+    async function exportGamesToExcel(games, playerName, folderPath) {
         const WORKBOOK = new ExcelJS.Workbook();
         await WORKBOOK.xlsx.readFile(path.join(ROOT_PATH, 'template.xlsx'));
 
@@ -770,10 +872,11 @@ function handleDeepLink(url) {
         });
 
         const FILE_PATH = path.join(
-            StorageManager.getSettingsValue(
-                'gameHistoryOutputPath',
-                path.join(os.homedir(), 'Downloads')
-            ),
+            folderPath ??
+                StorageManager.getSettingsValue(
+                    'gameHistoryOutputPath',
+                    path.join(os.homedir(), 'Downloads')
+                ),
             `EBP - ${playerName} (${new Date().getTime()}).xlsx`
         );
         // Save to a new file
@@ -1313,22 +1416,7 @@ function handleDeepLink(url) {
 
         // The front-end asks the server to ask the user to choose files with the computer explorer.
         ipcMain.handle('open-files', async (event, extensions) => {
-            const { canceled, filePaths } = await dialog.showOpenDialog({
-                properties: ['openFile'],
-                filters: [{ name: 'EVA video', extensions: extensions }]
-            });
-
-            if (canceled || filePaths.length == 0) {
-                getMainWindow().webContents.send('global-message', undefined);
-                getMainWindow().webContents.send(
-                    'toast',
-                    'error',
-                    'view.replay_cutter.noFilesSelected'
-                );
-                return [];
-            }
-
-            return filePaths;
+            return openFiles(extensions);
         });
 
         // The front-end asks the server to cut a video file.

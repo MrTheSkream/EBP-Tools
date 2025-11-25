@@ -1,0 +1,4 @@
+provider: github
+owner: HeyHeyChicken
+repo: EBP-Tools
+updaterCacheDirName: ebp-tools-updater

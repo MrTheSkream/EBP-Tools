@@ -1170,6 +1170,8 @@ let projectLatestVersion /* string */ = '';
 
             //#endregion
 
+            autoUpdater.checkForUpdatesAndNotify();
+
             console.log({
                 current: version,
                 last: projectLatestVersion

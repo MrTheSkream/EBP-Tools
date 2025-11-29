@@ -16,7 +16,7 @@ const { autoUpdater } = require('electron-updater');
 
 // Configure auto-updater
 autoUpdater.autoDownload = true;
-autoUpdater.autoInstallOnAppQuit = false;
+autoUpdater.autoInstallOnAppQuit = true;
 
 // When in installation mode, close the application.
 if (require('electron-squirrel-startup')) {
@@ -967,7 +967,9 @@ let projectLatestVersion /* string */ = '';
                 console.log(
                     '[AUTO-UPDATER] Restarting application to install update...'
                 );
-                autoUpdater.quitAndInstall(false, true);
+                // Use default parameters for better compatibility with Squirrel.Windows
+                // The update will be installed when the app quits
+                autoUpdater.quitAndInstall();
             });
 
             // Check for updates every 4 hours

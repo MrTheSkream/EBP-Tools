@@ -4,7 +4,7 @@
 
 //#region Import
 
-import { Component, OnInit } from '@angular/core';
+import { Component, isDevMode, OnInit } from '@angular/core';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { CommonModule, Location as CommonLocation } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -43,8 +43,7 @@ export class HeaderComponent implements OnInit {
 
   protected readonly pages: string[] = [
     'replay_downloader',
-    'replay_cutter',
-    'game_history'
+    'replay_cutter'
   ];
   protected page?: string;
 
@@ -65,6 +64,10 @@ export class HeaderComponent implements OnInit {
   //#region Functions
 
   ngOnInit(): void {
+    if(isDevMode()){
+      this.pages.push('game_history');
+    }
+
     // List of languages supported by the application.
     this.translateService.addLangs(['fr', 'de', 'en', 'es', 'it', 'ro'].sort());
 

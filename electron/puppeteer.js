@@ -59,27 +59,38 @@ function addGame(games, game) {
 }
 
 function getBrowserPath(mainWindow, callback) {
-    let browserPath;
+    let browserPaths = [];
 
     switch (os.platform()) {
         case 'win32':
-            browserPath =
-                'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe';
+            browserPaths =
+                [
+                    'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe',
+                    'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
+                    'C:\\Program Files (x86)\\BraveSoftware\\Brave-Browser\\Application\\brave.exe'
+                ];
             break;
         case 'darwin':
-            browserPath =
-                '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
+            browserPaths =
+                ['/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'];
             break;
         case 'linux':
-            browserPath = execSync('which chromium-browser').toString().trim();
+            browserPaths = [execSync('which chromium-browser').toString().trim()];
             break;
         default:
             return null;
     }
 
-    if (fs.existsSync(browserPath)) {
-        callback(browserPath);
-    } else {
+    let found = false;
+    for(let i = 0; i < browserPaths.length; i++){
+        if (fs.existsSync(browserPaths[i])) {
+            found = true;
+            callback(browserPaths[i]);
+            break;
+        }
+    }
+
+    if(!found) {
         mainWindow.webContents.send(
             'error',
             'view.game_history.edgeIsNotInstalled'

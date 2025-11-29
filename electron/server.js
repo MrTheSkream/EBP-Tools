@@ -96,10 +96,10 @@ let projectLatestVersion /* string */ = '';
 
 (async () => {
     const NUMBER_OF_OPENINGS_KEY = "numberOfOpenings";
-    const NUMBER_OF_OPENINGS = StorageManager.getTemporarySettingsValue(NUMBER_OF_OPENINGS_KEY);
-    StorageManager.setTemporarySettingsValue(NUMBER_OF_OPENINGS_KEY, NUMBER_OF_OPENINGS + 1);
+    const NUMBER_OF_OPENINGS = StorageManager.getTemporarySettingsValue(NUMBER_OF_OPENINGS_KEY) + 1;
+    StorageManager.setTemporarySettingsValue(NUMBER_OF_OPENINGS_KEY, NUMBER_OF_OPENINGS);
 
-    if(NUMBER_OF_OPENINGS == 0){
+    if(NUMBER_OF_OPENINGS === 1){
         app.relaunch();
         app.quit();
         return;

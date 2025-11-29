@@ -17,7 +17,7 @@ const StorageManager = require('../core/storage-manager');
  */
 function isJwtAccessTokenOk() {
     console.log(`Checking access token...`);
-    const JWT = StorageManager.settings['jwt'];
+    const JWT = StorageManager.permanentSettings['jwt'];
     if (JWT) {
         if (Date.now() < JWT.access_expires_in) {
             console.log('Access token is ok.');
@@ -34,7 +34,7 @@ function isJwtAccessTokenOk() {
  */
 function isJwtRefreshTokenOk() {
     console.log(`Checking refresh token...`);
-    const JWT = StorageManager.settings['jwt'];
+    const JWT = StorageManager.permanentSettings['jwt'];
     if (JWT) {
         if (Date.now() < JWT.refresh_expires_in) {
             console.log('Refresh token is ok.');
@@ -61,7 +61,7 @@ async function checkJwtToken(getMainWindow, justLoggedFromWordpress, callback) {
     } else {
         const IS_JWT_REFRESH_TOKEN_OK = isJwtRefreshTokenOk();
         if (IS_JWT_REFRESH_TOKEN_OK || justLoggedFromWordpress) {
-            const SETTINGS = StorageManager.settings;
+            const SETTINGS = StorageManager.permanentSettings;
 
             // We retrieve cookies from the main window.
             const COOKIES =
@@ -105,7 +105,7 @@ async function checkJwtToken(getMainWindow, justLoggedFromWordpress, callback) {
                             DATA.refresh_expires_in * 1000 + Date.now();
 
                         SETTINGS['jwt'] = DATA;
-                        StorageManager.settings = SETTINGS;
+                        StorageManager.permanentSettings = SETTINGS;
 
                         getMainWindow().webContents.send(
                             'set-jwt-access-token',
@@ -147,7 +147,7 @@ async function checkJwtToken(getMainWindow, justLoggedFromWordpress, callback) {
 function logout(getMainWindow) {
     const SESSION = session.defaultSession;
 
-    StorageManager.settings = {};
+    StorageManager.permanentSettings = {};
 
     Promise.all([
         SESSION.clearStorageData({

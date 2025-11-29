@@ -138,7 +138,7 @@ function createFloatingWindow(width, height, data) {
             }, 100);
         });
 
-        const URL = `http://localhost:${IS_DEV_MODE ? '4200' : getCurrentPort()}/${StorageManager.settings['language'] ?? 'aa'}/notification?data=${encodeURIComponent(data)}`;
+        const URL = `http://localhost:${IS_DEV_MODE ? '4200' : getCurrentPort()}/${StorageManager.permanentSettings['language'] ?? 'aa'}/notification?data=${encodeURIComponent(data)}`;
 
         floatingWindow.loadURL(URL);
     });
@@ -182,7 +182,7 @@ function createWindow() {
         }
     });
 
-    let language = StorageManager.settings['language'];
+    let language = StorageManager.permanentSettings['language'];
     if (!language) {
         language = app.getLocale();
     }

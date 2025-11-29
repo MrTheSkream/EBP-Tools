@@ -95,6 +95,16 @@ if (!APP_GOT_THE_LOCK) {
 let projectLatestVersion /* string */ = '';
 
 (async () => {
+    const NUMBER_OF_OPENINGS_KEY = "numberOfOpenings";
+    const NUMBER_OF_OPENINGS = StorageManager.getTemporarySettingsValue(NUMBER_OF_OPENINGS_KEY);
+    StorageManager.setTemporarySettingsValue(NUMBER_OF_OPENINGS_KEY, NUMBER_OF_OPENINGS + 1);
+
+    if(NUMBER_OF_OPENINGS == 0){
+        app.relaunch();
+        app.quit();
+        return;
+    }
+
     //#region Express Server Setup
 
     await setupExpressServer();
@@ -292,7 +302,7 @@ let projectLatestVersion /* string */ = '';
         const EXTENSION = videoPath.split('.').pop().toLowerCase();
         // A unique number is added to the end of the file name to ensure that an existing file is not overwritten.
         const OUTPUT_FILE_PATH /* string */ = path.join(
-            StorageManager.getSettingsValue(
+            StorageManager.getPermanentSettingsValue(
                 'videoCutterOutputPath',
                 path.join(os.homedir(), 'Downloads')
             ),
@@ -398,7 +408,7 @@ let projectLatestVersion /* string */ = '';
             path: `/back/api-tools/?${URL_PARAMS.toString()}`,
             method: 'PUT',
             headers: {
-                Authorization: `Bearer ${StorageManager.settings['jwt'].access_token}`,
+                Authorization: `Bearer ${StorageManager.permanentSettings['jwt'].access_token}`,
                 'Content-Type': 'application/json'
             }
         };
@@ -450,7 +460,7 @@ let projectLatestVersion /* string */ = '';
             path: `/back/api-tools/?${PARAMS.toString()}`,
             method: 'GET',
             headers: {
-                Authorization: `Bearer ${StorageManager.settings['jwt'].access_token}`,
+                Authorization: `Bearer ${StorageManager.permanentSettings['jwt'].access_token}`,
                 'Content-Type': 'application/json'
             }
         };
@@ -502,7 +512,7 @@ let projectLatestVersion /* string */ = '';
         const EXTENSION = videoPath.split('.').pop().toLowerCase();
         // If "fileName" is not set, a unique number is added to the end of the file name to ensure that an existing file is not overwritten.
         const OUTPUT_FILE_PATH /* string */ = path.join(
-            StorageManager.getSettingsValue(
+            StorageManager.getPermanentSettingsValue(
                 'videoCutterOutputPath',
                 path.join(os.homedir(), 'Downloads')
             ),
@@ -593,7 +603,7 @@ let projectLatestVersion /* string */ = '';
 
         for (let i = 0; i < KEEP.length; i++) {
             const TEMP_FILE = path.join(
-                StorageManager.getSettingsValue(
+                StorageManager.getPermanentSettingsValue(
                     'videoCutterOutputPath',
                     path.join(os.homedir(), 'Downloads')
                 )`ebp_temp_part_${i}.mp4`
@@ -660,7 +670,7 @@ let projectLatestVersion /* string */ = '';
         }
 
         const CONCAT_FILE = path.join(
-            StorageManager.getSettingsValue(
+            StorageManager.getPermanentSettingsValue(
                 'videoCutterOutputPath',
                 path.join(os.homedir(), 'Downloads')
             ),
@@ -873,7 +883,7 @@ let projectLatestVersion /* string */ = '';
 
         const FILE_PATH = path.join(
             folderPath ??
-                StorageManager.getSettingsValue(
+                StorageManager.getPermanentSettingsValue(
                     'gameHistoryOutputPath',
                     path.join(os.homedir(), 'Downloads')
                 ),
@@ -1051,7 +1061,7 @@ let projectLatestVersion /* string */ = '';
 
                     const VIDEO_TITLE = stdout.trim();
                     const OUTPUT_PATH = path.join(
-                        StorageManager.getSettingsValue(
+                        StorageManager.getPermanentSettingsValue(
                             'replayDownloaderOutputPath',
                             path.join(os.homedir(), 'Downloads')
                         ),
@@ -1144,7 +1154,7 @@ let projectLatestVersion /* string */ = '';
 
         // The front-end asks the server to return the JWT token content.
         ipcMain.handle('get-jwt-access-token', () => {
-            const JWT = StorageManager.settings['jwt'];
+            const JWT = StorageManager.permanentSettings['jwt'];
             if (JWT) {
                 getMainWindow().webContents.send(
                     'set-jwt-access-token',
@@ -1186,7 +1196,7 @@ let projectLatestVersion /* string */ = '';
 
         // The front-end asks the server to edit the video cutter output path.
         ipcMain.handle('set-setting', async (event, setting) => {
-            const PATH = StorageManager.getSettingsValue(
+            const PATH = StorageManager.getPermanentSettingsValue(
                 'videoCutterOutputPath',
                 path.join(os.homedir(), 'Downloads')
             );
@@ -1196,9 +1206,9 @@ let projectLatestVersion /* string */ = '';
                 defaultPath: PATH
             });
             if (!canceled && filePaths.length == 1) {
-                const SETTINGS = StorageManager.settings;
+                const SETTINGS = StorageManager.permanentSettings;
                 SETTINGS[setting] = filePaths[0];
-                StorageManager.settings = SETTINGS;
+                StorageManager.permanentSettings = SETTINGS;
                 return filePaths[0];
             } else {
                 return undefined;
@@ -1207,7 +1217,7 @@ let projectLatestVersion /* string */ = '';
 
         // The front-end asks the server to return the game-history output path.
         ipcMain.handle('get-game-history-output-path', () => {
-            return StorageManager.getSettingsValue(
+            return StorageManager.getPermanentSettingsValue(
                 'gameHistoryOutputPath',
                 path.join(os.homedir(), 'Downloads')
             );
@@ -1215,7 +1225,7 @@ let projectLatestVersion /* string */ = '';
 
         // The front-end asks the server to return the video cutter output path.
         ipcMain.handle('get-replay-downloader-output-path', () => {
-            return StorageManager.getSettingsValue(
+            return StorageManager.getPermanentSettingsValue(
                 'replayDownloaderOutputPath',
                 path.join(os.homedir(), 'Downloads')
             );
@@ -1223,7 +1233,7 @@ let projectLatestVersion /* string */ = '';
 
         // The front-end asks the server to return the video cutter output path.
         ipcMain.handle('get-video-cutter-output-path', () => {
-            return StorageManager.getSettingsValue(
+            return StorageManager.getPermanentSettingsValue(
                 'videoCutterOutputPath',
                 path.join(os.homedir(), 'Downloads')
             );
@@ -1260,12 +1270,12 @@ let projectLatestVersion /* string */ = '';
 
         // The front-end asks the server return a setting value by key.
         ipcMain.handle('get-settings', (event, key) => {
-            return StorageManager.getSettingsValue(key);
+            return StorageManager.getPermanentSettingsValue(key);
         });
 
         // The front-end asks the server to set a setting value by key.
         ipcMain.handle('set-settings', (event, key, value) => {
-            StorageManager.setSettingsValue(key, value);
+            StorageManager.setPermanentSettingsValue(key, value);
         });
 
         // The front-end asks the server to extract the public player games.
@@ -1321,11 +1331,11 @@ let projectLatestVersion /* string */ = '';
                                 );
 
                                 const KEY = 'public-pseudos';
-                                const SETTINGS = StorageManager.settings;
+                                const SETTINGS = StorageManager.permanentSettings;
                                 if (!SETTINGS[KEY]) SETTINGS[KEY] = [];
                                 if (!SETTINGS[KEY].includes(tag))
                                     SETTINGS[KEY].push(tag);
-                                StorageManager.settings = SETTINGS;
+                                StorageManager.permanentSettings = SETTINGS;
 
                                 getMainWindow().webContents.send(
                                     'games-are-exported',
@@ -1345,9 +1355,9 @@ let projectLatestVersion /* string */ = '';
 
         // The front-end asks the server to save the current language.
         ipcMain.handle('set-language', async (event, language) => {
-            const SETTINGS = StorageManager.settings;
+            const SETTINGS = StorageManager.permanentSettings;
             SETTINGS['language'] = language;
-            StorageManager.settings = SETTINGS;
+            StorageManager.permanentSettings = SETTINGS;
         });
 
         ipcMain.handle(
@@ -1429,7 +1439,7 @@ let projectLatestVersion /* string */ = '';
                 for (const game of games) {
                     await cutVideoFile(game, videoPath, undefined, customText);
                 }
-                return StorageManager.getSettingsValue(
+                return StorageManager.getPermanentSettingsValue(
                     'videoCutterOutputPath',
                     path.join(os.homedir(), 'Downloads')
                 );
@@ -1650,7 +1660,7 @@ let projectLatestVersion /* string */ = '';
         // The front-end asks the server to save console logs to a text file.
         ipcMain.handle('save-console-logs', async (event, logs) => {
             try {
-                const FOLDER_PATH = StorageManager.getSettingsValue(
+                const FOLDER_PATH = StorageManager.getPermanentSettingsValue(
                     'videoCutterOutputPath',
                     path.join(os.homedir(), 'Downloads')
                 );

@@ -70,7 +70,8 @@ const ROOT_PATH = IS_DEV_MODE ? path.dirname(__dirname) : process.resourcesPath;
 const OS_PLATFORM = os.platform();
 const FFMPEG_PATH = getFFmpegPath(OS_PLATFORM, IS_DEV_MODE, ROOT_PATH);
 const YTDLP_PATH = getYtDlpPath(OS_PLATFORM, IS_DEV_MODE, ROOT_PATH);
-const SETTINGS_PATH = path.join(app.getPath('userData'), 'settings.json');
+const PERMANENT_SETTINGS_PATH = path.join(app.getPath('userData'), 'settings.json');
+const TEMPORARY_SETTINGS_PATH =  path.join(ROOT_PATH, 'temporary_settings.json');
 const BROWSER_PATH = path.join(ROOT_PATH, 'browser');
 const PROTOCOL_NAME = 'tools';
 
@@ -125,7 +126,8 @@ module.exports = {
     FFMPEG_PATH,
     YTDLP_PATH,
 
-    SETTINGS_PATH,
+    PERMANENT_SETTINGS_PATH,
+    TEMPORARY_SETTINGS_PATH,
     BROWSER_PATH,
     PROTOCOL_NAME,
 

@@ -85,22 +85,22 @@ if (process.defaultApp) {
 
 //#endregion
 
-const APP_GOT_THE_LOCK = app.requestSingleInstanceLock();
-
-if (!APP_GOT_THE_LOCK) {
-    // Another instance is already launched => we quit.
-    app.quit();
-}
-
 let projectLatestVersion /* string */ = '';
 
 (async () => {
-    const NUMBER_OF_OPENINGS_KEY = "numberOfOpenings";
-    const NUMBER_OF_OPENINGS = StorageManager.getTemporarySettingsValue(NUMBER_OF_OPENINGS_KEY) + 1;
-    StorageManager.setTemporarySettingsValue(NUMBER_OF_OPENINGS_KEY, NUMBER_OF_OPENINGS);
+    const NUMBER_OF_OPENINGS_KEY = 'numberOfOpenings';
+    const NUMBER_OF_OPENINGS =
+        StorageManager.getTemporarySettingsValue(NUMBER_OF_OPENINGS_KEY) + 1;
+    StorageManager.setTemporarySettingsValue(
+        NUMBER_OF_OPENINGS_KEY,
+        NUMBER_OF_OPENINGS
+    );
 
-    if(NUMBER_OF_OPENINGS === 1){
+    if (NUMBER_OF_OPENINGS === 1) {
         app.relaunch();
+        if (getMainWindow() && !getMainWindow().isDestroyed()) {
+            getMainWindow().destroy();
+        }
         app.quit();
         return;
     }
@@ -992,9 +992,14 @@ let projectLatestVersion /* string */ = '';
                 );
                 if (DEEP_LINK_URL) {
                     handleDeepLink(DEEP_LINK_URL);
-                } else if (getMainWindow() && !getMainWindow().isDestroyed()) {
-                    getMainWindow().show();
-                    getMainWindow().focus();
+                } else {
+                    console.log(
+                        '[INSTANCE] New instance detected, quitting current instance to be replaced'
+                    );
+                    if (getMainWindow() && !getMainWindow().isDestroyed()) {
+                        getMainWindow().destroy();
+                    }
+                    app.quit();
                 }
             });
 
@@ -1185,6 +1190,7 @@ let projectLatestVersion /* string */ = '';
 
             autoUpdater.checkForUpdatesAndNotify();
 
+            console.log('Number of openings', NUMBER_OF_OPENINGS);
             console.log({
                 current: version,
                 last: projectLatestVersion
@@ -1333,7 +1339,8 @@ let projectLatestVersion /* string */ = '';
                                 );
 
                                 const KEY = 'public-pseudos';
-                                const SETTINGS = StorageManager.permanentSettings;
+                                const SETTINGS =
+                                    StorageManager.permanentSettings;
                                 if (!SETTINGS[KEY]) SETTINGS[KEY] = [];
                                 if (!SETTINGS[KEY].includes(tag))
                                     SETTINGS[KEY].push(tag);

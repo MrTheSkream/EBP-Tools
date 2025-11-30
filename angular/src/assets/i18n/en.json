@@ -5,7 +5,8 @@
     "reset": "Reset",
     "settings": "Settings",
     "close": "Close",
-    "save": "Save"
+    "save": "Save",
+    "search": "Search"
   },
   "view": {
     "home": {

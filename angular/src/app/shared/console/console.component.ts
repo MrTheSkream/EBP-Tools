@@ -39,6 +39,7 @@ export class ConsoleComponent implements OnInit, OnDestroy {
 
   protected isVisible = false;
   protected selectedLogLevel = 'all';
+  protected search: string = '';
   protected logs$: Observable<LogData[]>;
   private subscription: Subscription = new Subscription();
 
@@ -152,12 +153,14 @@ export class ConsoleComponent implements OnInit, OnDestroy {
    */
   protected getFilteredLogs(logs: LogData[]): LogData[] {
     if (this.selectedLogLevel === 'all') {
-      return logs;
+      return logs.filter((x) => x.message.includes(this.search));
     }
     const LOGS: LogData[] = logs.filter(
       (log) => log.level == this.selectedLogLevel
     );
-    return LOGS.slice(ConsoleService.MAX_LOGS * -1);
+    return LOGS.slice(ConsoleService.MAX_LOGS * -1).filter((x) =>
+      x.message.includes(this.search)
+    );
   }
 
   /**

@@ -5,7 +5,8 @@
     "reset": "Restablecer",
     "settings": "Configuración",
     "close": "Cerrar",
-    "save": "Guardar"
+    "save": "Guardar",
+    "search": "Buscar"
   },
   "view": {
     "home": {

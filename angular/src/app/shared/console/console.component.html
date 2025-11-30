@@ -8,6 +8,11 @@
     <h1>
       <i class="fa-sharp fa-regular fa-square-terminal"></i>
       <span>{{ 'shared.console.console' | translate }}</span>
+      <input
+        type="text"
+        placeholder="{{ 'common.search' | translate }}"
+        [(ngModel)]="search"
+      />
     </h1>
     <div class="right">
       <mat-form-field>

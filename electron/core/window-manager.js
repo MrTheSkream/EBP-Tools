@@ -4,9 +4,15 @@
 
 //#region Imports
 
-const { BrowserWindow, screen, app, Tray, Menu } = require('electron');
+const {
+    BrowserWindow,
+    screen,
+    app,
+    Tray,
+    Menu,
+    nativeImage
+} = require('electron');
 const path = require('node:path');
-const fs = require('fs');
 const { setupConsoleRedirection } = require('./console-manager');
 const {
     IS_DEV_MODE,
@@ -158,7 +164,7 @@ function deleteFloatingWindow(showMainWindow) {
 /**
  * Creates and configures the main application window.
  */
-function createWindow() {
+function createWindow(currentProjectVersion, autoUpdater) {
     const PRIMARY_DISPLAY = screen.getPrimaryDisplay();
     const APP_ARGS = process.argv;
 
@@ -202,6 +208,11 @@ function createWindow() {
     const CONTEXT_MENU = Menu.buildFromTemplate([
         {
             label: 'Open',
+            icon: nativeImage
+                .createFromPath(
+                    path.join(ROOT_PATH, 'assets', 'context-menu', 'circle.png')
+                )
+                .resize({ width: 12, height: 12 }),
             click: () => {
                 if (mainWindow && !mainWindow.isDestroyed()) {
                     mainWindow.show();
@@ -211,21 +222,57 @@ function createWindow() {
         },
         {
             label: 'Restart',
-            click: () => {
-                app.relaunch();
-                if (mainWindow && !mainWindow.isDestroyed()) {
-                    mainWindow.destroy();
+            icon: nativeImage
+                .createFromPath(
+                    path.join(
+                        ROOT_PATH,
+                        'assets',
+                        'context-menu',
+                        'arrow-circle-left.png'
+                    )
+                )
+                .resize({ width: 12, height: 12 }),
+            submenu: [
+                {
+                    label: 'Confirm restart',
+                    click: () => {
+                        app.relaunch();
+                        if (mainWindow && !mainWindow.isDestroyed()) {
+                            mainWindow.destroy();
+                        }
+                        app.quit();
+                    }
                 }
-                app.quit();
-            }
+            ]
         },
         {
             label: 'Quit',
-            click: () => {
-                if (mainWindow && !mainWindow.isDestroyed()) {
-                    mainWindow.destroy();
+            icon: nativeImage
+                .createFromPath(
+                    path.join(ROOT_PATH, 'assets', 'context-menu', 'power.png')
+                )
+                .resize({ width: 12, height: 12 }),
+            submenu: [
+                {
+                    label: 'Confirm quit',
+                    click: () => {
+                        if (mainWindow && !mainWindow.isDestroyed()) {
+                            mainWindow.destroy();
+                        }
+                        app.quit();
+                    }
                 }
-                app.quit();
+            ]
+        },
+        {
+            label: `Check for update (${currentProjectVersion})`,
+            icon: nativeImage
+                .createFromPath(
+                    path.join(ROOT_PATH, 'assets', 'context-menu', 'up.png')
+                )
+                .resize({ width: 12, height: 12 }),
+            click: () => {
+                autoUpdater.checkForUpdatesAndNotify();
             }
         }
     ]);

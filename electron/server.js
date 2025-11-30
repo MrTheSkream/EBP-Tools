@@ -931,7 +931,7 @@ let projectLatestVersion /* string */ = '';
         if (IS_DEV_MODE) {
             // We wait until the Angular server is ready before creating the window that will contain the HMI.
             waitForHttp(4200).then(() => {
-                createWindow();
+                createWindow(version, autoUpdater);
             });
         } else {
             // Configure auto-updater logger
@@ -983,7 +983,7 @@ let projectLatestVersion /* string */ = '';
             );
 
             // We immediately create the window that will contain the HMI.
-            createWindow();
+            createWindow(version, autoUpdater);
 
             // If a second instance is launched, the first is displayed.
             app.on('second-instance', (event, commandLine) => {
@@ -1706,7 +1706,7 @@ let projectLatestVersion /* string */ = '';
         app.on('activate', function () {
             // On macOS it's common to re-create a window in the app when the dock icon is clicked and there are no other windows open.
             if (BrowserWindow.getAllWindows().length === 0) {
-                createWindow();
+                createWindow(version, autoUpdater);
             }
         });
     });

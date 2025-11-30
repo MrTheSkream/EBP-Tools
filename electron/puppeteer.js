@@ -63,26 +63,28 @@ function getBrowserPath(mainWindow, callback) {
 
     switch (os.platform()) {
         case 'win32':
-            browserPaths =
-                [
-                    'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe',
-                    'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
-                    'C:\\Program Files (x86)\\BraveSoftware\\Brave-Browser\\Application\\brave.exe'
-                ];
+            browserPaths = [
+                'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe',
+                'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
+                'C:\\Program Files (x86)\\BraveSoftware\\Brave-Browser\\Application\\brave.exe'
+            ];
             break;
         case 'darwin':
-            browserPaths =
-                ['/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'];
+            browserPaths = [
+                '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
+            ];
             break;
         case 'linux':
-            browserPaths = [execSync('which chromium-browser').toString().trim()];
+            browserPaths = [
+                execSync('which chromium-browser').toString().trim()
+            ];
             break;
         default:
             return null;
     }
 
     let found = false;
-    for(let i = 0; i < browserPaths.length; i++){
+    for (let i = 0; i < browserPaths.length; i++) {
         if (fs.existsSync(browserPaths[i])) {
             found = true;
             callback(browserPaths[i]);
@@ -90,7 +92,7 @@ function getBrowserPath(mainWindow, callback) {
         }
     }
 
-    if(!found) {
+    if (!found) {
         mainWindow.webContents.send(
             'error',
             'view.game_history.edgeIsNotInstalled'
@@ -251,13 +253,14 @@ function extractPublicPseudoGames(
     timeToWait,
     dialog,
     mainWindow,
+    debug,
     callback
 ) {
     getBrowserPath(mainWindow, async (browserPath) => {
         try {
             const BROWSER = await puppeteer.launch({
                 executablePath: browserPath,
-                headless: false,
+                headless: debug ? false : 'new',
                 defaultViewport: null,
                 args: ['--start-maximized']
             });
@@ -295,13 +298,14 @@ async function extractPrivatePseudoGames(
     timeToWait,
     dialog,
     mainWindow,
+    debug,
     callback
 ) {
     getBrowserPath(mainWindow, async (browserPath) => {
         try {
             const BROWSER = await puppeteer.launch({
                 executablePath: browserPath,
-                headless: false,
+                headless: debug ? false : 'new',
                 defaultViewport: null,
                 args: ['--start-maximized']
             });

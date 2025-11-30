@@ -160,6 +160,7 @@ let projectLatestVersion /* string */ = '';
                         DATA.timeToWait,
                         dialog,
                         getMainWindow(),
+                        DATA.debug,
                         async (games) => {
                             socketEmit(DATA.socket, 'exportGames', games);
 
@@ -183,6 +184,7 @@ let projectLatestVersion /* string */ = '';
                         DATA.timeToWait,
                         dialog,
                         getMainWindow(),
+                        DATA.debug,
                         async (games) => {
                             socketEmit(DATA.socket, 'exportGames', games);
 
@@ -1298,6 +1300,7 @@ let projectLatestVersion /* string */ = '';
                     timeToWait,
                     dialog,
                     getMainWindow(),
+                    true,
                     async (games) => {
                         if (games.length > 0) {
                             const FILE_PATH = await exportGamesToExcel(
@@ -1332,6 +1335,7 @@ let projectLatestVersion /* string */ = '';
                         timeToWait,
                         dialog,
                         getMainWindow(),
+                        true,
                         async (games) => {
                             if (games.length > 0) {
                                 const FILE_PATH = await exportGamesToExcel(

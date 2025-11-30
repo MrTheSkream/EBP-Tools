@@ -210,6 +210,16 @@ function createWindow() {
             }
         },
         {
+            label: 'Restart',
+            click: () => {
+                app.relaunch();
+                if (mainWindow && !mainWindow.isDestroyed()) {
+                    mainWindow.destroy();
+                }
+                app.quit();
+            }
+        },
+        {
             label: 'Quit',
             click: () => {
                 if (mainWindow && !mainWindow.isDestroyed()) {

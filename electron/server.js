@@ -17,6 +17,7 @@ const { autoUpdater } = require('electron-updater');
 // Configure auto-updater
 autoUpdater.autoDownload = true;
 autoUpdater.autoInstallOnAppQuit = true;
+autoUpdater.disableDifferentialDownload = true; // Disable differential downloads (blockmap not available with Electron Forge)
 
 // When in installation mode, close the application.
 if (require('electron-squirrel-startup')) {

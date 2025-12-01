@@ -56,7 +56,8 @@ const {
     createWindow,
     switchDebugMode,
     getMainWindow,
-    setDebugMode
+    setDebugMode,
+    destroyMainWindow
 } = require('./core/window-manager');
 const StorageManager = require('./core/storage-manager');
 const socketEmit = require('./services/socket-service');
@@ -86,6 +87,13 @@ if (process.defaultApp) {
 
 //#endregion
 
+const APP_GOT_THE_LOCK = app.requestSingleInstanceLock();
+
+if (!APP_GOT_THE_LOCK) {
+    // Another instance is already launched => we quit.
+    app.quit();
+}
+
 let projectLatestVersion /* string */ = '';
 
 (async () => {
@@ -99,9 +107,7 @@ let projectLatestVersion /* string */ = '';
 
     if (NUMBER_OF_OPENINGS === 1) {
         app.relaunch();
-        if (getMainWindow() && !getMainWindow().isDestroyed()) {
-            getMainWindow().destroy();
-        }
+        destroyMainWindow();
         app.quit();
         return;
     }
@@ -142,60 +148,92 @@ let projectLatestVersion /* string */ = '';
         const PARAMS = PARTS.slice(1);
 
         const DATA = JSON.parse(decodeURIComponent(PARAMS));
-        console.log('[DEEP-LINK] Action:', ACTION, 'Params:', DATA);
 
-        switch (ACTION) {
+        handleDeepLinkData(ACTION, DATA);
+    }
+
+    /**
+     * Handle deep link URL (ebp://...)
+     * @param {string} action
+     * @param {*} data
+     */
+    async function handleDeepLinkData(action, data) {
+        console.log('[DEEP-LINK] Action:', action, 'Params:', data);
+
+        StorageManager.setTemporarySettingsValue('deeplink', {
+            action: action,
+            data: data
+        });
+
+        switch (action) {
             case 'openFolder':
                 openDirectory((directoryPath) => {
-                    socketEmit(DATA.socket, 'openFolder', directoryPath);
+                    socketEmit(data.socket, 'openFolder', directoryPath);
+
+                    StorageManager.setTemporarySettingsValue(
+                        'deeplink',
+                        undefined
+                    );
                 });
                 break;
             case 'exportGames':
-                if (DATA.publicPseudo) {
+                if (data.publicPseudo) {
                     extractPublicPseudoGames(
-                        DATA.publicPseudo,
-                        DATA.nbPages,
-                        DATA.seasonIndex,
-                        DATA.skip,
-                        DATA.timeToWait,
+                        app,
+                        data.publicPseudo,
+                        data.nbPages,
+                        data.seasonIndex,
+                        data.skip,
+                        data.timeToWait,
                         dialog,
                         getMainWindow(),
-                        DATA.debug,
+                        data.debug,
                         async (games) => {
-                            socketEmit(DATA.socket, 'exportGames', games);
+                            socketEmit(data.socket, 'exportGames', games);
+
+                            StorageManager.setTemporarySettingsValue(
+                                'deeplink',
+                                undefined
+                            );
 
                             if (
                                 games.length > 0 &&
-                                DATA.excelDestinationFolder
+                                data.excelDestinationFolder
                             ) {
                                 exportGamesToExcel(
                                     games,
-                                    DATA.publicPseudo.split('#')[0],
-                                    DATA.excelDestinationFolder
+                                    data.publicPseudo.split('#')[0],
+                                    data.excelDestinationFolder
                                 );
                             }
                         }
                     );
                 } else {
                     extractPrivatePseudoGames(
-                        DATA.nbPages,
-                        DATA.seasonIndex,
-                        DATA.skip,
-                        DATA.timeToWait,
+                        app,
+                        data.nbPages,
+                        data.seasonIndex,
+                        data.skip,
+                        data.timeToWait,
                         dialog,
                         getMainWindow(),
-                        DATA.debug,
+                        data.debug,
                         async (games) => {
-                            socketEmit(DATA.socket, 'exportGames', games);
+                            socketEmit(data.socket, 'exportGames', games);
+
+                            StorageManager.setTemporarySettingsValue(
+                                'deeplink',
+                                undefined
+                            );
 
                             if (
                                 games.length > 0 &&
-                                DATA.excelDestinationFolder
+                                data.excelDestinationFolder
                             ) {
                                 exportGamesToExcel(
                                     games,
                                     'private',
-                                    DATA.excelDestinationFolder
+                                    data.excelDestinationFolder
                                 );
                             }
                         }
@@ -203,7 +241,7 @@ let projectLatestVersion /* string */ = '';
                 }
                 break;
             case 'analyzeVideoFile':
-                const FILES_PATHS = await openFiles(DATA.filesExtensions);
+                const FILES_PATHS = await openFiles(data.filesExtensions);
                 if (FILES_PATHS.length == 1) {
                     getMainWindow().webContents.send(
                         'analyze-video-file',
@@ -211,6 +249,8 @@ let projectLatestVersion /* string */ = '';
                         true
                     );
                 }
+
+                StorageManager.setTemporarySettingsValue('deeplink', undefined);
                 break;
         }
     }
@@ -993,17 +1033,11 @@ let projectLatestVersion /* string */ = '';
                 const DEEP_LINK_URL = commandLine.find((arg) =>
                     arg.startsWith(`${PROTOCOL_NAME}://`)
                 );
-                if (DEEP_LINK_URL) {
-                    handleDeepLink(DEEP_LINK_URL);
-                } else {
-                    console.log(
-                        '[INSTANCE] New instance detected, quitting current instance to be replaced'
-                    );
-                    if (getMainWindow() && !getMainWindow().isDestroyed()) {
-                        getMainWindow().destroy();
-                    }
-                    app.quit();
-                }
+                console.log(
+                    '[INSTANCE] New instance detected, quitting current instance to be replaced'
+                );
+                destroyMainWindow();
+                app.quit();
             });
 
             app.setLoginItemSettings({
@@ -1012,6 +1046,16 @@ let projectLatestVersion /* string */ = '';
                 args: ['--mode=startup']
             });
         }
+
+        //#region Old deep link
+
+        const OLD_DEEP_LINK =
+            StorageManager.getTemporarySettingsValue('deeplink');
+        if (OLD_DEEP_LINK) {
+            handleDeepLinkData(OLD_DEEP_LINK.action, OLD_DEEP_LINK.data);
+        }
+
+        //#endregion
 
         // The front-end asks the server to enables/disables debug mode.
         ipcMain.handle('switch-debug-mode', switchDebugMode);
@@ -1294,6 +1338,7 @@ let projectLatestVersion /* string */ = '';
             'extract-private-pseudo-games',
             (event, nbPages, seasonIndex, skip, timeToWait) => {
                 extractPrivatePseudoGames(
+                    app,
                     nbPages,
                     seasonIndex,
                     skip,
@@ -1328,6 +1373,7 @@ let projectLatestVersion /* string */ = '';
             (event, tag, nbPages, seasonIndex, skip, timeToWait) => {
                 if (tag) {
                     extractPublicPseudoGames(
+                        app,
                         tag,
                         nbPages,
                         seasonIndex,

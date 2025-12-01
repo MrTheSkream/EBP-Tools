@@ -8,6 +8,7 @@ const puppeteer = require('puppeteer-core');
 const { execSync } = require('child_process');
 const os = require('os');
 const fs = require('fs');
+const { destroyMainWindow } = require('./core/window-manager');
 
 //#endregion
 
@@ -102,6 +103,7 @@ function getBrowserPath(mainWindow, callback) {
 
 /**
  * Cette fonction extrait les games à partir d'une session EVA.
+ * @param {*} app
  * @param {*} browser
  * @param {*} page
  * @param {*} nbPages Number of game pages to extract.
@@ -111,6 +113,7 @@ function getBrowserPath(mainWindow, callback) {
  * @param {*} callback Callback function
  */
 async function extractGames(
+    app /* Electron.App */,
     browser,
     page,
     nbPages,
@@ -119,6 +122,7 @@ async function extractGames(
     timeToWait,
     dialog,
     publicMode,
+    start,
     callback
 ) {
     let index = 0;
@@ -126,6 +130,16 @@ async function extractGames(
     let isExtractingStopped = false;
     let loadIndex = 0;
     const QUERY = '.btn-group > button:last-child';
+    let onEVAWebSite = false;
+
+    setTimeout(async () => {
+        if (!onEVAWebSite) {
+            await browser.close();
+            destroyMainWindow();
+            app.relaunch();
+            app.exit(0);
+        }
+    }, 3 * 1000);
 
     // Detect when the user closes the page
     page.on('close', () => {
@@ -152,7 +166,53 @@ async function extractGames(
 
     page.on('request', async (request) => {
         if (!isExtractingStopped) {
+            const RESOURCE_TYPE = request.resourceType();
+
+            if (publicMode) {
+                if (['image', 'font', 'media'].includes(RESOURCE_TYPE)) {
+                    request.abort();
+                    return;
+                }
+            }
+
             const URL = request.url();
+
+            if (!onEVAWebSite && URL.includes('eva.gg')) {
+                onEVAWebSite = true;
+                const ELAPSED_SECONDS = (
+                    (new Date().getTime() - start) /
+                    1000
+                ).toFixed(2);
+                console.log(
+                    `[PUPPETEER] Extraction terminée en ${ELAPSED_SECONDS}s`
+                );
+            }
+
+            if (publicMode) {
+                if (
+                    (URL.includes('stripe.com') ||
+                        URL.includes('matomo') ||
+                        URL.includes('facebook') ||
+                        URL.includes('youtube') ||
+                        URL.includes('snapchat') ||
+                        URL.includes('sst.eva.gg') ||
+                        URL.includes('cdn.eva.gg') ||
+                        URL.includes('axept.io') ||
+                        URL.includes('tiktok.com') ||
+                        URL.includes('sentry.io') ||
+                        URL.includes('fonts.googleapis') ||
+                        URL.includes('licdn.com') ||
+                        URL.includes('inkedin.com') ||
+                        URL.includes('google.com') ||
+                        URL.endsWith('.css') ||
+                        URL.includes('googletagmanager.com')) &&
+                    !URL.includes('recaptcha')
+                ) {
+                    request.abort();
+                    return;
+                }
+            }
+
             if (URL.includes('graphql')) {
                 try {
                     const DATA = request.postData();
@@ -214,6 +274,13 @@ async function extractGames(
                                         (await page.$(QUERY + ':disabled')) !==
                                         null;
                                     if (END) {
+                                        const ELAPSED_SECONDS = (
+                                            (new Date().getTime() - start) /
+                                            1000
+                                        ).toFixed(2);
+                                        console.log(
+                                            `[PUPPETEER] Extraction terminée en ${ELAPSED_SECONDS}s`
+                                        );
                                         callback(GAMES);
                                         browser.close();
                                     } else {
@@ -233,6 +300,13 @@ async function extractGames(
                                     MIN
                             );
                         } else {
+                            const ELAPSED_SECONDS = (
+                                (new Date().getTime() - start) /
+                                1000
+                            ).toFixed(2);
+                            console.log(
+                                `[PUPPETEER] Extraction terminée en ${ELAPSED_SECONDS}s`
+                            );
                             callback(GAMES);
                             browser.close();
                         }
@@ -246,6 +320,7 @@ async function extractGames(
 }
 
 function extractPublicPseudoGames(
+    app /* Electron.App */,
     tag,
     nbPages,
     seasonIndex,
@@ -256,18 +331,42 @@ function extractPublicPseudoGames(
     debug,
     callback
 ) {
+    const START = new Date().getTime();
     getBrowserPath(mainWindow, async (browserPath) => {
         try {
             const BROWSER = await puppeteer.launch({
                 executablePath: browserPath,
-                headless: debug ? false : 'new',
-                defaultViewport: null,
-                args: ['--start-maximized']
+                headless: false,
+                defaultViewport: debug
+                    ? null
+                    : {
+                          width: 1920,
+                          height: 1080
+                      },
+                args: debug
+                    ? ['--start-maximized']
+                    : [
+                          '--disable-blink-features=AutomationControlled',
+                          '--no-sandbox',
+                          '--disable-setuid-sandbox',
+                          `--window-position=-${Number.MAX_SAFE_INTEGER},-${Number.MAX_SAFE_INTEGER}`,
+                          '--window-size=1,1',
+                          '--disable-notifications',
+                          '--disable-infobars',
+                          '--disable-session-crashed-bubble',
+                          '--mute-audio'
+                      ]
             });
 
             const PAGE = (await BROWSER.pages())[0];
 
+            // Définir le viewport à une taille normale si non en debug
+            if (!debug) {
+                await PAGE.setViewport({ width: 1920, height: 1080 });
+            }
+
             await extractGames(
+                app /* Electron.App */,
                 BROWSER,
                 PAGE,
                 nbPages,
@@ -276,6 +375,7 @@ function extractPublicPseudoGames(
                 timeToWait,
                 dialog,
                 true,
+                START,
                 callback
             );
 
@@ -292,6 +392,7 @@ function extractPublicPseudoGames(
 }
 
 async function extractPrivatePseudoGames(
+    app /* Electron.App */,
     nbPages,
     seasonIndex,
     skip,
@@ -301,13 +402,31 @@ async function extractPrivatePseudoGames(
     debug,
     callback
 ) {
+    const START = new Date().getTime();
     getBrowserPath(mainWindow, async (browserPath) => {
         try {
             const BROWSER = await puppeteer.launch({
                 executablePath: browserPath,
-                headless: debug ? false : 'new',
-                defaultViewport: null,
-                args: ['--start-maximized']
+                headless: false,
+                defaultViewport: debug
+                    ? null
+                    : {
+                          width: 1920,
+                          height: 1080
+                      },
+                args: debug
+                    ? ['--start-maximized']
+                    : [
+                          '--disable-blink-features=AutomationControlled',
+                          '--no-sandbox',
+                          '--disable-setuid-sandbox',
+                          `--window-position=-${Number.MAX_SAFE_INTEGER},-${Number.MAX_SAFE_INTEGER}`,
+                          '--window-size=1,1',
+                          '--disable-notifications',
+                          '--disable-infobars',
+                          '--disable-session-crashed-bubble',
+                          '--mute-audio'
+                      ]
             });
 
             // Cet espion permet de relancer la fonction si elle ne s'est pas bien passée.
@@ -329,6 +448,11 @@ async function extractPrivatePseudoGames(
 
             const PAGE = (await BROWSER.pages())[0];
 
+            // Définir le viewport à une taille normale si non en debug
+            if (!debug) {
+                await PAGE.setViewport({ width: 1920, height: 1080 });
+            }
+
             PAGE.on('framenavigated', async (frame) => {
                 // When the user is logged in, he is redirected to the games page.
                 if (frame.url().endsWith('/profile/dashboard')) {
@@ -339,6 +463,7 @@ async function extractPrivatePseudoGames(
             });
 
             await extractGames(
+                app /* Electron.App */,
                 BROWSER,
                 PAGE,
                 nbPages,
@@ -347,6 +472,7 @@ async function extractPrivatePseudoGames(
                 timeToWait,
                 dialog,
                 false,
+                START,
                 callback
             );
 

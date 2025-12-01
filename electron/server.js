@@ -1012,7 +1012,7 @@ let projectLatestVersion /* string */ = '';
                 );
                 // Use default parameters for better compatibility with Squirrel.Windows
                 // The update will be installed when the app quits
-                autoUpdater.quitAndInstall();
+                autoUpdater.quitAndInstall(true, true);
             });
 
             // Check for updates every 4 hours

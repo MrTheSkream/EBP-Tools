@@ -408,25 +408,8 @@ async function extractPrivatePseudoGames(
             const BROWSER = await puppeteer.launch({
                 executablePath: browserPath,
                 headless: false,
-                defaultViewport: debug
-                    ? null
-                    : {
-                          width: 1920,
-                          height: 1080
-                      },
-                args: debug
-                    ? ['--start-maximized']
-                    : [
-                          '--disable-blink-features=AutomationControlled',
-                          '--no-sandbox',
-                          '--disable-setuid-sandbox',
-                          `--window-position=-${Number.MAX_SAFE_INTEGER},-${Number.MAX_SAFE_INTEGER}`,
-                          '--window-size=1,1',
-                          '--disable-notifications',
-                          '--disable-infobars',
-                          '--disable-session-crashed-bubble',
-                          '--mute-audio'
-                      ]
+                defaultViewport: null,
+                args: ['--start-maximized']
             });
 
             // Cet espion permet de relancer la fonction si elle ne s'est pas bien passée.

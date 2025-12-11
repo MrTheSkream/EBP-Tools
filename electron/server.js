@@ -1052,7 +1052,7 @@ let projectLatestVersion /* string */ = '';
         const OLD_DEEP_LINK =
             StorageManager.getTemporarySettingsValue('deeplink');
         if (OLD_DEEP_LINK) {
-            handleDeepLinkData(OLD_DEEP_LINK.action, OLD_DEEP_LINK.data);
+            //handleDeepLinkData(OLD_DEEP_LINK.action, OLD_DEEP_LINK.data);
         }
 
         //#endregion

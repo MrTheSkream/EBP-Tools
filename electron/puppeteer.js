@@ -219,7 +219,10 @@ async function extractGames(
                     const DATA = request.postData();
                     if (DATA) {
                         const JSON_DATA = JSON.parse(DATA);
-                        if (JSON_DATA.operationName === 'listGameHistories') {
+                        if (
+                            JSON_DATA.operationName ===
+                            'useAfterhGameHistoryPage'
+                        ) {
                             if (JSON_DATA.variables.page.page == 1) {
                                 JSON_DATA.variables.page.page += skip;
                             }
@@ -252,14 +255,32 @@ async function extractGames(
             }
             if (response.url().includes('graphql')) {
                 try {
+                    let nodes = undefined;
                     const JSON_DATA = await response.json();
+
+                    // Si on est sur une page publique
                     if (
-                        JSON_DATA?.data?.gameHistories?.nodes &&
-                        Array.isArray(JSON_DATA.data.gameHistories.nodes)
+                        JSON_DATA?.data?.listLastAfterhGameHistories &&
+                        Array.isArray(
+                            JSON_DATA.data.listLastAfterhGameHistories
+                        )
                     ) {
+                        nodes = JSON_DATA.data.listLastAfterhGameHistories;
+                    }
+                    // Si on est sur sa page en étant connecté
+                    else if (
+                        JSON_DATA?.data?.getAfterhGameHistoryPage?.nodes &&
+                        Array.isArray(
+                            JSON_DATA.data.getAfterhGameHistoryPage.nodes
+                        )
+                    ) {
+                        nodes = JSON_DATA.data.getAfterhGameHistoryPage.nodes;
+                    }
+
+                    if (nodes) {
                         index++;
                         const OLD_INDEX = index;
-                        JSON_DATA.data.gameHistories.nodes.forEach((game) => {
+                        nodes.forEach((game) => {
                             addGame(GAMES, game);
                         });
 

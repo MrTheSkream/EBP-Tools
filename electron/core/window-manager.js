@@ -176,18 +176,11 @@ function createWindow(updateService) {
     const IS_STARTUP_MODE = APP_ARGS.includes('--mode=startup');
 
     let isJustUpdated = false;
-    const NUMBER_OF_OPENINGS =
-        StorageManager.getTemporarySettingsValue('numberOfOpenings');
-
-    if (NUMBER_OF_OPENINGS == 2) {
-        const JUST_UPDATED =
-            StorageManager.getPermanentSettingsValue('justUpdated');
-
-        if (JUST_UPDATED !== undefined) {
-            isJustUpdated = true;
-
-            StorageManager.setPermanentSettingsValue('justUpdated', undefined);
-        }
+    const JUST_UPDATED =
+        StorageManager.getPermanentSettingsValue('justUpdated');
+    if (JUST_UPDATED !== undefined) {
+        isJustUpdated = true;
+        StorageManager.setPermanentSettingsValue('justUpdated', undefined);
     }
 
     //StorageManager.getPermanentSettingsValue('justUpdated');

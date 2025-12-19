@@ -104,14 +104,16 @@ if (!APP_GOT_THE_LOCK) {
 
 (async () => {
     const NUMBER_OF_OPENINGS_KEY = 'numberOfOpenings';
-    const NUMBER_OF_OPENINGS =
-        StorageManager.getTemporarySettingsValue(NUMBER_OF_OPENINGS_KEY) + 1;
+    const NUMBER_OF_OPENINGS = StorageManager.getTemporarySettingsValue(
+        NUMBER_OF_OPENINGS_KEY,
+        0
+    );
     StorageManager.setTemporarySettingsValue(
         NUMBER_OF_OPENINGS_KEY,
-        NUMBER_OF_OPENINGS
+        NUMBER_OF_OPENINGS + 1
     );
 
-    if (NUMBER_OF_OPENINGS === 1) {
+    if (NUMBER_OF_OPENINGS === 0) {
         app.relaunch();
         destroyMainWindow();
         app.quit();

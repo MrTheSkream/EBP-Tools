@@ -5,7 +5,10 @@
 //#region Imports
 
 const fs = require('fs');
-const { PERMANENT_SETTINGS_PATH, TEMPORARY_SETTINGS_PATH } = require('../config/constants');
+const {
+    PERMANENT_SETTINGS_PATH,
+    TEMPORARY_SETTINGS_PATH
+} = require('../config/constants');
 
 //#endregion
 
@@ -34,13 +37,19 @@ class StorageManager {
 
     static get permanentSettings() {
         if (fs.existsSync(PERMANENT_SETTINGS_PATH)) {
-            return JSON.parse(fs.readFileSync(PERMANENT_SETTINGS_PATH, 'utf-8'));
+            return JSON.parse(
+                fs.readFileSync(PERMANENT_SETTINGS_PATH, 'utf-8')
+            );
         }
         return {};
     }
 
     static set permanentSettings(newSettings) {
-        fs.writeFileSync(PERMANENT_SETTINGS_PATH, JSON.stringify(newSettings), 'utf-8');
+        fs.writeFileSync(
+            PERMANENT_SETTINGS_PATH,
+            JSON.stringify(newSettings),
+            'utf-8'
+        );
     }
 
     //#endregion
@@ -57,18 +66,25 @@ class StorageManager {
     static setTemporarySettingsValue(name, value) {
         const SETTINGS = StorageManager.temporarySettings;
         SETTINGS[name] = value;
+        console.log(name, value);
         StorageManager.temporarySettings = SETTINGS;
     }
 
     static get temporarySettings() {
         if (fs.existsSync(TEMPORARY_SETTINGS_PATH)) {
-            return JSON.parse(fs.readFileSync(TEMPORARY_SETTINGS_PATH, 'utf-8'));
+            return JSON.parse(
+                fs.readFileSync(TEMPORARY_SETTINGS_PATH, 'utf-8')
+            );
         }
         return {};
     }
 
     static set temporarySettings(newSettings) {
-        fs.writeFileSync(TEMPORARY_SETTINGS_PATH, JSON.stringify(newSettings), 'utf-8');
+        fs.writeFileSync(
+            TEMPORARY_SETTINGS_PATH,
+            JSON.stringify(newSettings),
+            'utf-8'
+        );
     }
 
     //#endregion

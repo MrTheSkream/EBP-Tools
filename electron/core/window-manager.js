@@ -165,6 +165,7 @@ function deleteFloatingWindow(showMainWindow) {
  * Creates and configures the main application window.
  */
 function createWindow(updateService) {
+    console.log('createWindow');
     const PRIMARY_DISPLAY = screen.getPrimaryDisplay();
     const APP_ARGS = process.argv;
 
@@ -173,12 +174,28 @@ function createWindow(updateService) {
         arg.startsWith(`${PROTOCOL_NAME}://`)
     );
     const IS_STARTUP_MODE = APP_ARGS.includes('--mode=startup');
-    const IS_UPDATED_MODE = APP_ARGS.includes('--mode=updated');
+
+    let isJustUpdated = false;
+    const NUMBER_OF_OPENINGS =
+        StorageManager.getTemporarySettingsValue('numberOfOpenings');
+
+    if (NUMBER_OF_OPENINGS == 2) {
+        const JUST_UPDATED =
+            StorageManager.getPermanentSettingsValue('justUpdated');
+
+        if (JUST_UPDATED !== undefined) {
+            isJustUpdated = true;
+
+            StorageManager.setPermanentSettingsValue('justUpdated', undefined);
+        }
+    }
+
+    //StorageManager.getPermanentSettingsValue('justUpdated');
 
     mainWindow = new BrowserWindow({
         width: Math.min(PRIMARY_DISPLAY.workAreaSize.width, WINDOW_WIDTH),
         height: Math.min(PRIMARY_DISPLAY.workAreaSize.height, WINDOW_HEIGHT),
-        show: !IS_STARTUP_MODE && !HAS_DEEP_LINK && !IS_UPDATED_MODE,
+        show: !IS_STARTUP_MODE && !HAS_DEEP_LINK && !isJustUpdated,
         skipTaskbar: IS_STARTUP_MODE || HAS_DEEP_LINK,
         resizable: false,
         contextIsolation: true,
@@ -312,7 +329,7 @@ function createWindow(updateService) {
         );
     });
 
-    if (IS_UPDATED_MODE) {
+    if (isJustUpdated) {
         updateService.showUpdatedNotification();
     }
 }

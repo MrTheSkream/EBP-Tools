@@ -16,6 +16,7 @@ const {
     createFloatingWindow,
     deleteFloatingWindow
 } = require('../core/window-manager');
+const StorageManager = require('../core/storage-manager');
 
 //#endregion
 
@@ -108,31 +109,22 @@ class UpdateService {
                         }
 
                         this.#download(FILE_URL, DESTINATION_PATH, () => {
+                            StorageManager.setPermanentSettingsValue(
+                                'justUpdated',
+                                'true'
+                            );
                             switch (os.platform()) {
                                 case 'win32':
-                                    spawn(
-                                        DESTINATION_PATH,
-                                        ['--mode=updated'],
-                                        {
-                                            detached: true,
-                                            stdio: 'ignore'
-                                        }
-                                    ).unref();
+                                    spawn(DESTINATION_PATH, {
+                                        detached: true,
+                                        stdio: 'ignore'
+                                    }).unref();
                                     break;
                                 case 'darwin':
-                                    spawn(
-                                        // NOSONAR
-                                        'open',
-                                        [
-                                            DESTINATION_PATH,
-                                            '--args',
-                                            '--mode=updated'
-                                        ],
-                                        {
-                                            detached: true,
-                                            stdio: 'ignore'
-                                        }
-                                    ).unref();
+                                    spawn('open', [DESTINATION_PATH], {
+                                        detached: true,
+                                        stdio: 'ignore'
+                                    }).unref();
                                     break;
                             }
                             app.quit();

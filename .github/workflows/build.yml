@@ -19,7 +19,7 @@ jobs:
         runs-on: ubuntu-latest
         steps:
             # Clone the repository.
-            - uses: actions/checkout@v3
+            - uses: actions/checkout@v4
             # Install Node.js.
             - name: Setup Node.js
               uses: actions/setup-node@v4
@@ -45,11 +45,11 @@ jobs:
             APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         steps:
             # Clone the repository.
-            - uses: actions/checkout@v3
+            - uses: actions/checkout@v4
 
             # Import Apple certificate
             - name: Import Code-Signing Certificates
-              uses: Apple-Actions/import-codesign-certs@v1
+              uses: Apple-Actions/import-codesign-certs@v3
               with:
                   p12-file-base64: ${{ secrets.MACOS_CERTIFICATE }}
                   p12-password: ${{ secrets.MACOS_CERTIFICATE_PASSWORD }}
@@ -94,7 +94,7 @@ jobs:
         needs: [test]
         steps:
             # Clone the repository.
-            - uses: actions/checkout@v3
+            - uses: actions/checkout@v4
             # Install Node.js.
             - name: Setup Node.js
               uses: actions/setup-node@v4

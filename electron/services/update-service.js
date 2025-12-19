@@ -198,8 +198,9 @@ class UpdateService {
             res.pipe(FILE);
 
             FILE.on('finish', () => {
-                FILE.close();
-                callback?.();
+                FILE.close(() => {
+                    callback?.();
+                });
             });
         });
     }

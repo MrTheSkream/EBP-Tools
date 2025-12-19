@@ -58,7 +58,7 @@ async function setupExpressServer() {
         });
 
         // Start the server
-        APP.listen(PORT, () => {
+        APP.listen(PORT, '127.0.0.1', () => {
             console.log(`[EXPRESS] Listening on http://localhost:${PORT}.`);
             resolve(PORT);
         });

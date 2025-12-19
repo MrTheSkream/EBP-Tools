@@ -120,8 +120,8 @@ class UpdateService {
                                     ).unref();
                                     break;
                                 case 'darwin':
-                                    // NOSONAR
                                     spawn(
+                                        // NOSONAR
                                         'open',
                                         [
                                             DESTINATION_PATH,

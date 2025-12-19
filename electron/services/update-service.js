@@ -16,7 +16,6 @@ const {
     createFloatingWindow,
     deleteFloatingWindow
 } = require('../core/window-manager');
-const StorageManager = require('../core/storage-manager');
 
 //#endregion
 
@@ -35,6 +34,29 @@ class UpdateService {
     }
 
     //#region Functions
+
+    /**
+     * Displays the "Up to date" notification.
+     */
+    showUpdatedNotification() {
+        getMainWindow().hide();
+
+        createFloatingWindow(
+            450,
+            150,
+            JSON.stringify({
+                percent: 0,
+                leftRounded: true,
+                infinite: true,
+                icon: 'fa-sharp fa-solid fa-check',
+                text: '.common.upToDate'
+            })
+        );
+
+        setTimeout(() => {
+            deleteFloatingWindow(false);
+        }, 5000);
+    }
 
     /**
      * Automatically updates the application.
@@ -90,7 +112,7 @@ class UpdateService {
                                 case 'win32':
                                     spawn(
                                         DESTINATION_PATH,
-                                        ['--mode=startup'],
+                                        ['--mode=updated'],
                                         {
                                             detached: true,
                                             stdio: 'ignore'
@@ -104,7 +126,7 @@ class UpdateService {
                                         [
                                             DESTINATION_PATH,
                                             '--args',
-                                            '--mode=startup'
+                                            '--mode=updated'
                                         ],
                                         {
                                             detached: true,
@@ -118,23 +140,7 @@ class UpdateService {
                     }
                 } else {
                     if (invisible === false) {
-                        getMainWindow().hide();
-
-                        createFloatingWindow(
-                            450,
-                            150,
-                            JSON.stringify({
-                                percent: 0,
-                                leftRounded: true,
-                                infinite: true,
-                                icon: 'fa-sharp fa-solid fa-check',
-                                text: '.common.upToDate'
-                            })
-                        );
-
-                        setTimeout(() => {
-                            deleteFloatingWindow(false);
-                        }, 5000);
+                        this.showUpdatedNotification();
                     }
                 }
             }
@@ -173,6 +179,12 @@ class UpdateService {
         REQUEST.end();
     }
 
+    /**
+     * Downloads a file.
+     * @param {String} url URL of the file to download.
+     * @param {String} dest Path to place the file.
+     * @param {Function} callback Callback function.
+     */
     #download(url, dest, callback) {
         https.get(url, (res) => {
             // Redirection

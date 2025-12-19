@@ -1,0 +1,210 @@
+// Copyright (c) 2025, Antoine Duval
+// This file is part of a source-visible project.
+// See LICENSE for terms. Unauthorized use is prohibited.
+
+//#region Imports
+
+const https = require('https');
+const fs = require('fs');
+const os = require('os');
+const { version } = require('../../package.json');
+const { app } = require('electron');
+const path = require('node:path');
+const { spawn } = require('child_process');
+const {
+    getMainWindow,
+    createFloatingWindow,
+    deleteFloatingWindow
+} = require('../core/window-manager');
+
+//#endregion
+
+class UpdateService {
+    githubVersion = '';
+
+    constructor() {
+        this.localVersion = version;
+
+        setInterval(
+            () => {
+                this.autoUpdate(true);
+            },
+            1000 * 60 * 60
+        );
+    }
+
+    //#region Functions
+
+    /**
+     * Automatically updates the application.
+     * @param {boolean} invisible Should we hide the graphical update elements?
+     */
+    autoUpdate(invisible) {
+        this.getProjectLatestVersion(() => {
+            if (this.githubVersion) {
+                if (this.githubVersion != this.localVersion) {
+                    let githubFileName = '';
+                    let localFileName = '';
+                    switch (os.platform()) {
+                        case 'win32':
+                            githubFileName = `EBP-Tools-${this.githubVersion}.exe`;
+                            localFileName = `update.exe`;
+                            break;
+                        case 'darwin':
+                            githubFileName = `EBP-Tools-${this.githubVersion}.dmg`;
+                            localFileName = `update.dmg`;
+                            break;
+                    }
+
+                    if (githubFileName && localFileName) {
+                        getMainWindow().webContents.send(
+                            'global-message',
+                            'common.updatingInProgress'
+                        );
+
+                        const FILE_URL = `https://github.com/HeyHeyChicken/EBP-Tools/releases/download/${this.githubVersion}/${githubFileName}`;
+                        const DESTINATION_PATH = path.join(
+                            app.getPath('userData'),
+                            localFileName
+                        );
+
+                        if (invisible === false) {
+                            getMainWindow().hide();
+
+                            createFloatingWindow(
+                                450,
+                                150,
+                                JSON.stringify({
+                                    percent: 0,
+                                    leftRounded: true,
+                                    infinite: false,
+                                    icon: undefined,
+                                    text: '.common.updatingInProgress'
+                                })
+                            );
+                        }
+
+                        this.#download(FILE_URL, DESTINATION_PATH, () => {
+                            switch (os.platform()) {
+                                case 'win32':
+                                    spawn(DESTINATION_PATH, [], {
+                                        detached: true,
+                                        stdio: 'ignore'
+                                    }).unref();
+                                    break;
+                                case 'darwin':
+                                    spawn('open', [DESTINATION_PATH], {
+                                        detached: true,
+                                        stdio: 'ignore'
+                                    }).unref();
+                                    break;
+                            }
+                            app.quit();
+                        });
+                    }
+                } else {
+                    if (invisible === false) {
+                        getMainWindow().hide();
+
+                        createFloatingWindow(
+                            450,
+                            150,
+                            JSON.stringify({
+                                percent: 0,
+                                leftRounded: true,
+                                infinite: true,
+                                icon: 'fa-sharp fa-solid fa-check',
+                                text: '.common.upToDate'
+                            })
+                        );
+
+                        setTimeout(() => {
+                            deleteFloatingWindow(false);
+                        }, 5000);
+                    }
+                }
+            }
+        });
+    }
+
+    /**
+     * Retrieves the number of the latest published version of the project.
+     * @param {Function} callback (Optional) Return function.
+     */
+    getProjectLatestVersion(callback) {
+        const OPTIONS = {
+            hostname: 'api.github.com',
+            path: '/repos/heyheychicken/EBP-Tools/releases/latest',
+            method: 'GET',
+            headers: { 'User-Agent': '' }
+        };
+
+        const REQUEST = https.request(OPTIONS, (res) => {
+            let data = '';
+
+            res.on('data', (chunk) => (data += chunk));
+            res.on('end', () => {
+                try {
+                    const DATA = JSON.parse(data);
+                    this.githubVersion = DATA.tag_name;
+
+                    if (typeof callback !== 'undefined') {
+                        callback();
+                    }
+                } catch (err) {}
+            });
+        });
+
+        REQUEST.on('error', (err) => console.error(err));
+        REQUEST.end();
+    }
+
+    #download(url, dest, callback) {
+        https.get(url, (res) => {
+            // Redirection
+            if (
+                (res.statusCode === 301 || res.statusCode === 302) &&
+                res.headers.location
+            ) {
+                return this.#download(res.headers.location, dest, callback);
+            }
+
+            if (res.statusCode !== 200) {
+                console.error('Erreur:', res.statusCode);
+                return;
+            }
+
+            const TOTAL = parseInt(res.headers['content-length'], 10);
+            let downloaded = 0;
+            let lastPercent = 0;
+
+            const FILE = fs.createWriteStream(dest);
+
+            res.on('data', (chunk) => {
+                downloaded += chunk.length;
+
+                if (TOTAL) {
+                    const PERCENT = Math.round((downloaded / TOTAL) * 100);
+                    if (PERCENT > lastPercent) {
+                        lastPercent = PERCENT;
+                        getMainWindow().webContents.send(
+                            'updater-downloader-percent',
+                            PERCENT
+                        );
+                    }
+                }
+            });
+
+            res.pipe(FILE);
+
+            FILE.on('finish', () => {
+                FILE.close();
+                callback?.();
+            });
+        });
+    }
+
+    //#endregion
+}
+
+module.exports = UpdateService;

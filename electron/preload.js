@@ -99,6 +99,8 @@ contextBridge.exposeInMainWorld("electronAPI", {
   onConsoleLog: (callback) => ipcRenderer.on("console-log", (event, logData) => callback(logData)),
   // The server asks the font-end to display a toast.
   toast: (callback) => ipcRenderer.on("toast", (event, type, i18nPath, i18nVariables) => callback(type, i18nPath, i18nVariables)),
+  // The server asks the font-end the update downloading percent.
+  updaterDownloaderPercent: (callback) => ipcRenderer.on("updater-downloader-percent", (event, percent) => callback(percent)),
 
   //#endregion
 });

@@ -12,12 +12,19 @@ const {
     dialog,
     shell
 } = require('electron');
-const { autoUpdater } = require('electron-updater');
 
-// Configure auto-updater
-autoUpdater.autoDownload = true;
-autoUpdater.autoInstallOnAppQuit = true;
-autoUpdater.disableDifferentialDownload = true; // Disable differential downloads (blockmap not available with Electron Forge)
+//#region Configure auto-updater
+
+/**
+ * I can't get Electron's automatic update system to work, so I disable it and create a homemade auto updater.
+ */
+
+//const { autoUpdater } = require('electron-updater');
+//autoUpdater.autoDownload = true;
+//autoUpdater.autoInstallOnAppQuit = true;
+//autoUpdater.disableDifferentialDownload = true; // Disable differential downloads (blockmap not available with Electron Forge)
+
+//#endregion
 
 // When in installation mode, close the application.
 if (require('electron-squirrel-startup')) {
@@ -27,7 +34,6 @@ if (require('electron-squirrel-startup')) {
 const path = require('node:path');
 const os = require('os');
 const { exec, spawn, execFile } = require('child_process');
-const { version } = require('../package.json');
 const https = require('https');
 const http = require('http');
 const fs = require('fs');
@@ -67,6 +73,7 @@ const {
     changeVideoResolution,
     removeBorders
 } = require('./services/video-service');
+const UpdateService = require('./services/update-service');
 
 //#endregion
 
@@ -87,14 +94,13 @@ if (process.defaultApp) {
 
 //#endregion
 
+const UPDATE_SERVICE = new UpdateService();
 const APP_GOT_THE_LOCK = app.requestSingleInstanceLock();
 
 if (!APP_GOT_THE_LOCK) {
     // Another instance is already launched => we quit.
     app.quit();
 }
-
-let projectLatestVersion /* string */ = '';
 
 (async () => {
     const NUMBER_OF_OPENINGS_KEY = 'numberOfOpenings';
@@ -117,14 +123,6 @@ let projectLatestVersion /* string */ = '';
     await setupExpressServer();
 
     //#endregion
-
-    getProjectLatestVersion();
-    setInterval(
-        () => {
-            getProjectLatestVersion();
-        },
-        1000 * 60 * 60
-    );
 
     /**
      * Handle deep link URL (ebp://...)
@@ -595,33 +593,6 @@ let projectLatestVersion /* string */ = '';
     }
 
     /**
-     * This function retrieves the number of the latest published version of the project.
-     */
-    function getProjectLatestVersion() {
-        const OPTIONS = {
-            hostname: 'api.github.com',
-            path: '/repos/heyheychicken/EBP-Tools/releases/latest',
-            method: 'GET',
-            headers: { 'User-Agent': '' }
-        };
-
-        const REQUEST = https.request(OPTIONS, (res) => {
-            let data = '';
-
-            res.on('data', (chunk) => (data += chunk));
-            res.on('end', () => {
-                try {
-                    const DATA = JSON.parse(data);
-                    projectLatestVersion = DATA.tag_name;
-                } catch (err) {}
-            });
-        });
-
-        REQUEST.on('error', (err) => console.error(err));
-        REQUEST.end();
-    }
-
-    /**
      * Converts a time string in HH:MM:SS format to total seconds.
      * @param {string} hms - Time string in format "HH:MM:SS".
      * @returns {number} Total number of seconds.
@@ -973,10 +944,11 @@ let projectLatestVersion /* string */ = '';
         if (IS_DEV_MODE) {
             // We wait until the Angular server is ready before creating the window that will contain the HMI.
             waitForHttp(4200).then(() => {
-                createWindow(version, autoUpdater);
+                createWindow(UPDATE_SERVICE);
             });
         } else {
             // Configure auto-updater logger
+            /*
             autoUpdater.logger = console;
 
             // Auto-updater event handlers
@@ -1023,9 +995,10 @@ let projectLatestVersion /* string */ = '';
                 },
                 4 * 60 * 60 * 1000
             );
+            */
 
             // We immediately create the window that will contain the HMI.
-            createWindow(version, autoUpdater);
+            createWindow(UPDATE_SERVICE);
 
             // If a second instance is launched, the first is displayed.
             app.on('second-instance', (event, commandLine) => {
@@ -1235,17 +1208,18 @@ let projectLatestVersion /* string */ = '';
 
             //#endregion
 
-            autoUpdater.checkForUpdatesAndNotify();
+            //autoUpdater.checkForUpdatesAndNotify();
+            UPDATE_SERVICE.autoUpdate(true);
 
             console.log('Number of openings', NUMBER_OF_OPENINGS);
             console.log({
-                current: version,
-                last: projectLatestVersion
+                current: UPDATE_SERVICE.localVersion,
+                last: UPDATE_SERVICE.githubVersion
             });
 
             return {
-                current: version,
-                last: projectLatestVersion
+                current: UPDATE_SERVICE.localVersion,
+                last: UPDATE_SERVICE.githubVersion
             };
         });
 
@@ -1756,7 +1730,7 @@ let projectLatestVersion /* string */ = '';
         app.on('activate', function () {
             // On macOS it's common to re-create a window in the app when the dock icon is clicked and there are no other windows open.
             if (BrowserWindow.getAllWindows().length === 0) {
-                createWindow(version, autoUpdater);
+                createWindow(UPDATE_SERVICE);
             }
         });
     });

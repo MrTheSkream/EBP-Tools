@@ -6,7 +6,9 @@
     "settings": "Settings",
     "close": "Close",
     "save": "Save",
-    "search": "Search"
+    "search": "Search",
+    "updatingInProgress": "Updating in progress, please wait.",
+    "upToDate": "EBP - Tools is up to date."
   },
   "view": {
     "home": {

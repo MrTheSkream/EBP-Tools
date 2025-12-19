@@ -164,7 +164,7 @@ function deleteFloatingWindow(showMainWindow) {
 /**
  * Creates and configures the main application window.
  */
-function createWindow(currentProjectVersion, autoUpdater) {
+function createWindow(updateService) {
     const PRIMARY_DISPLAY = screen.getPrimaryDisplay();
     const APP_ARGS = process.argv;
 
@@ -265,14 +265,14 @@ function createWindow(currentProjectVersion, autoUpdater) {
             ]
         },
         {
-            label: `Check for update (${currentProjectVersion})`,
+            label: `Check for update (${updateService.localVersion})`,
             icon: nativeImage
                 .createFromPath(
                     path.join(ROOT_PATH, 'assets', 'context-menu', 'up.png')
                 )
                 .resize({ width: 12, height: 12 }),
             click: () => {
-                autoUpdater.checkForUpdatesAndNotify();
+                updateService.autoUpdate(false);
             }
         }
     ]);

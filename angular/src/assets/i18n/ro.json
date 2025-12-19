@@ -6,7 +6,9 @@
     "settings": "Setări",
     "close": "Închide",
     "save": "Salvează",
-    "search": "Căuta"
+    "search": "Căuta",
+    "updatingInProgress": "Actualizare în curs, vă rugăm să așteptați.",
+    "upToDate": "EBP - Tools este actualizat."
   },
   "view": {
     "home": {

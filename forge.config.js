@@ -110,6 +110,11 @@ module.exports = {
                     }
                 }
             }
+        },
+        {
+            // ZIP (.app) pour auto-update
+            name: '@electron-forge/maker-zip',
+            platforms: ['darwin']
         }
     ],
     plugins: [

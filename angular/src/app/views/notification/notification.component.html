@@ -13,10 +13,18 @@ See LICENSE for terms. Unauthorized use is prohibited.
         [icon]="data.icon"
       ></ebp-loader>
     </div>
-    <ebp-message [html]="data.text"> </ebp-message>
+    @if (data.text.startsWith('.')) {
+      <ebp-message [html]="data.text.slice(1) | translate"> </ebp-message>
+    } @else {
+      <ebp-message [html]="data.text"> </ebp-message>
+    }
   } @else {
     <div class="images">
-      <ebp-message [html]="data.text"> </ebp-message>
+      @if (data.text.startsWith('.')) {
+        <ebp-message [html]="data.text.slice(1) | translate"> </ebp-message>
+      } @else {
+        <ebp-message [html]="data.text"> </ebp-message>
+      }
       <div>
         @for (image of images; track image) {
           <img [src]="image" />

@@ -119,6 +119,7 @@ export interface ElectronAPI {
       i18nVariables: object
     ) => void
   ) => void;
+  updaterDownloaderPercent: (callback: (percent: number) => void) => void;
 
   //#endregion
 }

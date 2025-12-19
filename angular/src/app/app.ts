@@ -27,6 +27,7 @@ import { AccessibilitySettingsDTO } from './core/services/identity/model/accessi
 import { MatDialog } from '@angular/material/dialog';
 import { LinuxIntroDialog } from './views/home/dialogs/linux-intro/linux-intro.dialog';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { NotificationService } from './views/notification/services/notification.service';
 
 //#endregion
 @Component({
@@ -64,7 +65,8 @@ export class App implements OnInit {
     private readonly translateService: TranslateService,
     private readonly toastrService: ToastrService,
     private readonly elementRef: ElementRef,
-    private readonly dialogService: MatDialog
+    private readonly dialogService: MatDialog,
+    private readonly notificationService: NotificationService
   ) {}
 
   //#region Functions
@@ -203,6 +205,24 @@ export class App implements OnInit {
           });
         }
       );
+
+      // The server provides information on the progress of the update download.
+      window.electronAPI.updaterDownloaderPercent((percent: number) => {
+        this.ngZone.run(() => {
+          this.translateService
+            .get('common.updatingInProgress')
+            .subscribe((translated: string) => {
+              this.notificationService.sendMessage({
+                percent: percent,
+                infinite: percent == 100,
+                icon:
+                  percent == 100 ? 'fa-sharp fa-solid fa-download' : undefined,
+                text: translated,
+                leftRounded: true
+              });
+            });
+        });
+      });
 
       window.electronAPI.globalMessage(
         (i18nPath: string, i18nVariables: object) => {

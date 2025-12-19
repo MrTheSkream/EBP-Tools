@@ -85,6 +85,7 @@ jobs:
                   name: macos
                   path: |
                       out/make/*.dmg
+                      out/make/*.zip
                       out/make/latest-mac.yml
 
     # Create the Windows version of the application.
@@ -151,6 +152,7 @@ jobs:
                   prerelease: false
                   files: |
                       ./release/EBP-Tools-*.dmg
+                      ./release/*.zip
                       ./release/EBP-Tools-*.exe
                       ./release/RELEASES
                       ./release/*.nupkg

@@ -16,6 +16,7 @@ const {
     createFloatingWindow,
     deleteFloatingWindow
 } = require('../core/window-manager');
+const StorageManager = require('../core/storage-manager');
 
 //#endregion
 
@@ -87,16 +88,29 @@ class UpdateService {
                         this.#download(FILE_URL, DESTINATION_PATH, () => {
                             switch (os.platform()) {
                                 case 'win32':
-                                    spawn(DESTINATION_PATH, [], {
-                                        detached: true,
-                                        stdio: 'ignore'
-                                    }).unref();
+                                    spawn(
+                                        DESTINATION_PATH,
+                                        ['--mode=startup'],
+                                        {
+                                            detached: true,
+                                            stdio: 'ignore'
+                                        }
+                                    ).unref();
                                     break;
                                 case 'darwin':
-                                    spawn('open', [DESTINATION_PATH], {
-                                        detached: true,
-                                        stdio: 'ignore'
-                                    }).unref();
+                                    // NOSONAR
+                                    spawn(
+                                        'open',
+                                        [
+                                            DESTINATION_PATH,
+                                            '--args',
+                                            '--mode=startup'
+                                        ],
+                                        {
+                                            detached: true,
+                                            stdio: 'ignore'
+                                        }
+                                    ).unref();
                                     break;
                             }
                             app.quit();

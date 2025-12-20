@@ -1128,7 +1128,7 @@ if (!APP_GOT_THE_LOCK) {
                     DL.stdout.on('data', (data) => {
                         const MATCH = data.toString().match(/(\d{1,3}\.\d)%/); // extract the % (eg: 42.3%)
                         if (MATCH) {
-                            const PERCENT = parseInt(MATCH[1]);
+                            const PERCENT = Number.parseInt(MATCH[1]);
                             if (PERCENT > percent) {
                                 percent = PERCENT;
                                 getMainWindow().webContents.send(

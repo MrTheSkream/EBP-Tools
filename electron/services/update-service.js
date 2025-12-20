@@ -192,7 +192,7 @@ class UpdateService {
                 return;
             }
 
-            const TOTAL = parseInt(res.headers['content-length'], 10);
+            const TOTAL = Number.parseInt(res.headers['content-length'], 10);
             let downloaded = 0;
             let lastPercent = 0;
 

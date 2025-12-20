@@ -241,8 +241,8 @@ export class ReplayCutterCropDialog implements OnInit {
       const STYLE = getComputedStyle(this.matDialogContent?.nativeElement);
       return (
         this.matDialogContent?.nativeElement.clientWidth -
-        parseInt(STYLE.paddingLeft) -
-        parseInt(STYLE.paddingRight)
+        Number.parseInt(STYLE.paddingLeft) -
+        Number.parseInt(STYLE.paddingRight)
       );
     }
     return 0;
@@ -258,7 +258,7 @@ export class ReplayCutterCropDialog implements OnInit {
       const STYLE = getComputedStyle(this.matDialogContent?.nativeElement);
       return (
         this.matDialogContent?.nativeElement.clientHeight -
-        parseInt(STYLE.paddingTop)
+        Number.parseInt(STYLE.paddingTop)
       );
     }
     return 0;

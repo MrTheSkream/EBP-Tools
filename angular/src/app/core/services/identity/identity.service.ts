@@ -50,13 +50,13 @@ export class IdentityService {
       const DATA = JSON.parse(atob(PAYLOAD));
       console.log('User access token:\n', DATA);
 
-      this._userID = parseInt(DATA.userID);
-      this._leaderID = parseInt(DATA.sub);
+      this._userID = Number.parseInt(DATA.userID);
+      this._leaderID = Number.parseInt(DATA.sub);
 
       this._email = DATA.email;
 
-      this._supporterLevel = parseInt(DATA.supporterLevel);
-      if (isNaN(this._supporterLevel)) {
+      this._supporterLevel = Number.parseInt(DATA.supporterLevel);
+      if (Number.isNaN(this._supporterLevel)) {
         this._supporterLevel = 0;
       }
     }

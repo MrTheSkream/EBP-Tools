@@ -72,7 +72,7 @@ export class App implements OnInit {
   //#region Functions
 
   ngOnInit(): void {
-    const SPLITED = window.location.pathname
+    const SPLITED = globalThis.location.pathname
       .split('/')
       .filter((x) => x && x.trim().length > 0);
     // If the language is not in the URL...

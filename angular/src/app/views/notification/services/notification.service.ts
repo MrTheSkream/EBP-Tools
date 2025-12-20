@@ -14,8 +14,8 @@ import { Message } from '../models/message.model';
 export class NotificationService {
   //#region Attributes
 
-  private _channel = new BroadcastChannel('ebp_tools_notification');
-  private _messages$ = new Subject<Message>();
+  private readonly _channel = new BroadcastChannel('ebp_tools_notification');
+  private readonly _messages$ = new Subject<Message>();
   messages$ = this._messages$.asObservable();
 
   //#endregion

@@ -71,18 +71,18 @@ function changeVideoResolution(
                 /Duration: (\d+):(\d+):(\d+\.\d+)/
             );
             if (DURATION_MATCH) {
-                const HOURS = parseInt(DURATION_MATCH[1]);
-                const MINUTES = parseInt(DURATION_MATCH[2]);
-                const SECONDES = parseFloat(DURATION_MATCH[3]);
+                const HOURS = Number.parseInt(DURATION_MATCH[1]);
+                const MINUTES = Number.parseInt(DURATION_MATCH[2]);
+                const SECONDES = Number.parseFloat(DURATION_MATCH[3]);
                 duration = HOURS * 3600 + MINUTES * 60 + SECONDES;
             }
 
             // Progress
             const TIME_MATCH = DATA.match(/time=(\d+):(\d+):(\d+\.\d+)/);
             if (TIME_MATCH && duration > 0) {
-                const HOURS = parseInt(TIME_MATCH[1]);
-                const MINUTES = parseInt(TIME_MATCH[2]);
-                const SECONDES = parseFloat(TIME_MATCH[3]);
+                const HOURS = Number.parseInt(TIME_MATCH[1]);
+                const MINUTES = Number.parseInt(TIME_MATCH[2]);
+                const SECONDES = Number.parseFloat(TIME_MATCH[3]);
                 const CURRENT = HOURS * 3600 + MINUTES * 60 + SECONDES;
 
                 const PERCENT = Math.ceil((CURRENT / duration) * 100);
@@ -155,8 +155,8 @@ function removeBorders(inputPath, cropPosition) {
                 /Duration: (\d+):(\d+):(\d+\.\d+)/
             );
             if (DURATION_MATCH) {
-                const HOURS = parseInt(DURATION_MATCH[1]);
-                const MINUTES = parseInt(DURATION_MATCH[2]);
+                const HOURS = Number.parseInt(DURATION_MATCH[1]);
+                const MINUTES = Number.parseInt(DURATION_MATCH[2]);
                 const SECONDES = parseFloat(DURATION_MATCH[3]);
                 duration = HOURS * 3600 + MINUTES * 60 + SECONDES;
             }
@@ -164,8 +164,8 @@ function removeBorders(inputPath, cropPosition) {
             // Progress
             const TIME_MATCH = DATA.match(/time=(\d+):(\d+):(\d+\.\d+)/);
             if (TIME_MATCH && duration > 0) {
-                const HOURS = parseInt(TIME_MATCH[1]);
-                const MINUTES = parseInt(TIME_MATCH[2]);
+                const HOURS = Number.parseInt(TIME_MATCH[1]);
+                const MINUTES = Number.parseInt(TIME_MATCH[2]);
                 const SECONDES = parseFloat(TIME_MATCH[3]);
                 const CURRENT = HOURS * 3600 + MINUTES * 60 + SECONDES;
 

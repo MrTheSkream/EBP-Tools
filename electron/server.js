@@ -622,7 +622,8 @@ if (!APP_GOT_THE_LOCK) {
                 StorageManager.getPermanentSettingsValue(
                     'videoCutterOutputPath',
                     path.join(os.homedir(), 'Downloads')
-                )`ebp_temp_part_${i}.mp4`
+                ),
+                `ebp_temp_part_${i}.mp4`
             );
             TEMP_FILES.push(TEMP_FILE);
 

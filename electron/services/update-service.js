@@ -17,6 +17,7 @@ const {
     deleteFloatingWindow
 } = require('../core/window-manager');
 const StorageManager = require('../core/storage-manager');
+const { IS_DEV_MODE } = require('../config/constants');
 
 //#endregion
 
@@ -64,79 +65,81 @@ class UpdateService {
      * @param {boolean} invisible Should we hide the graphical update elements?
      */
     autoUpdate(invisible) {
-        this.getProjectLatestVersion(() => {
-            if (this.githubVersion) {
-                if (this.githubVersion != this.localVersion) {
-                    let githubFileName = '';
-                    let localFileName = '';
-                    switch (os.platform()) {
-                        case 'win32':
-                            githubFileName = `EBP-Tools-${this.githubVersion}.exe`;
-                            localFileName = `update.exe`;
-                            break;
-                        case 'darwin':
-                            githubFileName = `EBP-Tools-${this.githubVersion}.dmg`;
-                            localFileName = `update.dmg`;
-                            break;
-                    }
-
-                    if (githubFileName && localFileName) {
-                        getMainWindow().webContents.send(
-                            'global-message',
-                            'common.updatingInProgress'
-                        );
-
-                        const FILE_URL = `https://github.com/HeyHeyChicken/EBP-Tools/releases/download/${this.githubVersion}/${githubFileName}`;
-                        const DESTINATION_PATH = path.join(
-                            app.getPath('userData'),
-                            localFileName
-                        );
-
-                        if (invisible === false) {
-                            getMainWindow().hide();
-
-                            createFloatingWindow(
-                                450,
-                                150,
-                                JSON.stringify({
-                                    percent: 0,
-                                    leftRounded: true,
-                                    infinite: false,
-                                    icon: undefined,
-                                    text: '.common.updatingInProgress'
-                                })
-                            );
+        if (!IS_DEV_MODE) {
+            this.getProjectLatestVersion(() => {
+                if (this.githubVersion) {
+                    if (this.githubVersion != this.localVersion) {
+                        let githubFileName = '';
+                        let localFileName = '';
+                        switch (os.platform()) {
+                            case 'win32':
+                                githubFileName = `EBP-Tools-${this.githubVersion}.exe`;
+                                localFileName = `update.exe`;
+                                break;
+                            case 'darwin':
+                                githubFileName = `EBP-Tools-${this.githubVersion}.dmg`;
+                                localFileName = `update.dmg`;
+                                break;
                         }
 
-                        this.#download(FILE_URL, DESTINATION_PATH, () => {
-                            StorageManager.setPermanentSettingsValue(
-                                'justUpdated',
-                                'true'
+                        if (githubFileName && localFileName) {
+                            getMainWindow().webContents.send(
+                                'global-message',
+                                'common.updatingInProgress'
                             );
-                            switch (os.platform()) {
-                                case 'win32':
-                                    spawn(DESTINATION_PATH, {
-                                        detached: true,
-                                        stdio: 'ignore'
-                                    }).unref();
-                                    break;
-                                case 'darwin':
-                                    spawn('open', [DESTINATION_PATH], {
-                                        detached: true,
-                                        stdio: 'ignore'
-                                    }).unref();
-                                    break;
+
+                            const FILE_URL = `https://github.com/HeyHeyChicken/EBP-Tools/releases/download/${this.githubVersion}/${githubFileName}`;
+                            const DESTINATION_PATH = path.join(
+                                app.getPath('userData'),
+                                localFileName
+                            );
+
+                            if (invisible === false) {
+                                getMainWindow().hide();
+
+                                createFloatingWindow(
+                                    450,
+                                    150,
+                                    JSON.stringify({
+                                        percent: 0,
+                                        leftRounded: true,
+                                        infinite: false,
+                                        icon: undefined,
+                                        text: '.common.updatingInProgress'
+                                    })
+                                );
                             }
-                            app.quit();
-                        });
-                    }
-                } else {
-                    if (invisible === false) {
-                        this.showUpdatedNotification();
+
+                            this.#download(FILE_URL, DESTINATION_PATH, () => {
+                                StorageManager.setPermanentSettingsValue(
+                                    'justUpdated',
+                                    'true'
+                                );
+                                switch (os.platform()) {
+                                    case 'win32':
+                                        spawn(DESTINATION_PATH, {
+                                            detached: true,
+                                            stdio: 'ignore'
+                                        }).unref();
+                                        break;
+                                    case 'darwin':
+                                        spawn('open', [DESTINATION_PATH], {
+                                            detached: true,
+                                            stdio: 'ignore'
+                                        }).unref();
+                                        break;
+                                }
+                                app.quit();
+                            });
+                        }
+                    } else {
+                        if (invisible === false) {
+                            this.showUpdatedNotification();
+                        }
                     }
                 }
-            }
-        });
+            });
+        }
     }
 
     /**

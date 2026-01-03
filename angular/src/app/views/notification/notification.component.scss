@@ -9,7 +9,7 @@
 ::ng-deep * {
   -webkit-app-region: drag;
 
-  &:not(ebp-message) {
+  &:not(.message) {
     overflow: hidden !important;
   }
 }
@@ -65,12 +65,16 @@
 
     > ebp-message {
       position: absolute;
-      right: calc(#{variables.$form_height} + #{variables.$margin} * 3);
+      right: calc(#{variables.$margin} * 2);
       top: 50%;
       transform: translateY(-50%);
-      width: calc(
-        100% - #{$height} - #{variables.$form_height} - #{variables.$margin} * 7
-      );
+      width: calc(100% - #{$height} - #{variables.$margin} * 4);
+
+      ::ng-deep {
+        > .message {
+          margin-bottom: 0;
+        }
+      }
     }
 
     > .images {

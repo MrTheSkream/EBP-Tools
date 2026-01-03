@@ -28,6 +28,8 @@ import { MatDialog } from '@angular/material/dialog';
 import { LinuxIntroDialog } from './views/home/dialogs/linux-intro/linux-intro.dialog';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { NotificationService } from './views/notification/services/notification.service';
+import { ReplayCutterService } from './views/replay_cutter/services/replay-cutter.service';
+import { Message } from './views/notification/models/message.model';
 
 //#endregion
 @Component({
@@ -177,6 +179,23 @@ export class App implements OnInit {
         });
       });
 
+      window.electronAPI.analyzeVideoFile(
+        (
+          socket: string,
+          filePath: string,
+          forcedTraining: boolean | undefined
+        ) => {
+          this.ngZone.run(() => {
+            ReplayCutterService.videoDetectMaps(
+              socket,
+              `http://localhost:${this.globalService.serverPort}/file?path=${filePath}`,
+              this.translateService,
+              this.notificationService
+            );
+          });
+        }
+      );
+
       window.electronAPI.toast(
         (
           type: 'success' | 'error' | 'warning' | 'info',
@@ -206,21 +225,10 @@ export class App implements OnInit {
         }
       );
 
-      // The server provides information on the progress of the update download.
-      window.electronAPI.updaterDownloaderPercent((percent: number) => {
+      // The server update the notification informations
+      window.electronAPI.setNotificationData((message: Message) => {
         this.ngZone.run(() => {
-          this.translateService
-            .get('common.updatingInProgress')
-            .subscribe((translated: string) => {
-              this.notificationService.sendMessage({
-                percent: percent,
-                infinite: percent == 100,
-                icon:
-                  percent == 100 ? 'fa-sharp fa-solid fa-download' : undefined,
-                text: translated,
-                leftRounded: true
-              });
-            });
+          this.notificationService.sendMessage(message);
         });
       });
 

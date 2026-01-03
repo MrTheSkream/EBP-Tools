@@ -51,7 +51,8 @@ class UpdateService {
                 leftRounded: true,
                 infinite: true,
                 icon: 'fa-sharp fa-solid fa-check',
-                text: '.common.upToDate'
+                text: '.common.upToDate',
+                state: 'info'
             })
         );
 
@@ -105,7 +106,8 @@ class UpdateService {
                                         leftRounded: true,
                                         infinite: false,
                                         icon: undefined,
-                                        text: '.common.updatingInProgress'
+                                        text: '.common.updatingInProgress',
+                                        state: 'info'
                                     })
                                 );
                             }
@@ -209,8 +211,18 @@ class UpdateService {
                     if (PERCENT > lastPercent) {
                         lastPercent = PERCENT;
                         getMainWindow().webContents.send(
-                            'updater-downloader-percent',
-                            PERCENT
+                            'set-notification-data',
+                            {
+                                percent: PERCENT,
+                                infinite: PERCENT == 100,
+                                icon:
+                                    PERCENT == 100
+                                        ? 'fa-sharp fa-solid fa-download'
+                                        : undefined,
+                                text: '.common.updatingInProgress',
+                                leftRounded: true,
+                                state: 'info'
+                            }
                         );
                     }
                 }

@@ -8,7 +8,9 @@
     "save": "Salvează",
     "search": "Căuta",
     "updatingInProgress": "Actualizare în curs, vă rugăm să așteptați.",
-    "upToDate": "EBP - Tools este actualizat."
+    "upToDate": "EBP - Tools este actualizat.",
+    "encoding": "Codificare în curs…",
+    "encoded": "Videoclipul a fost codificat cu succes!"
   },
   "view": {
     "home": {

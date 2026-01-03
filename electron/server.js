@@ -176,6 +176,119 @@ if (!APP_GOT_THE_LOCK) {
                     );
                 });
                 break;
+            case 'encodeVideo':
+                const FILES_TO_ENCODE_PATHS = await openFiles(
+                    data.filesExtensions
+                );
+                if (FILES_TO_ENCODE_PATHS.length == 1) {
+                    const NOTIFICATION_DATA = {
+                        percent: 0,
+                        leftRounded: true,
+                        infinite: false,
+                        icon: '',
+                        text: '.common.encoding',
+                        state: 'info'
+                    };
+                    createFloatingWindow(
+                        450,
+                        150,
+                        JSON.stringify(NOTIFICATION_DATA)
+                    );
+
+                    const TMP_PATH = `${FILES_TO_ENCODE_PATHS[0]}.temp.mp4`;
+                    const DURATION = await getVideoDuration(
+                        FILES_TO_ENCODE_PATHS[0]
+                    );
+                    const ARGS = [
+                        '-y',
+                        '-i',
+                        FILES_TO_ENCODE_PATHS[0],
+                        '-vf',
+                        'pad=ceil(iw/2)*2:ceil(ih/2)*2,fps=30',
+                        '-c:v',
+                        'libx264',
+                        TMP_PATH
+                    ];
+
+                    console.log(`[FFMPEG] Encoding video...`);
+
+                    const COMMAND = spawn(FFMPEG_PATH, ARGS);
+
+                    COMMAND.stderr.on('data', (data) => {
+                        const STR = data.toString();
+
+                        const TIME_MATCH = STR.match(/time=(\d+:\d+:\d+\.\d+)/);
+                        if (TIME_MATCH) {
+                            const [h, m, s] = TIME_MATCH[1].split(':');
+                            const CURRENT = +h * 3600 + +m * 60 + parseFloat(s);
+                            const PERCENT = Math.min(
+                                100,
+                                Math.round((CURRENT / DURATION) * 100)
+                            );
+
+                            getMainWindow().webContents.send(
+                                'set-notification-data',
+                                {
+                                    ...NOTIFICATION_DATA,
+                                    ...{ percent: PERCENT }
+                                }
+                            );
+                        }
+                    });
+
+                    COMMAND.on('close', (code) => {
+                        if (code === 0) {
+                            console.log(`[FFMPEG] Video encoded.`);
+
+                            const OUTPUT = FILES_TO_ENCODE_PATHS[0].replace(
+                                path.extname(FILES_TO_ENCODE_PATHS[0]),
+                                '.mp4'
+                            );
+
+                            if (fs.existsSync(FILES_TO_ENCODE_PATHS[0])) {
+                                fs.unlinkSync(FILES_TO_ENCODE_PATHS[0]);
+                            }
+
+                            fs.renameSync(TMP_PATH, OUTPUT);
+
+                            getMainWindow().webContents.send(
+                                'set-notification-data',
+                                {
+                                    percent: 100,
+                                    leftRounded: true,
+                                    infinite: false,
+                                    icon: 'fa-sharp fa-solid fa-check',
+                                    text: '.common.encoded',
+                                    state: 'success'
+                                }
+                            );
+
+                            StorageManager.setTemporarySettingsValue(
+                                'deeplink',
+                                undefined
+                            );
+
+                            setTimeout(() => {
+                                deleteFloatingWindow();
+                            }, 5000);
+                        } else {
+                            deleteFloatingWindow();
+                            StorageManager.setTemporarySettingsValue(
+                                'deeplink',
+                                undefined
+                            );
+                        }
+                    });
+                } else {
+                    console.log(
+                        `Error: ${FILES_TO_ENCODE_PATHS.length} file${FILES_TO_ENCODE_PATHS.length > 1 ? 's' : ''} selected.`
+                    );
+                    StorageManager.setTemporarySettingsValue(
+                        'deeplink',
+                        undefined
+                    );
+                }
+                break;
             case 'exportGames':
                 if (data.publicPseudo) {
                     extractPublicPseudoGames(
@@ -241,10 +354,12 @@ if (!APP_GOT_THE_LOCK) {
                 }
                 break;
             case 'analyzeVideoFile':
+                console.log(data.socket);
                 const FILES_PATHS = await openFiles(data.filesExtensions);
                 if (FILES_PATHS.length == 1) {
                     getMainWindow().webContents.send(
                         'analyze-video-file',
+                        data.socket,
                         FILES_PATHS[0],
                         true
                     );
@@ -387,6 +502,30 @@ if (!APP_GOT_THE_LOCK) {
                     `[[FFMPEG] Cut Game - Completed successfully: ${OUTPUT_FILE_PATH}`
                 );
                 resolve(OUTPUT_FILE_PATH);
+            });
+        });
+    }
+
+    /**
+     * Returns the video duration in seconds (float).
+     */
+    function getVideoDuration(videoPath) {
+        return new Promise((resolve, reject) => {
+            const COMMAND = spawn(FFMPEG_PATH, ['-i', videoPath]);
+
+            let stderr = '';
+            COMMAND.stderr.on('data', (d) => (stderr += d.toString()));
+            COMMAND.on('error', reject);
+
+            COMMAND.on('close', () => {
+                // Duration: 00:01:23.45, start: 0.000000, bitrate: ...
+                const MATCH = stderr.match(/Duration:\s(\d+):(\d+):(\d+\.\d+)/);
+                if (!MATCH) return reject(new Error('Duration not found'));
+
+                const [, h, m, s] = MATCH;
+                const duration = +h * 3600 + +m * 60 + parseFloat(s);
+
+                resolve(duration);
             });
         });
     }
@@ -1070,6 +1209,11 @@ if (!APP_GOT_THE_LOCK) {
         // The front-end asks the server to return the user's operating system.
         ipcMain.handle('get-os', () => {
             return os.platform();
+        });
+
+        // The front-end asks the server to send a socket message to the EBP socket server.
+        ipcMain.handle('socket-emit', (event, socket, path, value) => {
+            socketEmit(socket, path, value);
         });
 
         // The front-end asks the server to download a YouTube video.

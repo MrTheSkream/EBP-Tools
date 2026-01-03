@@ -9,6 +9,7 @@ import { Versions } from './versions';
 import { JWT } from './jwt';
 import { CropperPosition } from 'ngx-image-cropper';
 import { Game } from '../app/views/replay_cutter/models/game';
+import { Message } from '../app/views/notification/models/message.model';
 
 //#endregion
 
@@ -94,6 +95,7 @@ export interface ElectronAPI {
   ) => Promise<string>;
   getSettings: (key: string) => Promise<any | undefined>;
   setSettings: (key: string, value: any) => void;
+  socketEmit: (socket: string, path: string, value: any) => void;
 
   //#endregion
 
@@ -104,6 +106,13 @@ export interface ElectronAPI {
   setRemoveBordersPercent: (callback: (percent: number) => void) => void;
   setJWTAccessToken: (callback: (accessToken: string) => void) => void;
   gameIsUploaded: (callback: (gameIndex: number) => void) => void;
+  analyzeVideoFile: (
+    callback: (
+      socket: string,
+      filePath: string,
+      forcedTraining: boolean | undefined
+    ) => void
+  ) => void;
   gamesAreExported: (callback: (filePath: string | undefined) => void) => void;
   replayDownloaderError: (callback: (error: string) => void) => void;
   replayDownloaderSuccess: (callback: (path: string) => void) => void;
@@ -119,7 +128,7 @@ export interface ElectronAPI {
       i18nVariables: object
     ) => void
   ) => void;
-  updaterDownloaderPercent: (callback: (percent: number) => void) => void;
+  setNotificationData: (callback: (data: Message) => void) => void;
 
   //#endregion
 }

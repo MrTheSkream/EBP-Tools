@@ -8,7 +8,9 @@
     "save": "Speichern",
     "search": "Suchen",
     "updatingInProgress": "Aktualisierung läuft, bitte warten.",
-    "upToDate": "EBP - Tools ist auf dem neuesten Stand."
+    "upToDate": "EBP - Tools ist auf dem neuesten Stand.",
+    "encoding": "Kodierung läuft…",
+    "encoded": "Das Video wurde erfolgreich kodiert!"
   },
   "view": {
     "home": {

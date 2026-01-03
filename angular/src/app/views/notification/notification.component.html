@@ -11,19 +11,25 @@ See LICENSE for terms. Unauthorized use is prohibited.
         [value]="data.percent"
         [infinite]="data.infinite"
         [icon]="data.icon"
+        [state]="data.state"
       ></ebp-loader>
     </div>
     @if (data.text.startsWith('.')) {
-      <ebp-message [html]="data.text.slice(1) | translate"> </ebp-message>
+      <ebp-message [state]="data.state" [html]="data.text.slice(1) | translate">
+      </ebp-message>
     } @else {
-      <ebp-message [html]="data.text"> </ebp-message>
+      <ebp-message [state]="data.state" [html]="data.text"> </ebp-message>
     }
   } @else {
     <div class="images">
       @if (data.text.startsWith('.')) {
-        <ebp-message [html]="data.text.slice(1) | translate"> </ebp-message>
+        <ebp-message
+          [state]="data.state"
+          [html]="data.text.slice(1) | translate"
+        >
+        </ebp-message>
       } @else {
-        <ebp-message [html]="data.text"> </ebp-message>
+        <ebp-message [state]="data.state" [html]="data.text"> </ebp-message>
       }
       <div>
         @for (image of images; track image) {

@@ -22,6 +22,7 @@ export class MessageComponent implements OnInit {
 
   @Input() public friend: boolean = false;
   @Input() public html: string | undefined;
+  @Input() public state: 'info' | 'success' | 'error' = 'info';
   @HostBinding('class.friend') addFriendClass: boolean = false;
 
   //#endregion

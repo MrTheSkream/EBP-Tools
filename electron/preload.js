@@ -68,6 +68,8 @@ contextBridge.exposeInMainWorld("electronAPI", {
   setVideoResolution: (videoPath, width, height) => ipcRenderer.invoke("set-video-resolution", videoPath, width, height),
   getSettings: (key) => ipcRenderer.invoke("get-settings", key),
   setSettings: (key, value) => ipcRenderer.invoke("set-settings", key, value),
+  // The front-end asks the server to send a socket message to the EBP socket server.
+  socketEmit: (socket, path, value) => ipcRenderer.invoke("socket-emit", socket, path, value),
 
   //#endregion
 
@@ -83,6 +85,8 @@ contextBridge.exposeInMainWorld("electronAPI", {
   setJWTAccessToken: (callback) => ipcRenderer.on("set-jwt-access-token", (event, accessToken) => callback(accessToken)),
   // The server gives the path of the video file selected by the user.
   gameIsUploaded: (callback) => ipcRenderer.on("game-is-uploaded", (event, gameIndex) => callback(gameIndex)),
+  // The server ask the front-end to analyse a video.
+  analyzeVideoFile: (callback) => ipcRenderer.on("analyze-video-file", (event, socket, filePath, forcedTraining) => callback(socket, filePath, forcedTraining)),
   // The server gives the path of the video file selected by the user.
   setVideoFile: (callback) => ipcRenderer.on("set-video-file", (event, value) => callback(value)),
   // The server informs the front-end that the games are exported.
@@ -99,8 +103,8 @@ contextBridge.exposeInMainWorld("electronAPI", {
   onConsoleLog: (callback) => ipcRenderer.on("console-log", (event, logData) => callback(logData)),
   // The server asks the font-end to display a toast.
   toast: (callback) => ipcRenderer.on("toast", (event, type, i18nPath, i18nVariables) => callback(type, i18nPath, i18nVariables)),
-  // The server asks the font-end the update downloading percent.
-  updaterDownloaderPercent: (callback) => ipcRenderer.on("updater-downloader-percent", (event, percent) => callback(percent)),
+  // The server asks the font-end to update the notification data.
+  setNotificationData: (callback) => ipcRenderer.on("set-notification-data", (event, data) => callback(data)),
 
   //#endregion
 });

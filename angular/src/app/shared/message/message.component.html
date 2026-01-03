@@ -3,8 +3,10 @@ Copyright (c) 2025, Antoine Duval
 This file is part of a source-visible project.
 See LICENSE for terms. Unauthorized use is prohibited.
 -->
-<ng-content></ng-content>
-@if (html) {
-  <div [innerHTML]="html">aaa</div>
-}
-<div class="circle"></div>
+<div [class]="'message ' + state">
+  <ng-content></ng-content>
+  @if (html) {
+    <div [innerHTML]="html"></div>
+  }
+  <div class="circle"></div>
+</div>

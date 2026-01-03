@@ -33,7 +33,8 @@ export class NotificationComponent implements OnInit, OnDestroy {
     infinite: false,
     icon: undefined,
     text: '',
-    leftRounded: true
+    leftRounded: true,
+    state: 'info'
   };
   private subscription: Subscription | undefined;
 

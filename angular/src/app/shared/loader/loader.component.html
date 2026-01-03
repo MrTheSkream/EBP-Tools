@@ -3,7 +3,11 @@ Copyright (c) 2025, Antoine Duval
 This file is part of a source-visible project.
 See LICENSE for terms. Unauthorized use is prohibited.
 -->
-<div [class]="'loader t' + value" id="loader" [class.infinite]="infinite">
+<div
+  [class]="state + ' loader t' + value"
+  id="loader"
+  [class.infinite]="infinite"
+>
   @if (!infinite && !icon) {
     <span></span>
   }

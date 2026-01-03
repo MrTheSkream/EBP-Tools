@@ -10,6 +10,7 @@ export interface Message {
   icon: string | undefined;
   text: string;
   leftRounded: boolean;
+  state: 'info' | 'success' | 'error';
 
   //#endregion
 }

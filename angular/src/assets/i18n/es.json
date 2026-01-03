@@ -8,7 +8,9 @@
     "save": "Guardar",
     "search": "Buscar",
     "updatingInProgress": "Actualización en curso, por favor espere.",
-    "upToDate": "EBP - Tools está actualizado."
+    "upToDate": "EBP - Tools está actualizado.",
+    "encoding": "Codificación en curso…",
+    "encoded": "¡El vídeo se ha codificado con éxito!"
   },
   "view": {
     "home": {

@@ -3,6 +3,7 @@
 // See LICENSE for terms. Unauthorized use is prohibited.
 
 @use '../../../styles/imports/variables' as variables;
+@use '../../../styles/imports/material_colors' as material_colors;
 @use 'sass:math';
 
 $size: 150px;
@@ -23,7 +24,6 @@ $size: 150px;
     position: absolute;
     z-index: 1;
     font-size: calc(#{variables.$margin} * 4);
-    color: variables.$main_color;
   }
 
   > span {
@@ -32,7 +32,6 @@ $size: 150px;
     left: 50%;
     color: white;
     transform: translate(-50%, -50%);
-    color: variables.$main_color;
     font-size: calc(#{$size} * 0.4);
   }
 
@@ -63,36 +62,129 @@ $size: 150px;
     }
   }
 
-  &:not(.infinite) {
-    @for $i from 1 through 100 {
-      $active: math.floor(math.div($i, 2));
-      &.t#{$i} {
-        > div > div {
-          @for $j from 1 through $active {
-            &:nth-child(#{$j}) {
+  &.info {
+    > i,
+    > span {
+      color: variables.$main_color;
+    }
+
+    &:not(.infinite) {
+      @for $i from 1 through 100 {
+        $active: math.floor(math.div($i, 2));
+        &.t#{$i} {
+          > div > div {
+            @for $j from 1 through $active {
+              &:nth-child(#{$j}) {
+                background: variables.$main_color;
+              }
+            }
+          }
+        }
+      }
+
+      > div {
+        > div {
+          &:first-child {
+            background: variables.$main_color;
+          }
+        }
+      }
+    }
+
+    &.infinite {
+      @for $i from 1 through 100 {
+        &.t#{$i} {
+          > div > div {
+            $bar: math.ceil(math.div($i, 2));
+            &:nth-child(#{$bar}) {
               background: variables.$main_color;
             }
           }
         }
       }
     }
+  }
 
-    > div {
+  &.success {
+    > i,
+    > span {
+      color: material_colors.$material_green_500;
+    }
+
+    &:not(.infinite) {
+      @for $i from 1 through 100 {
+        $active: math.floor(math.div($i, 2));
+        &.t#{$i} {
+          > div > div {
+            @for $j from 1 through $active {
+              &:nth-child(#{$j}) {
+                background: material_colors.$material_green_500;
+              }
+            }
+          }
+        }
+      }
+
       > div {
-        &:first-child {
-          background: variables.$main_color;
+        > div {
+          &:first-child {
+            background: material_colors.$material_green_500;
+          }
+        }
+      }
+    }
+
+    &.infinite {
+      @for $i from 1 through 100 {
+        &.t#{$i} {
+          > div > div {
+            $bar: math.ceil(math.div($i, 2));
+            &:nth-child(#{$bar}) {
+              background: material_colors.$material_green_500;
+            }
+          }
         }
       }
     }
   }
 
-  &.infinite {
-    @for $i from 1 through 100 {
-      &.t#{$i} {
-        > div > div {
-          $bar: math.ceil(math.div($i, 2));
-          &:nth-child(#{$bar}) {
-            background: variables.$main_color;
+  &.error {
+    > i,
+    > span {
+      color: material_colors.$material_red_500;
+    }
+
+    &:not(.infinite) {
+      @for $i from 1 through 100 {
+        $active: math.floor(math.div($i, 2));
+        &.t#{$i} {
+          > div > div {
+            @for $j from 1 through $active {
+              &:nth-child(#{$j}) {
+                background: material_colors.$material_red_500;
+              }
+            }
+          }
+        }
+      }
+
+      > div {
+        > div {
+          &:first-child {
+            background: material_colors.$material_red_500;
+          }
+        }
+      }
+    }
+
+    &.infinite {
+      @for $i from 1 through 100 {
+        &.t#{$i} {
+          > div > div {
+            $bar: math.ceil(math.div($i, 2));
+            &:nth-child(#{$bar}) {
+              background: material_colors.$material_red_500;
+            }
           }
         }
       }

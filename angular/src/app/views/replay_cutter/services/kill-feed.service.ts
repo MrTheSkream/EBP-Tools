@@ -9,6 +9,7 @@ import { Game } from '../models/game';
 import { ReplayCutterComponent } from '../replay_cutter.component';
 import { RGB } from '../models/rgb';
 import { Line } from './models/line.model';
+import { ReplayCutterService } from './replay-cutter.service';
 
 //#endregion
 
@@ -100,7 +101,7 @@ export class KillFeedService {
         for (let x = 0; x < WIDTH; x++) {
           const i = (y * WIDTH + x) * 4;
           if (
-            replayCutterComponent.colorSimilarity(
+            ReplayCutterService.colorSimilarity(
               new RGB(DATA.data[i], DATA.data[i + 1], DATA.data[i + 2]),
               new RGB(213, 131, 58),
               COLOR_TOLERENCE
@@ -108,7 +109,7 @@ export class KillFeedService {
           ) {
             LINES[LINES.length - 1].orange++;
           } else if (
-            replayCutterComponent.colorSimilarity(
+            ReplayCutterService.colorSimilarity(
               new RGB(DATA.data[i], DATA.data[i + 1], DATA.data[i + 2]),
               new RGB(52, 124, 231),
               COLOR_TOLERENCE
@@ -116,7 +117,7 @@ export class KillFeedService {
           ) {
             LINES[LINES.length - 1].blue++;
           } else if (
-            replayCutterComponent.colorSimilarity(
+            ReplayCutterService.colorSimilarity(
               new RGB(DATA.data[i], DATA.data[i + 1], DATA.data[i + 2]),
               new RGB(208, 109, 101),
               COLOR_TOLERENCE
@@ -124,7 +125,7 @@ export class KillFeedService {
           ) {
             LINES[LINES.length - 1].red++;
           } else if (
-            replayCutterComponent.colorSimilarity(
+            ReplayCutterService.colorSimilarity(
               new RGB(DATA.data[i], DATA.data[i + 1], DATA.data[i + 2]),
               new RGB(206, 203, 202),
               COLOR_TOLERENCE
@@ -177,7 +178,7 @@ export class KillFeedService {
 
         // DEBUG
         replayCutterComponent.debug?.nativeElement.append(
-          replayCutterComponent.videoToCanvas(CANVAS)!
+          ReplayCutterService.videoToCanvas(CANVAS)!
         );
       }
 
@@ -228,7 +229,7 @@ export class KillFeedService {
               const NOW: number = VIDEO.currentTime;
               this.percent = Math.ceil(100 - (NOW / VIDEO.duration) * 100);
 
-              if (replayCutterComponent.detectGamePlaying(VIDEO, [this.game])) {
+              if (ReplayCutterService.detectGamePlaying(VIDEO, [this.game])) {
                 this.doesFrameContainDeaths(VIDEO, replayCutterComponent);
               }
 

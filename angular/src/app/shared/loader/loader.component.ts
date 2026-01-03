@@ -35,6 +35,7 @@ export class LoaderComponent implements OnDestroy {
 
   @Input() public value: number = 0;
   @Input() public icon: string | undefined;
+  @Input() public state: 'info' | 'success' | 'error' = 'info';
 
   private _interval: NodeJS.Timeout | undefined;
 

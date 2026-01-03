@@ -105,7 +105,8 @@ export class ReplayDownloaderComponent implements OnInit {
                   ? 'fa-sharp fa-solid fa-clapperboard-play'
                   : undefined,
               text: translated,
-              leftRounded: true
+              leftRounded: true,
+              state: 'info'
             });
           });
       });

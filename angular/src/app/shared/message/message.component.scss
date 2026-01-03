@@ -3,8 +3,13 @@
 // See LICENSE for terms. Unauthorized use is prohibited.
 
 @use '../../../styles/imports/variables' as variables;
+@use '../../../styles/imports/material_colors' as material_colors;
 
 :host {
+  display: block;
+}
+
+.message {
   margin: 0 auto;
   margin-bottom: variables.$margin;
   color: variables.$dark_color;
@@ -16,12 +21,36 @@
   max-width: calc(100% - #{variables.$margin} * 7);
 
   &:not(.friend) {
-    background: variables.$main_color;
     transform: translateX(-30px);
+
+    &.info {
+      background-color: variables.$main_color;
+
+      &:before {
+        border-color: transparent transparent transparent variables.$main_color;
+      }
+    }
+
+    &.success {
+      background-color: material_colors.$material_green_500;
+
+      &:before {
+        border-color: transparent transparent transparent
+          material_colors.$material_green_500;
+      }
+    }
+
+    &.error {
+      background-color: material_colors.$material_red_500;
+
+      &:before {
+        border-color: transparent transparent transparent
+          material_colors.$material_red_500;
+      }
+    }
 
     &:before {
       border-width: variables.$margin 0 0 variables.$margin;
-      border-color: transparent transparent transparent variables.$main_color;
       left: 100%;
     }
 

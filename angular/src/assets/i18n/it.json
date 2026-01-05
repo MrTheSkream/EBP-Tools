@@ -154,15 +154,15 @@
       },
       "replay_downloader": {
         "fetching": "Le informazioni del video sono in fase di recupero…",
-        "downloading": "Il video è in fase di download..."
+        "downloading": "Il video è in fase di download...",
+        "downloaded": "Il video è stato caricato con successo!"
       },
       "removing-border": {
         "description": "Il tuo replay è in fase di elaborazione. Attendere prego..."
       }
     },
     "replay_downloader": {
-      "intro": "Scarica qui le tue repliche da YouTube o Twitch.",
-      "youtuDotBe": "Gli URL \"youtu.be\" non sono compatibili, si prega di fornire un URL \"youtube.com\"."
+      "intro": "Scarica qui le tue repliche da YouTube o Twitch."
     }
   },
   "shared": {

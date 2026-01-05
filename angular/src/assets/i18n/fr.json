@@ -154,15 +154,15 @@
       },
       "replay_downloader": {
         "fetching": "Les informations de la vidéo sont en cours de récupération...",
-        "downloading": "La vidéo est en cours de téléchargement..."
+        "downloading": "La vidéo est en cours de téléchargement...",
+        "downloaded": "La vidéo a été téléchargée avec succès !"
       },
       "removing-border": {
         "description": "Votre replay est en cours d'adaptation. Merci de patienter..."
       }
     },
     "replay_downloader": {
-      "intro": "Téléchargez ici vos replays depuis YouTube ou Twitch.",
-      "youtuDotBe": "Les URL \"youtu.be\" sont incompatibles, veuillez fournir une URL \"youtube.com\"."
+      "intro": "Téléchargez ici vos replays depuis YouTube ou Twitch."
     }
   },
   "shared": {

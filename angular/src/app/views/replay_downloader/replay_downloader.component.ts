@@ -9,7 +9,6 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { GridModule } from '../../shared/grid/grid.module';
 import { MatInputModule } from '@angular/material/input';
 import { FormsModule } from '@angular/forms';
-import { LoaderComponent } from '../../shared/loader/loader.component';
 import { CommonModule } from '@angular/common';
 import { ToastrService } from 'ngx-toastr';
 import { GlobalService } from '../../core/services/global.service';
@@ -29,7 +28,6 @@ import { NotificationService } from '../notification/services/notification.servi
     TranslateModule,
     MatInputModule,
     FormsModule,
-    LoaderComponent,
     CommonModule,
     MessageComponent
   ]
@@ -69,7 +67,6 @@ export class ReplayDownloaderComponent implements OnInit {
         if (error) {
           this.globalService.loading = undefined;
           this.toastrService.error(error);
-          window.electronAPI.removeNotification(true);
         }
       });
     });
@@ -79,36 +76,10 @@ export class ReplayDownloaderComponent implements OnInit {
         this.percent = undefined;
         if (videoPath) {
           console.log(`The user exported a replay here: "${videoPath}"`);
-          this.globalService.loading = undefined;
           this.toastrService.success(videoPath).onTap.subscribe(() => {
             window.electronAPI.openFile(videoPath);
           });
-          window.electronAPI.removeNotification(true);
         }
-      });
-    });
-
-    window.electronAPI.replayDownloaderPercent((percent: number) => {
-      this.ngZone.run(() => {
-        this.percent = percent;
-
-        this.globalService.loading = '';
-
-        this.translateService
-          .get('view.notification.replay_downloader.downloading')
-          .subscribe((translated: string) => {
-            this.notificationService.sendMessage({
-              percent: percent,
-              infinite: percent == 100,
-              icon:
-                percent == 100
-                  ? 'fa-sharp fa-solid fa-clapperboard-play'
-                  : undefined,
-              text: translated,
-              leftRounded: true,
-              state: 'info'
-            });
-          });
       });
     });
   }
@@ -141,9 +112,11 @@ export class ReplayDownloaderComponent implements OnInit {
     if (this.youTubeURL) {
       if (this.isYouTubeUrl(this.youTubeURL)) {
         this.percent = 0;
-        const CLEAN_URL = this.cleanYouTubeURL(this.youTubeURL);
+        window.electronAPI.downloadReplay(
+          this.cleanYouTubeURL(this.youTubeURL),
+          VideoPlatform.YOUTUBE
+        );
         this.showNotification();
-        window.electronAPI.downloadReplay(CLEAN_URL, VideoPlatform.YOUTUBE);
       }
     }
   }
@@ -171,6 +144,13 @@ export class ReplayDownloaderComponent implements OnInit {
    */
   private cleanYouTubeURL(url: string): string {
     const URL_OBJ = new URL(url);
+    // Cas youtu.be
+    if (URL_OBJ.hostname === 'youtu.be') {
+      console.log('gg');
+      const VIDEO_ID = URL_OBJ.pathname.slice(1);
+      return VIDEO_ID ? `https://www.youtube.com/watch?v=${VIDEO_ID}` : url;
+    }
+
     const VIDEO_ID = URL_OBJ.searchParams.get('v');
     if (VIDEO_ID) {
       return `https://www.youtube.com/watch?v=${VIDEO_ID}`;
@@ -185,25 +165,6 @@ export class ReplayDownloaderComponent implements OnInit {
   private showNotification() {
     this.youTubeURL = undefined;
     this.twitchURL = undefined;
-
-    this.globalService.loading = '';
-
-    this.translateService
-      .get('view.notification.replay_downloader.fetching')
-      .subscribe((translated: string) => {
-        window.electronAPI.showNotification(
-          true,
-          500,
-          150,
-          JSON.stringify({
-            percent: 0,
-            infinite: true,
-            icon: 'fa-sharp fa-solid fa-clapperboard-play',
-            text: translated,
-            leftRounded: true
-          })
-        );
-      });
   }
 
   /**
@@ -213,16 +174,8 @@ export class ReplayDownloaderComponent implements OnInit {
    * @returns True if the URL matches a valid YouTube URL pattern, false otherwise.
    */
   private isYouTubeUrl(url: string): boolean {
-    if (url.includes('youtu.be')) {
-      this.translateService
-        .get('view.replay_downloader.youtuDotBe')
-        .subscribe((translated: string) => {
-          this.toastrService.error(translated);
-        });
-      return false;
-    }
     const regex =
-      /^(https?:\/\/)?(www\.)?youtube\.com\/(watch\?v=|live\/)[\w-]{11}(&\S*)?$/;
+      /^(https?:\/\/)?(www\.)?(youtube\.com\/(watch\?v=|live\/)|youtu\.be\/)[\w-]{11}([?&]\S*)?$/;
     return regex.test(url);
   }
 

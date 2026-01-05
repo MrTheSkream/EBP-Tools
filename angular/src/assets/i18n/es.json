@@ -154,15 +154,15 @@
       },
       "replay_downloader": {
         "fetching": "La información del video se está recuperando…",
-        "downloading": "El video se está descargando..."
+        "downloading": "El video se está descargando...",
+        "downloaded": "El video se cargó correctamente."
       },
       "removing-border": {
         "description": "Su repetición se está procesando. Por favor, espere..."
       }
     },
     "replay_downloader": {
-      "intro": "Descarga aquí tus repeticiones desde YouTube o Twitch.",
-      "youtuDotBe": "Las URL \"youtu.be\" son incompatibles, por favor proporcione una URL \"youtube.com\"."
+      "intro": "Descarga aquí tus repeticiones desde YouTube o Twitch."
     }
   },
   "shared": {

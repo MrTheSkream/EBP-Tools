@@ -116,7 +116,6 @@ export interface ElectronAPI {
   gamesAreExported: (callback: (filePath: string | undefined) => void) => void;
   replayDownloaderError: (callback: (error: string) => void) => void;
   replayDownloaderSuccess: (callback: (path: string) => void) => void;
-  replayDownloaderPercent: (callback: (percent: number) => void) => void;
   globalMessage: (
     callback: (i18nPath: string, i18nVariables: object) => void
   ) => void;

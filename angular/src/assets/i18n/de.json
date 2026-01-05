@@ -154,15 +154,15 @@
       },
       "replay_downloader": {
         "fetching": "Die Videoinformationen werden abgerufen…",
-        "downloading": "Das Video wird heruntergeladen..."
+        "downloading": "Das Video wird heruntergeladen...",
+        "downloaded": "Das Video wurde erfolgreich hochgeladen!"
       },
       "removing-border": {
         "description": "Ihre Wiedergabe wird bearbeitet. Bitte warten Sie..."
       }
     },
     "replay_downloader": {
-      "intro": "Laden Sie hier Ihre Replays von YouTube oder Twitch herunter.",
-      "youtuDotBe": "Die \"youtu.be\"-URLs sind nicht kompatibel, bitte geben Sie eine \"youtube.com\"-URL an."
+      "intro": "Laden Sie hier Ihre Replays von YouTube oder Twitch herunter."
     }
   },
   "shared": {

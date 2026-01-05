@@ -95,8 +95,6 @@ contextBridge.exposeInMainWorld("electronAPI", {
   replayDownloaderError: (callback) => ipcRenderer.on("replay-downloader-error", (event, error) => callback(error)),
   // The server asks the font-end that the video is well downloaded.
   replayDownloaderSuccess: (callback) => ipcRenderer.on("replay-downloader-success", (event, path) => callback(path)),
-  // The server asks the font-end the downloading percent.
-  replayDownloaderPercent: (callback) => ipcRenderer.on("replay-downloader-percent", (event, percent) => callback(percent)),
   // The server asks the font-end to display a global message.
   globalMessage: (callback) => ipcRenderer.on("global-message", (event, i18nPath, i18nVariables) => callback(i18nPath, i18nVariables)),
   // The server sends console logs to the front-end.

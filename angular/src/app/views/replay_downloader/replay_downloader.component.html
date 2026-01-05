@@ -9,7 +9,6 @@ See LICENSE for terms. Unauthorized use is prohibited.
     <ebp-column></ebp-column>
     <ebp-column [xs]="7">
       @if (percent != undefined) {
-        <ebp-loader [value]="percent"></ebp-loader>
       } @else {
         <ebp-message class="mb-2">
           {{ 'view.replay_downloader.intro' | translate }}

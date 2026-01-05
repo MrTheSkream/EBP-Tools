@@ -154,15 +154,15 @@
       },
       "replay_downloader": {
         "fetching": "Informațiile videoclipului sunt în curs de preluare…",
-        "downloading": "Videoclipul se descarcă..."
+        "downloading": "Videoclipul se descarcă...",
+        "downloaded": "Videoclipul a fost încărcat cu succes!"
       },
       "removing-border": {
         "description": "Redarea dvs. este în curs de procesare. Vă rugăm să așteptați..."
       }
     },
     "replay_downloader": {
-      "intro": "Descarcă aici replay-urile tale de pe YouTube sau Twitch.",
-      "youtuDotBe": "URL-urile \"youtu.be\" sunt incompatibile, vă rugăm să furnizați un URL \"youtube.com\"."
+      "intro": "Descarcă aici replay-urile tale de pe YouTube sau Twitch."
     }
   },
   "shared": {

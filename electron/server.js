@@ -63,7 +63,9 @@ const {
     switchDebugMode,
     getMainWindow,
     setDebugMode,
-    destroyMainWindow
+    destroyMainWindow,
+    hideMainWindow,
+    showMainWindow
 } = require('./core/window-manager');
 const StorageManager = require('./core/storage-manager');
 const socketEmit = require('./services/socket-service');
@@ -1180,13 +1182,8 @@ if (!APP_GOT_THE_LOCK) {
             'show-notification',
             (event, hideMainWindow, width, height, notificationData) => {
                 createFloatingWindow(width, height, notificationData);
-                if (
-                    hideMainWindow &&
-                    getMainWindow() &&
-                    !getMainWindow().isDestroyed() &&
-                    !IS_DEV_MODE
-                ) {
-                    getMainWindow().hide();
+                if (hideMainWindow && !IS_DEV_MODE) {
+                    hideMainWindow();
                 }
             }
         );
@@ -1218,17 +1215,43 @@ if (!APP_GOT_THE_LOCK) {
 
         // The front-end asks the server to download a YouTube video.
         ipcMain.handle('download-replay', (event, url, platform) => {
+            getMainWindow().webContents.send('global-message', ' ');
+            hideMainWindow();
+
+            const NOTIFICATION_DATA = {
+                leftRounded: true,
+                percent: 0,
+                infinite: true,
+                icon: 'fa-sharp fa-solid fa-clapperboard-play',
+                text: '.view.notification.replay_downloader.fetching',
+                state: 'info'
+            };
+            createFloatingWindow(500, 150, JSON.stringify(NOTIFICATION_DATA));
+
             let percent = 0;
-            // We get the title of the video.
             exec(
                 `"${YTDLP_PATH}" --ffmpeg-location "${FFMPEG_PATH}" --get-title ${url}`,
                 (error, stdout, stderr) => {
                     if (error) {
                         console.error(error.message);
                         getMainWindow().webContents.send(
-                            'replay-downloader-error',
-                            error.message.split('ERROR: ')[1]
+                            'global-message',
+                            undefined
                         );
+                        getMainWindow().webContents.send(
+                            'set-notification-data',
+                            {
+                                ...NOTIFICATION_DATA,
+                                ...{
+                                    infinite: false,
+                                    state: 'error',
+                                    text: error.message
+                                }
+                            }
+                        );
+                        setTimeout(() => {
+                            deleteFloatingWindow(true);
+                        }, 5000);
                         return;
                     }
                     if (stderr) console.error('Stderr :', stderr);
@@ -1246,13 +1269,11 @@ if (!APP_GOT_THE_LOCK) {
                     switch (platform) {
                         case 'youtube':
                             settings = [
-                                `--ffmpeg-location`,
+                                '--ffmpeg-location',
                                 FFMPEG_PATH,
-                                `-f`,
-                                `bv[height<=${DEFAULT_VIDEO_HEIGHT}]+ba`,
-                                `--merge-output-format`,
-                                `mp4`,
-                                `-o`,
+                                '-f',
+                                `best[ext=mp4][height<=${DEFAULT_VIDEO_HEIGHT}]`,
+                                '-o',
                                 OUTPUT_PATH,
                                 url
                             ];
@@ -1274,22 +1295,30 @@ if (!APP_GOT_THE_LOCK) {
                         const MATCH = data.toString().match(/(\d{1,3}\.\d)%/); // extract the % (eg: 42.3%)
                         if (MATCH) {
                             const PERCENT = Number.parseInt(MATCH[1]);
-                            if (PERCENT > percent) {
+                            console.log(PERCENT + '%');
+                            if (
+                                PERCENT > percent ||
+                                (percent != PERCENT && percent == 100)
+                            ) {
                                 percent = PERCENT;
+
                                 getMainWindow().webContents.send(
-                                    'replay-downloader-percent',
-                                    PERCENT
+                                    'set-notification-data',
+                                    {
+                                        ...NOTIFICATION_DATA,
+                                        ...{
+                                            text: '.view.notification.replay_downloader.downloading',
+                                            infinite: PERCENT == 100,
+                                            percent: PERCENT,
+                                            icon:
+                                                PERCENT == 100
+                                                    ? 'fa-sharp fa-solid fa-clapperboard-play'
+                                                    : undefined
+                                        }
+                                    }
                                 );
                             }
                         }
-                    });
-
-                    DL.stderr.on('data', (data) => {
-                        console.error(data.toString());
-                        getMainWindow().webContents.send(
-                            'replay-downloader-error',
-                            data.toString().split('ERROR: ')[1]
-                        );
                     });
 
                     DL.on('close', (code) => {
@@ -1303,10 +1332,36 @@ if (!APP_GOT_THE_LOCK) {
                                     new Date()
                                 );
                             }
+
                             getMainWindow().webContents.send(
                                 'replay-downloader-success',
                                 OUTPUT_PATH
                             );
+
+                            getMainWindow().webContents.send(
+                                'global-message',
+                                undefined
+                            );
+
+                            showMainWindow();
+
+                            getMainWindow().webContents.send(
+                                'set-notification-data',
+                                {
+                                    ...NOTIFICATION_DATA,
+                                    ...{
+                                        text: '.view.notification.replay_downloader.downloaded',
+                                        infinite: false,
+                                        percent: 100,
+                                        icon: 'fa-sharp fa-solid fa-check',
+                                        state: 'success'
+                                    }
+                                }
+                            );
+
+                            setTimeout(() => {
+                                deleteFloatingWindow();
+                            }, 5000);
                         }
                     });
                 }

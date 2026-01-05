@@ -150,14 +150,13 @@ function createFloatingWindow(width, height, data) {
     });
 }
 
-function deleteFloatingWindow(showMainWindow) {
+function deleteFloatingWindow(haveToShowMainWindow) {
     if (floatingWindow) {
         floatingWindow.close();
         floatingWindow = undefined;
     }
-    if (showMainWindow && getMainWindow() && !getMainWindow().isDestroyed()) {
-        getMainWindow().show();
-        getMainWindow().focus();
+    if (haveToShowMainWindow) {
+        showMainWindow();
     }
 }
 
@@ -210,9 +209,7 @@ function createWindow(updateService) {
     // When the user clicks on the close cross, we hide the application.
     mainWindow.on('close', (event) => {
         event.preventDefault();
-        if (mainWindow && !mainWindow.isDestroyed()) {
-            mainWindow.hide();
-        }
+        hideMainWindow();
     });
 
     const TRAY = new Tray(path.join(ROOT_PATH, 'assets', 'favicon.png'));
@@ -327,6 +324,19 @@ function createWindow(updateService) {
     }
 }
 
+function hideMainWindow() {
+    if (getMainWindow() && !getMainWindow().isDestroyed()) {
+        getMainWindow().hide();
+    }
+}
+
+function showMainWindow() {
+    if (getMainWindow() && !getMainWindow().isDestroyed()) {
+        getMainWindow().show();
+        getMainWindow().focus();
+    }
+}
+
 /**
  * Toggles the debug mode on/off. When enabled, closes DevTools and adjusts window size.
  * When disabled, opens DevTools and expands window width to accommodate the dev panel.
@@ -388,5 +398,7 @@ module.exports = {
     switchDebugMode,
     getMainWindow,
     setDebugMode,
-    destroyMainWindow
+    destroyMainWindow,
+    hideMainWindow,
+    showMainWindow
 };

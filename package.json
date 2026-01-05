@@ -37,7 +37,7 @@
         "@electron-forge/plugin-fuses": "^7.8.0",
         "@electron-forge/plugin-webpack": "^7.8.0",
         "@electron-forge/publisher-github": "^7.10.2",
-        "@eslint/js": "^9.39.1",
+        "@eslint/js": "^9.39.2",
         "@vercel/webpack-asset-relocator-loader": "^1.7.3",
         "concurrently": "^9.1.2",
         "copy-webpack-plugin": "^13.0.0",

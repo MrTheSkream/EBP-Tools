@@ -41,7 +41,7 @@
         "@vercel/webpack-asset-relocator-loader": "^1.7.3",
         "concurrently": "^9.1.2",
         "copy-webpack-plugin": "^13.0.0",
-        "electron": "^39.2.3",
+        "electron": "^39.2.7",
         "electron-squirrel-startup": "^1.0.1",
         "eslint": "^9.39.1",
         "prettier": "^3.5.3",

@@ -1272,7 +1272,9 @@ if (!APP_GOT_THE_LOCK) {
                                 '--ffmpeg-location',
                                 FFMPEG_PATH,
                                 '-f',
-                                `best[ext=mp4][height<=${DEFAULT_VIDEO_HEIGHT}]`,
+                                `bestvideo[height<=${DEFAULT_VIDEO_HEIGHT}][fps>30]+bestaudio/best`,
+                                '--merge-output-format',
+                                'mp4',
                                 '-o',
                                 OUTPUT_PATH,
                                 url

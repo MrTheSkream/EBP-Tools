@@ -1,9 +1,16 @@
 version: 2
 updates:
-  - package-ecosystem: "npm"
-    directory: "/"          # package.json directory
-    schedule:
-      interval: "weekly"    # daily | weekly | monthly
-    open-pull-requests-limit: 5
-    commit-message:
-      prefix: "deps"
+    - package-ecosystem: 'npm'
+      directory: '/'
+      schedule:
+          interval: 'weekly'
+      open-pull-requests-limit: 5
+      commit-message:
+          prefix: 'deps'
+    - package-ecosystem: 'npm'
+      directory: '/angular/'
+      schedule:
+          interval: 'weekly'
+      open-pull-requests-limit: 5
+      commit-message:
+          prefix: 'deps'

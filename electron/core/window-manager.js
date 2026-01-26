@@ -144,7 +144,7 @@ function createFloatingWindow(width, height, data) {
             }, 100);
         });
 
-        const URL = `http://localhost:${IS_DEV_MODE ? '4200' : getCurrentPort()}/${StorageManager.permanentSettings['language'] ?? 'aa'}/notification?data=${encodeURIComponent(data)}`;
+        const URL = `http://localhost:${IS_DEV_MODE ? '4201' : getCurrentPort()}/${StorageManager.permanentSettings['language'] ?? 'aa'}/notification?data=${encodeURIComponent(data)}`;
 
         floatingWindow.loadURL(URL);
     });
@@ -203,7 +203,7 @@ function createWindow(updateService) {
         language = app.getLocale();
     }
 
-    const ROOT_URL = `http://localhost:${IS_DEV_MODE ? '4200' : getCurrentPort()}/`;
+    const ROOT_URL = `http://localhost:${IS_DEV_MODE ? '4201' : getCurrentPort()}/`;
     const HOME_URL = `${ROOT_URL}${language}/`;
 
     // When the user clicks on the close cross, we hide the application.

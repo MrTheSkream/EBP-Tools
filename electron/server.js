@@ -178,6 +178,77 @@ if (!APP_GOT_THE_LOCK) {
                     );
                 });
                 break;
+            case 'importGamesFromExcel':
+                const EXCEL_FILES = await openFiles('xlsx');
+                if (EXCEL_FILES.length == 1) {
+                    const WORKBOOK = new ExcelJS.Workbook();
+                    await WORKBOOK.xlsx.readFile(EXCEL_FILES[0]);
+
+                    const GAMES = [];
+                    const WORKSHEET = WORKBOOK.getWorksheet(1);
+                    WORKSHEET.eachRow((ROW, ROW_NUMBER) => {
+                        if (ROW_NUMBER >= 4) {
+                            GAMES.push({
+                                mode: ROW.getCell('A').value,
+                                map: ROW.getCell('C').value,
+                                date: ROW.getCell('D').value,
+                                hour: ROW.getCell('E').value,
+                                duration: ROW.getCell('G').value,
+                                orangeTeam: {
+                                    name: 'ALLIANCE',
+                                    score: ROW.getCell('H').value,
+                                    players: []
+                                },
+                                blueTeam: {
+                                    name: 'REBELS',
+                                    score: ROW.getCell('AR').value,
+                                    players: []
+                                }
+                            });
+
+                            const JUMP = 7;
+                            for (let i = 9; i < 9 + JUMP * 5; i += JUMP) {
+                                const PLAYER_NAME = ROW.getCell(i).value;
+                                if (PLAYER_NAME !== null) {
+                                    GAMES[
+                                        GAMES.length - 1
+                                    ].orangeTeam.players.push({
+                                        name: PLAYER_NAME,
+                                        kills: ROW.getCell(i + 1).value,
+                                        deaths: ROW.getCell(i + 2).value,
+                                        assists: ROW.getCell(i + 3).value,
+                                        score: ROW.getCell(i + 4).value,
+                                        inflictedDamage: ROW.getCell(i + 5)
+                                            .value,
+                                        bulletsFiredAccuracy: ROW.getCell(i + 6)
+                                            .value
+                                    });
+                                }
+                            }
+                            for (let i = 45; i < 45 + JUMP * 5; i += JUMP) {
+                                const PLAYER_NAME = ROW.getCell(i).value;
+                                if (PLAYER_NAME !== null) {
+                                    GAMES[
+                                        GAMES.length - 1
+                                    ].blueTeam.players.push({
+                                        name: PLAYER_NAME,
+                                        kills: ROW.getCell(i + 1).value,
+                                        deaths: ROW.getCell(i + 2).value,
+                                        assists: ROW.getCell(i + 3).value,
+                                        score: ROW.getCell(i + 4).value,
+                                        inflictedDamage: ROW.getCell(i + 5)
+                                            .value,
+                                        bulletsFiredAccuracy: ROW.getCell(i + 6)
+                                            .value
+                                    });
+                                }
+                            }
+                        }
+                    });
+
+                    socketEmit(data.socket, 'exportGames', GAMES);
+                }
+                break;
             case 'encodeVideo':
                 const FILES_TO_ENCODE_PATHS = await openFiles(
                     data.filesExtensions
@@ -430,7 +501,7 @@ if (!APP_GOT_THE_LOCK) {
     async function openFiles(extensions) {
         const { canceled, filePaths } = await dialog.showOpenDialog({
             properties: ['openFile'],
-            filters: [{ name: 'EVA video', extensions: extensions }]
+            filters: [{ extensions: extensions }]
         });
 
         if (canceled || filePaths.length == 0) {
@@ -1087,7 +1158,7 @@ if (!APP_GOT_THE_LOCK) {
     app.whenReady().then(() => {
         if (IS_DEV_MODE) {
             // We wait until the Angular server is ready before creating the window that will contain the HMI.
-            waitForHttp(4200).then(() => {
+            waitForHttp(4201).then(() => {
                 createWindow(UPDATE_SERVICE);
             });
         } else {

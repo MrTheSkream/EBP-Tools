@@ -44,7 +44,7 @@ async function setupExpressServer() {
         APP.use((req, res, next) => {
             // In development, redirect to Angular dev server
             if (process.env.NODE_ENV !== 'production') {
-                return res.redirect('http://localhost:4200');
+                return res.redirect('http://localhost:4201');
             }
 
             // In production, serve the Angular index.html

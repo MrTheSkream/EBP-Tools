@@ -119,7 +119,7 @@ See LICENSE for terms. Unauthorized use is prohibited.
                     "
                   >
                     <span (click)="editGameMap(game)"
-                      >{{ game.map }}
+                      >{{ game.map.trim().length > 0 ? game.map : '?' }}
                       @if (game.mapImage) {
                         <div class="popup">
                           <img [src]="game.mapImage" />

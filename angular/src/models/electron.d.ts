@@ -10,6 +10,7 @@ import { JWT } from './jwt';
 import { CropperPosition } from 'ngx-image-cropper';
 import { Game } from '../app/views/replay_cutter/models/game';
 import { Message } from '../app/views/notification/models/message.model';
+import { VideoFormat } from '../app/views/replay_downloader/models/video-format.interface';
 
 //#endregion
 
@@ -28,7 +29,14 @@ export interface ElectronAPI {
     customText: string
   ) => Promise<string>;
   debugMode: () => Promise<void>;
-  downloadReplay: (url: string, platform: VideoPlatform) => Promise<void>;
+  getVideoFormats: (
+    url: string
+  ) => Promise<{ success: boolean; formats?: VideoFormat[]; error?: string }>;
+  downloadReplay: (
+    url: string,
+    platform: VideoPlatform,
+    formatId?: string
+  ) => Promise<void>;
   extractPublicPseudoGames: (
     tag: string,
     nbPages: number,

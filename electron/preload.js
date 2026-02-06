@@ -14,8 +14,10 @@ contextBridge.exposeInMainWorld("electronAPI", {
   isDevMode: () => ipcRenderer.invoke("is-dev-mode"),
   // The front-end asks the server to return the user's operating system.
   getOS: () => ipcRenderer.invoke("get-os"),
+  // The front-end asks the server to get available video formats for a URL.
+  getVideoFormats: (url) => ipcRenderer.invoke("get-video-formats", url),
   // The front-end asks the server to download a YouTube video.
-  downloadReplay: (url, platform) => ipcRenderer.invoke("download-replay", url, platform),
+  downloadReplay: (url, platform, formatId) => ipcRenderer.invoke("download-replay", url, platform, formatId),
   // The front-end asks the server to enables/disables debug mode.
   debugMode: () => ipcRenderer.invoke("switch-debug-mode"),
   // The front-end asks the server to open an url in the default browser.

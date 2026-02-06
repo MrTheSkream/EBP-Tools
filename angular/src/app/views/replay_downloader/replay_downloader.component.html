@@ -32,39 +32,59 @@ See LICENSE for terms. Unauthorized use is prohibited.
           </mat-form-field>
           <!-- STEP 2 -->
           <p>{{ 'view.game_history.step' | translate }} 2</p>
-          <form (submit)="onDownloadYouTube()">
-            <mat-form-field>
-              <mat-label>YouTube</mat-label>
+          <div class="d-flex">
+            <mat-form-field class="mr-1">
+              <mat-label>{{
+                'view.replay_downloader.urlLabel' | translate
+              }}</mat-label>
               <input
                 matInput
                 type="text"
                 placeholder="http://www.youtube.com/watch?v=aqz-KE-bpKQ"
                 [ngModelOptions]="{ standalone: true }"
-                [(ngModel)]="youTubeURL"
+                [(ngModel)]="videoURL"
               />
-              <div class="buttons">
-                <button type="submit" tabindex="-1">
-                  <i class="fa-brands fa-youtube"></i>
-                </button>
-              </div>
             </mat-form-field>
-          </form>
-          <form (submit)="onDownloadTwitch()">
+            @if (loadingFormats) {
+              <button type="button" class="squared" tabindex="-1" disabled>
+                <i class="fa-sharp fa-solid fa-spinner fa-spin"></i>
+              </button>
+            } @else {
+              <button
+                type="button"
+                class="squared"
+                (click)="fetchVideoFormats()"
+              >
+                <i class="fa-sharp fa-solid fa-magnifying-glass"></i>
+              </button>
+            }
+          </div>
+          <!-- STEP 3 -->
+          <p>{{ 'view.game_history.step' | translate }} 3</p>
+          <form (submit)="download()">
             <mat-form-field>
-              <mat-label>Twitch</mat-label>
-              <input
-                matInput
-                type="text"
-                placeholder="https://www.twitch.tv/videos/2481536428"
+              <mat-label>{{
+                'view.replay_downloader.quality' | translate
+              }}</mat-label>
+              <mat-select
+                [disabled]="formats.length == 0"
+                [(ngModel)]="selectedFormat"
                 [ngModelOptions]="{ standalone: true }"
-                [(ngModel)]="twitchURL"
-              />
-              <div class="buttons">
-                <button type="submit" tabindex="-1">
-                  <i class="fa-brands fa-twitch"></i>
-                </button>
-              </div>
+              >
+                @for (format of formats; track format.id) {
+                  <mat-option [value]="format.id">{{
+                    format.label
+                  }}</mat-option>
+                }
+              </mat-select>
             </mat-form-field>
+            <button
+              [disabled]="!selectedFormat"
+              type="submit"
+              class="w-100 mt-1 green"
+            >
+              {{ 'common.download' | translate }}
+            </button>
           </form>
         </div>
       }

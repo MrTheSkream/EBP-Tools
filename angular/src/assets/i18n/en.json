@@ -10,7 +10,8 @@
     "updatingInProgress": "Updating in progress, please wait.",
     "upToDate": "EBP - Tools is up to date.",
     "encoding": "Encoding in progress…",
-    "encoded": "The video has been successfully encoded!"
+    "encoded": "The video has been successfully encoded!",
+    "download": "Download"
   },
   "view": {
     "home": {
@@ -165,7 +166,10 @@
       }
     },
     "replay_downloader": {
-      "intro": "Download your replays from YouTube or Twitch here."
+      "intro": "Download your replays from YouTube or Twitch here.",
+      "quality": "Quality",
+      "noFormats": "No formats available",
+      "urlLabel": "Video URL"
     }
   },
   "shared": {

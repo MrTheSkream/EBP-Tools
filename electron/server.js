@@ -1223,205 +1223,212 @@ if (!APP_GOT_THE_LOCK) {
             socketEmit(socket, path, value);
         });
 
-        // The front-end asks the server to download a YouTube video.
-        ipcMain.handle('download-replay', async (event, url, platform) => {
-            getMainWindow().webContents.send('global-message', ' ');
-            hideMainWindow();
-
-            const NOTIFICATION_DATA = {
-                leftRounded: true,
-                percent: 0,
-                infinite: true,
-                icon: 'fa-sharp fa-solid fa-clapperboard-play',
-                text: '.view.notification.replay_downloader.checking_ytdlp',
-                state: 'info'
-            };
-            createFloatingWindow(500, 150, JSON.stringify(NOTIFICATION_DATA));
-
-            // Ensure yt-dlp is available and up-to-date
-            let ytDlpPath;
+        // The front-end asks the server to get available video formats for a URL.
+        ipcMain.handle('get-video-formats', async (event, url) => {
             try {
-                ytDlpPath = await ytDlpService.ensureYtDlp(
-                    (percent, status) => {
-                        const TEXT =
-                            status === 'updating'
-                                ? '.view.notification.replay_downloader.updating_ytdlp'
-                                : '.view.notification.replay_downloader.downloading_ytdlp';
-                        getMainWindow().webContents.send(
-                            'set-notification-data',
-                            {
-                                ...NOTIFICATION_DATA,
-                                text: TEXT,
-                                percent: percent,
-                                infinite: false
-                            }
-                        );
-                    }
+                const YT_DLP_PATH = await ytDlpService.ensureYtDlp();
+                const { stdout } = await execAsync(
+                    `"${YT_DLP_PATH}" -J "${url}"`,
+                    { timeout: 30000 }
                 );
+                const DATA = JSON.parse(stdout);
+
+                // Filter and format the available formats
+                const FORMATS = DATA.formats
+                    .filter((f) => f.vcodec !== 'none' && f.height)
+                    .map((f) => ({
+                        id: f.format_id,
+                        label: `${f.height}p${f.fps > 30 ? ' ' + f.fps + 'fps' : ''}`,
+                        height: f.height,
+                        fps: f.fps || 30
+                    }))
+                    .sort((a, b) => b.height - a.height || b.fps - a.fps);
+
+                // Deduplicate by label (keep highest quality for each resolution)
+                const UNIQUE = [
+                    ...new Map(FORMATS.map((f) => [f.label, f])).values()
+                ];
+                return { success: true, formats: UNIQUE };
             } catch (error) {
-                console.error('[YT-DLP] Error:', error.message);
-                getMainWindow().webContents.send('global-message', undefined);
-                getMainWindow().webContents.send('set-notification-data', {
-                    ...NOTIFICATION_DATA,
-                    infinite: false,
-                    state: 'error',
-                    text: `yt-dlp error: ${error.message}`
-                });
-                setTimeout(() => {
-                    deleteFloatingWindow(true);
-                }, 5000);
-                return;
+                console.error('[get-video-formats] Error:', error.message);
+                return { success: false, error: error.message };
             }
+        });
 
-            // Update notification to show fetching video info
-            getMainWindow().webContents.send('set-notification-data', {
-                ...NOTIFICATION_DATA,
-                text: '.view.notification.replay_downloader.fetching',
-                infinite: true,
-                percent: 0
-            });
+        // The front-end asks the server to download a YouTube video.
+        ipcMain.handle(
+            'download-replay',
+            async (event, url, platform, formatId) => {
+                getMainWindow().webContents.send('global-message', ' ');
+                hideMainWindow();
 
-            let percent = 0;
-            exec(
-                `"${ytDlpPath}" --ffmpeg-location "${FFMPEG_PATH}" --get-title ${url}`,
-                (error, stdout, stderr) => {
-                    if (error) {
-                        console.error(error.message);
-                        getMainWindow().webContents.send(
-                            'global-message',
-                            undefined
+                // Ensure yt-dlp is available and up-to-date
+                const YT_DLP_PATH = ytDlpService.getYtDlpPath();
+
+                const NOTIFICATION_DATA = {
+                    leftRounded: true,
+                    percent: 0,
+                    infinite: true,
+                    icon: 'fa-sharp fa-solid fa-clapperboard-play',
+                    text: '.view.notification.replay_downloader.fetching',
+                    state: 'info'
+                };
+                createFloatingWindow(
+                    500,
+                    150,
+                    JSON.stringify(NOTIFICATION_DATA)
+                );
+
+                let percent = 0;
+                exec(
+                    `"${YT_DLP_PATH}" --ffmpeg-location "${FFMPEG_PATH}" --get-title ${url}`,
+                    (error, stdout, stderr) => {
+                        if (error) {
+                            console.error(error.message);
+                            getMainWindow().webContents.send(
+                                'global-message',
+                                undefined
+                            );
+                            getMainWindow().webContents.send(
+                                'set-notification-data',
+                                {
+                                    ...NOTIFICATION_DATA,
+                                    ...{
+                                        infinite: false,
+                                        state: 'error',
+                                        text: error.message
+                                    }
+                                }
+                            );
+                            setTimeout(() => {
+                                deleteFloatingWindow(true);
+                            }, 5000);
+                            return;
+                        }
+                        if (stderr) console.error('Stderr :', stderr);
+
+                        const VIDEO_TITLE = stdout.trim();
+                        const OUTPUT_PATH = path.join(
+                            StorageManager.getPermanentSettingsValue(
+                                'replayDownloaderOutputPath',
+                                path.join(os.homedir(), 'Downloads')
+                            ),
+                            `EBP - ${platform} - ${VIDEO_TITLE} (${new Date().getTime()}).mp4`
                         );
-                        getMainWindow().webContents.send(
-                            'set-notification-data',
-                            {
-                                ...NOTIFICATION_DATA,
-                                ...{
-                                    infinite: false,
-                                    state: 'error',
-                                    text: error.message
+
+                        let settings = [];
+                        switch (platform) {
+                            case 'youtube':
+                                const YOUTUBE_FORMAT = formatId
+                                    ? `${formatId}+bestaudio/best`
+                                    : `bestvideo[height<=${DEFAULT_VIDEO_HEIGHT}][fps>30]+bestaudio/best`;
+                                settings = [
+                                    '--ffmpeg-location',
+                                    FFMPEG_PATH,
+                                    '-f',
+                                    YOUTUBE_FORMAT,
+                                    '--merge-output-format',
+                                    'mp4',
+                                    '-o',
+                                    OUTPUT_PATH,
+                                    url
+                                ];
+                                break;
+                            case 'twitch':
+                                const TWITCH_FORMAT = formatId
+                                    ? formatId
+                                    : `best[height<=${DEFAULT_VIDEO_HEIGHT}]`;
+                                settings = [
+                                    `-f`,
+                                    TWITCH_FORMAT,
+                                    `-o`,
+                                    OUTPUT_PATH,
+                                    url
+                                ];
+                                break;
+                        }
+
+                        const DL = spawn(YT_DLP_PATH, settings);
+
+                        DL.stdout.on('data', (data) => {
+                            const MATCH = data
+                                .toString()
+                                .match(/(\d{1,3}\.\d)%/); // extract the % (eg: 42.3%)
+                            if (MATCH) {
+                                const PERCENT = Number.parseInt(MATCH[1]);
+                                console.log(PERCENT + '%');
+                                if (
+                                    PERCENT > percent ||
+                                    (percent != PERCENT && percent == 100)
+                                ) {
+                                    percent = PERCENT;
+
+                                    getMainWindow().webContents.send(
+                                        'set-notification-data',
+                                        {
+                                            ...NOTIFICATION_DATA,
+                                            ...{
+                                                text: '.view.notification.replay_downloader.downloading',
+                                                infinite: PERCENT == 100,
+                                                percent: PERCENT,
+                                                icon:
+                                                    PERCENT == 100
+                                                        ? 'fa-sharp fa-solid fa-clapperboard-play'
+                                                        : undefined
+                                            }
+                                        }
+                                    );
                                 }
                             }
-                        );
-                        setTimeout(() => {
-                            deleteFloatingWindow(true);
-                        }, 5000);
-                        return;
-                    }
-                    if (stderr) console.error('Stderr :', stderr);
+                        });
 
-                    const VIDEO_TITLE = stdout.trim();
-                    const OUTPUT_PATH = path.join(
-                        StorageManager.getPermanentSettingsValue(
-                            'replayDownloaderOutputPath',
-                            path.join(os.homedir(), 'Downloads')
-                        ),
-                        `EBP - ${platform} - ${VIDEO_TITLE} (${new Date().getTime()}).mp4`
-                    );
+                        DL.on('close', (code) => {
+                            if (code == 0) {
+                                const NORMALIZED_OUTPUT_PATH =
+                                    OUTPUT_PATH.normalize('NFC');
+                                if (fs.existsSync(NORMALIZED_OUTPUT_PATH)) {
+                                    fs.utimesSync(
+                                        NORMALIZED_OUTPUT_PATH,
+                                        new Date(),
+                                        new Date()
+                                    );
+                                }
 
-                    let settings = [];
-                    switch (platform) {
-                        case 'youtube':
-                            settings = [
-                                '--ffmpeg-location',
-                                FFMPEG_PATH,
-                                '-f',
-                                `bestvideo[height<=${DEFAULT_VIDEO_HEIGHT}][fps>30]+bestaudio/best`,
-                                '--merge-output-format',
-                                'mp4',
-                                '-o',
-                                OUTPUT_PATH,
-                                url
-                            ];
-                            break;
-                        case 'twitch':
-                            settings = [
-                                `-f`,
-                                `best[height<=${DEFAULT_VIDEO_HEIGHT}]`,
-                                `-o`,
-                                OUTPUT_PATH,
-                                url
-                            ];
-                            break;
-                    }
+                                getMainWindow().webContents.send(
+                                    'replay-downloader-success',
+                                    OUTPUT_PATH
+                                );
 
-                    const DL = spawn(ytDlpPath, settings);
+                                getMainWindow().webContents.send(
+                                    'global-message',
+                                    undefined
+                                );
 
-                    DL.stdout.on('data', (data) => {
-                        const MATCH = data.toString().match(/(\d{1,3}\.\d)%/); // extract the % (eg: 42.3%)
-                        if (MATCH) {
-                            const PERCENT = Number.parseInt(MATCH[1]);
-                            console.log(PERCENT + '%');
-                            if (
-                                PERCENT > percent ||
-                                (percent != PERCENT && percent == 100)
-                            ) {
-                                percent = PERCENT;
+                                showMainWindow();
 
                                 getMainWindow().webContents.send(
                                     'set-notification-data',
                                     {
                                         ...NOTIFICATION_DATA,
                                         ...{
-                                            text: '.view.notification.replay_downloader.downloading',
-                                            infinite: PERCENT == 100,
-                                            percent: PERCENT,
-                                            icon:
-                                                PERCENT == 100
-                                                    ? 'fa-sharp fa-solid fa-clapperboard-play'
-                                                    : undefined
+                                            text: '.view.notification.replay_downloader.downloaded',
+                                            infinite: false,
+                                            percent: 100,
+                                            icon: 'fa-sharp fa-solid fa-check',
+                                            state: 'success'
                                         }
                                     }
                                 );
+
+                                setTimeout(() => {
+                                    deleteFloatingWindow();
+                                }, 5000);
                             }
-                        }
-                    });
-
-                    DL.on('close', (code) => {
-                        if (code == 0) {
-                            const NORMALIZED_OUTPUT_PATH =
-                                OUTPUT_PATH.normalize('NFC');
-                            if (fs.existsSync(NORMALIZED_OUTPUT_PATH)) {
-                                fs.utimesSync(
-                                    NORMALIZED_OUTPUT_PATH,
-                                    new Date(),
-                                    new Date()
-                                );
-                            }
-
-                            getMainWindow().webContents.send(
-                                'replay-downloader-success',
-                                OUTPUT_PATH
-                            );
-
-                            getMainWindow().webContents.send(
-                                'global-message',
-                                undefined
-                            );
-
-                            showMainWindow();
-
-                            getMainWindow().webContents.send(
-                                'set-notification-data',
-                                {
-                                    ...NOTIFICATION_DATA,
-                                    ...{
-                                        text: '.view.notification.replay_downloader.downloaded',
-                                        infinite: false,
-                                        percent: 100,
-                                        icon: 'fa-sharp fa-solid fa-check',
-                                        state: 'success'
-                                    }
-                                }
-                            );
-
-                            setTimeout(() => {
-                                deleteFloatingWindow();
-                            }, 5000);
-                        }
-                    });
-                }
-            );
-        });
+                        });
+                    }
+                );
+            }
+        );
 
         // The front-end asks the server to open an url in the default browser.
         ipcMain.handle('open-url', (event, url) => {

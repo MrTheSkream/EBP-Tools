@@ -2,7 +2,7 @@
 // This file is part of a source-visible project.
 // See LICENSE for terms. Unauthorized use is prohibited.
 
-@use "../../../styles/imports/variables" as variables;
+@use '../../../styles/imports/variables' as variables;
 
 .box {
   background-color: variables.$dark_color;

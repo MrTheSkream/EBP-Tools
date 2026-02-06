@@ -10,7 +10,8 @@
     "updatingInProgress": "Actualizare în curs, vă rugăm să așteptați.",
     "upToDate": "EBP - Tools este actualizat.",
     "encoding": "Codificare în curs…",
-    "encoded": "Videoclipul a fost codificat cu succes!"
+    "encoded": "Videoclipul a fost codificat cu succes!",
+    "download": "Descărca"
   },
   "view": {
     "home": {
@@ -165,7 +166,10 @@
       }
     },
     "replay_downloader": {
-      "intro": "Descarcă aici replay-urile tale de pe YouTube sau Twitch."
+      "intro": "Descarcă aici replay-urile tale de pe YouTube sau Twitch.",
+      "quality": "Calitate",
+      "noFormats": "Niciun format disponibil",
+      "urlLabel": "URL-ul videoclipului"
     }
   },
   "shared": {

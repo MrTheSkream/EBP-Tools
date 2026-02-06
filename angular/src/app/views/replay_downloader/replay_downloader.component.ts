@@ -8,13 +8,14 @@ import { Component, isDevMode, NgZone, OnInit } from '@angular/core';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { GridModule } from '../../shared/grid/grid.module';
 import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { ToastrService } from 'ngx-toastr';
 import { GlobalService } from '../../core/services/global.service';
-import { VideoPlatform } from '../../../models/video-platform.enum';
 import { MessageComponent } from '../../shared/message/message.component';
-import { NotificationService } from '../notification/services/notification.service';
+import { VideoFormat } from './models/video-format.interface';
+import { VideoPlatform } from './models/video-platform.enum';
 
 //#endregion
 
@@ -27,6 +28,7 @@ import { NotificationService } from '../notification/services/notification.servi
     GridModule,
     TranslateModule,
     MatInputModule,
+    MatSelectModule,
     FormsModule,
     CommonModule,
     MessageComponent
@@ -35,12 +37,16 @@ import { NotificationService } from '../notification/services/notification.servi
 export class ReplayDownloaderComponent implements OnInit {
   //#region Attributes
 
-  protected youTubeURL?: string = isDevMode()
+  protected videoURL?: string = isDevMode()
     ? 'https://www.youtube.com/watch?v=UKVDSvhIRM8'
     : undefined;
-  protected twitchURL?: string;
   protected outputPath: string | undefined;
   protected percent?: number;
+
+  protected formats: VideoFormat[] = [];
+  protected selectedFormat?: string;
+  protected loadingFormats = false;
+  protected detectedPlatform?: VideoPlatform;
 
   //#endregion
 
@@ -48,8 +54,7 @@ export class ReplayDownloaderComponent implements OnInit {
     protected readonly globalService: GlobalService,
     private readonly toastrService: ToastrService,
     private readonly ngZone: NgZone,
-    private readonly translateService: TranslateService,
-    private readonly notificationService: NotificationService
+    private readonly translateService: TranslateService
   ) {}
 
   //#region Functions
@@ -105,35 +110,84 @@ export class ReplayDownloaderComponent implements OnInit {
   }
 
   /**
-   * Initiates the download process for a YouTube replay video.
-   * Validates the YouTube URL format, cleans it, resets the progress indicator, and triggers the download through the Electron API. Shows a notification to inform the user that the download has started.
+   * Fetches available video formats for a YouTube or Twitch URL.
+   * Detects the platform from the URL and retrieves format options from the backend.
    */
-  protected onDownloadYouTube(): void {
-    if (this.youTubeURL) {
-      if (this.isYouTubeUrl(this.youTubeURL)) {
-        this.percent = 0;
-        window.electronAPI.downloadReplay(
-          this.cleanYouTubeURL(this.youTubeURL),
-          VideoPlatform.YOUTUBE
-        );
-        this.showNotification();
-      }
+  protected fetchVideoFormats(): void {
+    if (!this.videoURL) {
+      return;
     }
+
+    // Detect platform
+    if (this.isYouTubeUrl(this.videoURL)) {
+      this.detectedPlatform = VideoPlatform.YOUTUBE;
+    } else if (this.isTwitchUrl(this.videoURL)) {
+      this.detectedPlatform = VideoPlatform.TWITCH;
+    } else {
+      this.detectedPlatform = undefined;
+      this.formats = [];
+      this.selectedFormat = undefined;
+      return;
+    }
+
+    this.loadingFormats = true;
+    this.formats = [];
+    this.selectedFormat = undefined;
+
+    const URL_TO_FETCH =
+      this.detectedPlatform === VideoPlatform.YOUTUBE
+        ? this.cleanYouTubeURL(this.videoURL)
+        : this.videoURL;
+
+    window.electronAPI
+      .getVideoFormats(URL_TO_FETCH)
+      .then(
+        (result: {
+          success: boolean;
+          formats?: VideoFormat[];
+          error?: string;
+        }) => {
+          this.ngZone.run(() => {
+            this.loadingFormats = false;
+            if (result.success && result.formats) {
+              this.formats = result.formats;
+              if (this.formats.length > 0) {
+                this.selectedFormat = this.formats[0].id;
+              }
+            } else {
+              this.toastrService.error(
+                result.error ||
+                  this.translateService.instant(
+                    'view.replay_downloader.noFormats'
+                  )
+              );
+            }
+          });
+        }
+      );
   }
 
   /**
-   * Initiates the download process for a Twitch replay video.
-   * Validates the Twitch URL format, resets the progress indicator, and triggers the download through the Electron API. Shows a notification to inform the user that the download has started.
+   * Initiates the download process for the video.
+   * Uses the detected platform and selected format to trigger the download.
    */
-  protected onDownloadTwitch(): void {
-    console.log(this.twitchURL);
-    if (this.twitchURL) {
-      if (this.isTwitchUrl(this.twitchURL)) {
-        this.percent = 0;
-        window.electronAPI.downloadReplay(this.twitchURL, VideoPlatform.TWITCH);
-        this.showNotification();
-      }
+  protected download(): void {
+    if (!this.videoURL || !this.detectedPlatform) {
+      return;
     }
+
+    this.percent = 0;
+    const URL_TO_DOWNLOAD =
+      this.detectedPlatform === VideoPlatform.YOUTUBE
+        ? this.cleanYouTubeURL(this.videoURL)
+        : this.videoURL;
+
+    window.electronAPI.downloadReplay(
+      URL_TO_DOWNLOAD,
+      this.detectedPlatform,
+      this.selectedFormat
+    );
+    this.resetForm();
   }
 
   /**
@@ -146,7 +200,6 @@ export class ReplayDownloaderComponent implements OnInit {
     const URL_OBJ = new URL(url);
     // Cas youtu.be
     if (URL_OBJ.hostname === 'youtu.be') {
-      console.log('gg');
       const VIDEO_ID = URL_OBJ.pathname.slice(1);
       return VIDEO_ID ? `https://www.youtube.com/watch?v=${VIDEO_ID}` : url;
     }
@@ -159,12 +212,14 @@ export class ReplayDownloaderComponent implements OnInit {
   }
 
   /**
-   * Displays a notification at the bottom right corner of the screen to inform the user that the download process has started.
-   * Clears the URL input fields, sets the global loading state, and shows a notification window with an infinite progress indicator and a localized "fetching" message.
+   * Resets the form after initiating a download.
+   * Clears the URL input field and format selection.
    */
-  private showNotification() {
-    this.youTubeURL = undefined;
-    this.twitchURL = undefined;
+  private resetForm(): void {
+    this.videoURL = undefined;
+    this.formats = [];
+    this.selectedFormat = undefined;
+    this.detectedPlatform = undefined;
   }
 
   /**

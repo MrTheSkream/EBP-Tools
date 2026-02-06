@@ -153,6 +153,9 @@
         "description": "Votre replay est en cours d'adaptation de résolution. Merci de patienter..."
       },
       "replay_downloader": {
+        "checking_ytdlp": "Vérification de yt-dlp...",
+        "downloading_ytdlp": "Téléchargement de yt-dlp...",
+        "updating_ytdlp": "Mise à jour de yt-dlp...",
         "fetching": "Les informations de la vidéo sont en cours de récupération...",
         "downloading": "La vidéo est en cours de téléchargement...",
         "downloaded": "La vidéo a été téléchargée avec succès !"

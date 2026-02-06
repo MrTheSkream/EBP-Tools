@@ -153,6 +153,9 @@
         "description": "Ihre Wiedergabe wird an die Auflösung angepasst. Bitte warten…"
       },
       "replay_downloader": {
+        "checking_ytdlp": "Überprüfung von yt-dlp...",
+        "downloading_ytdlp": "yt-dlp wird heruntergeladen...",
+        "updating_ytdlp": "yt-dlp wird aktualisiert...",
         "fetching": "Die Videoinformationen werden abgerufen…",
         "downloading": "Das Video wird heruntergeladen...",
         "downloaded": "Das Video wurde erfolgreich hochgeladen!"

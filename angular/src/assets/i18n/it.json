@@ -153,6 +153,9 @@
         "description": "Il tuo replay è in fase di adattamento alla risoluzione. Attendere prego…"
       },
       "replay_downloader": {
+        "checking_ytdlp": "Verifica di yt-dlp...",
+        "downloading_ytdlp": "Download di yt-dlp...",
+        "updating_ytdlp": "Aggiornamento di yt-dlp...",
         "fetching": "Le informazioni del video sono in fase di recupero…",
         "downloading": "Il video è in fase di download...",
         "downloaded": "Il video è stato caricato con successo!"

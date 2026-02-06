@@ -153,6 +153,9 @@
         "description": "Tu repetición se está ajustando a la resolución. Por favor, espera…"
       },
       "replay_downloader": {
+        "checking_ytdlp": "Verificando yt-dlp...",
+        "downloading_ytdlp": "Descargando yt-dlp...",
+        "updating_ytdlp": "Actualizando yt-dlp...",
         "fetching": "La información del video se está recuperando…",
         "downloading": "El video se está descargando...",
         "downloaded": "El video se cargó correctamente."

@@ -153,6 +153,9 @@
         "description": "Replay-ul tău este în curs de adaptare a rezoluției. Te rugăm să aștepți…"
       },
       "replay_downloader": {
+        "checking_ytdlp": "Verificare yt-dlp...",
+        "downloading_ytdlp": "Descărcare yt-dlp...",
+        "updating_ytdlp": "Actualizare yt-dlp...",
         "fetching": "Informațiile videoclipului sunt în curs de preluare…",
         "downloading": "Videoclipul se descarcă...",
         "downloaded": "Videoclipul a fost încărcat cu succes!"

@@ -38,29 +38,6 @@ function getFFmpegPath(osPlatform, isDevMode, rootPath) {
     );
 }
 
-/**
- * Get the path to the yt-dlp binary based on the current platform and environment
- * @returns {string} Path to yt-dlp executable
- */
-function getYtDlpPath(osPlatform, isDevMode, rootPath) {
-    if (osPlatform === 'linux') {
-        try {
-            return execSync('which yt-dlp').toString().trim();
-        } catch (error) {
-            console.error('yt-dlp not found in PATH on Linux');
-            throw new Error('yt-dlp binary not found');
-        }
-    }
-
-    const DIRECTORY = isDevMode ? '../binaries/yt-dlp' : 'yt-dlp';
-
-    return path.join(
-        rootPath,
-        DIRECTORY,
-        osPlatform === 'win32' ? 'win32.exe' : osPlatform
-    );
-}
-
 //#endregion
 
 const EBP_DOMAIN = 'evabattleplan.com';
@@ -69,7 +46,6 @@ const IS_DEV_MODE = process.env.NODE_ENV !== 'production';
 const ROOT_PATH = IS_DEV_MODE ? path.dirname(__dirname) : process.resourcesPath;
 const OS_PLATFORM = os.platform();
 const FFMPEG_PATH = getFFmpegPath(OS_PLATFORM, IS_DEV_MODE, ROOT_PATH);
-const YTDLP_PATH = getYtDlpPath(OS_PLATFORM, IS_DEV_MODE, ROOT_PATH);
 const PERMANENT_SETTINGS_PATH = path.join(app.getPath('userData'), 'settings.json');
 const TEMPORARY_SETTINGS_PATH =  path.join(ROOT_PATH, 'temporary_settings.json');
 const BROWSER_PATH = path.join(ROOT_PATH, 'browser');
@@ -124,7 +100,6 @@ module.exports = {
     ROOT_PATH,
 
     FFMPEG_PATH,
-    YTDLP_PATH,
 
     PERMANENT_SETTINGS_PATH,
     TEMPORARY_SETTINGS_PATH,

@@ -15,7 +15,6 @@ module.exports = {
             './electron/assets/',
             './electron/template.xlsx',
             './binaries/ffmpeg/',
-            './binaries/yt-dlp/',
             './app-update.yml'
         ],
         icon: 'electron/assets/icon',

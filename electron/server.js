@@ -33,7 +33,7 @@ if (require('electron-squirrel-startup')) {
 
 const path = require('node:path');
 const os = require('os');
-const { exec, spawn, execFile } = require('child_process');
+const { exec, execFile, spawn } = require('child_process');
 const https = require('https');
 const http = require('http');
 const fs = require('fs');
@@ -51,7 +51,6 @@ const {
     ROOT_PATH,
     DEFAULT_VIDEO_HEIGHT,
     FFMPEG_PATH,
-    YTDLP_PATH,
     PROTOCOL_NAME,
     getCurrentPort
 } = require('./config/constants');
@@ -76,6 +75,7 @@ const {
     removeBorders
 } = require('./services/video-service');
 const UpdateService = require('./services/update-service');
+const ytDlpService = require('./services/ytdlp-service');
 
 //#endregion
 
@@ -941,92 +941,25 @@ if (!APP_GOT_THE_LOCK) {
 
     /**
      * Checks local YT-DLP version against the latest version available on GitHub
-     * Prompts for update if a newer version is available
      */
-    function checkYTDLPVersion() {
-        execFile(YTDLP_PATH, ['--version'], (error, stdout, stderr) => {
-            if (error) {
-                console.error('YT-DLP erreur:\n', error);
-                return;
+    async function checkYTDLPVersion() {
+        try {
+            const LOCAL_VERSION = await ytDlpService.getLocalVersion();
+            console.info('Local YT-DLP version:', LOCAL_VERSION);
+
+            const LATEST_VERSION = await ytDlpService.getLatestVersion();
+            console.info('GitHub YT-DLP version:', LATEST_VERSION);
+
+            if (LOCAL_VERSION !== LATEST_VERSION) {
+                console.info(
+                    'YT-DLP update available. Will be updated on next download.'
+                );
+            } else {
+                console.info('YT-DLP is up to date.');
             }
-            const LOCAL_VERSION = stdout.trim();
-            console.info('Local YT-DLP version:\n', LOCAL_VERSION);
-
-            https
-                .get(
-                    'https://api.github.com/repos/yt-dlp/yt-dlp/releases/latest',
-                    {
-                        headers: { 'User-Agent': 'node.js' } // GitHub API requiert un User-Agent
-                    },
-                    (res) => {
-                        let data = '';
-                        res.on('data', (chunk) => (data += chunk));
-                        res.on('end', () => {
-                            const RELEASE = JSON.parse(data);
-                            const GITHUB_VERSION = RELEASE.tag_name;
-
-                            if (GITHUB_VERSION) {
-                                console.info(
-                                    'GitHub YT-DLP version:\n',
-                                    GITHUB_VERSION
-                                );
-
-                                if (LOCAL_VERSION != GITHUB_VERSION) {
-                                    const MESSAGE =
-                                        'YT-DLP is outdated. You should update it.';
-                                    console.warn(MESSAGE);
-
-                                    if (IS_DEV_MODE) {
-                                        const ANSWER_INDEX =
-                                            dialog.showMessageBoxSync(
-                                                getMainWindow(),
-                                                {
-                                                    type: 'question',
-                                                    buttons: ['Ok', 'Later'],
-                                                    defaultId: 0,
-                                                    title: 'Choix',
-                                                    message: MESSAGE
-                                                }
-                                            );
-
-                                        if (ANSWER_INDEX == 0) {
-                                            const ASSETS = RELEASE.assets;
-
-                                            const MAC_ASSET = ASSETS.find(
-                                                (a) => a.name === 'yt-dlp_macos'
-                                            );
-                                            const WIN_ASSET = ASSETS.find(
-                                                (a) => a.name === 'yt-dlp.exe'
-                                            );
-
-                                            if (!MAC_ASSET || !WIN_ASSET) {
-                                                console.error(
-                                                    'Impossible de trouver les fichiers pour Mac ou Windows.'
-                                                );
-                                                return;
-                                            }
-
-                                            try {
-                                                shell.openExternal(
-                                                    MAC_ASSET.browser_download_url
-                                                );
-                                                shell.openExternal(
-                                                    WIN_ASSET.browser_download_url
-                                                );
-                                            } catch (err) {
-                                                console.error(err);
-                                            }
-                                        }
-                                    }
-                                } else {
-                                    console.info('YT-DLP is up to date.');
-                                }
-                            }
-                        });
-                    }
-                )
-                .on('error', (err) => console.error(err));
-        });
+        } catch (error) {
+            console.warn('Could not check YT-DLP version:', error.message);
+        }
     }
 
     /**
@@ -1291,7 +1224,7 @@ if (!APP_GOT_THE_LOCK) {
         });
 
         // The front-end asks the server to download a YouTube video.
-        ipcMain.handle('download-replay', (event, url, platform) => {
+        ipcMain.handle('download-replay', async (event, url, platform) => {
             getMainWindow().webContents.send('global-message', ' ');
             hideMainWindow();
 
@@ -1300,14 +1233,57 @@ if (!APP_GOT_THE_LOCK) {
                 percent: 0,
                 infinite: true,
                 icon: 'fa-sharp fa-solid fa-clapperboard-play',
-                text: '.view.notification.replay_downloader.fetching',
+                text: '.view.notification.replay_downloader.checking_ytdlp',
                 state: 'info'
             };
             createFloatingWindow(500, 150, JSON.stringify(NOTIFICATION_DATA));
 
+            // Ensure yt-dlp is available and up-to-date
+            let ytDlpPath;
+            try {
+                ytDlpPath = await ytDlpService.ensureYtDlp(
+                    (percent, status) => {
+                        const TEXT =
+                            status === 'updating'
+                                ? '.view.notification.replay_downloader.updating_ytdlp'
+                                : '.view.notification.replay_downloader.downloading_ytdlp';
+                        getMainWindow().webContents.send(
+                            'set-notification-data',
+                            {
+                                ...NOTIFICATION_DATA,
+                                text: TEXT,
+                                percent: percent,
+                                infinite: false
+                            }
+                        );
+                    }
+                );
+            } catch (error) {
+                console.error('[YT-DLP] Error:', error.message);
+                getMainWindow().webContents.send('global-message', undefined);
+                getMainWindow().webContents.send('set-notification-data', {
+                    ...NOTIFICATION_DATA,
+                    infinite: false,
+                    state: 'error',
+                    text: `yt-dlp error: ${error.message}`
+                });
+                setTimeout(() => {
+                    deleteFloatingWindow(true);
+                }, 5000);
+                return;
+            }
+
+            // Update notification to show fetching video info
+            getMainWindow().webContents.send('set-notification-data', {
+                ...NOTIFICATION_DATA,
+                text: '.view.notification.replay_downloader.fetching',
+                infinite: true,
+                percent: 0
+            });
+
             let percent = 0;
             exec(
-                `"${YTDLP_PATH}" --ffmpeg-location "${FFMPEG_PATH}" --get-title ${url}`,
+                `"${ytDlpPath}" --ffmpeg-location "${FFMPEG_PATH}" --get-title ${url}`,
                 (error, stdout, stderr) => {
                     if (error) {
                         console.error(error.message);
@@ -1368,7 +1344,7 @@ if (!APP_GOT_THE_LOCK) {
                             break;
                     }
 
-                    const DL = spawn(YTDLP_PATH, settings);
+                    const DL = spawn(ytDlpPath, settings);
 
                     DL.stdout.on('data', (data) => {
                         const MATCH = data.toString().match(/(\d{1,3}\.\d)%/); // extract the % (eg: 42.3%)

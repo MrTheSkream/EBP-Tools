@@ -363,6 +363,7 @@ if (!APP_GOT_THE_LOCK) {
                 }
                 break;
             case 'exportGames':
+                /*
                 if (data.publicPseudo) {
                     extractPublicPseudoGames(
                         app,
@@ -395,36 +396,41 @@ if (!APP_GOT_THE_LOCK) {
                         }
                     );
                 } else {
-                    extractPrivatePseudoGames(
-                        app,
-                        data.nbPages,
-                        data.seasonIndex,
-                        data.skip,
-                        data.timeToWait,
-                        dialog,
-                        getMainWindow(),
-                        data.debug,
-                        async (games) => {
-                            socketEmit(data.socket, 'exportGames', games);
+                    */
+                extractPrivatePseudoGames(
+                    app,
+                    data.nbPages,
+                    data.seasonIndex,
+                    data.skip,
+                    data.timeToWait,
+                    dialog,
+                    getMainWindow(),
+                    data.debug,
+                    async (games) => {
+                        console.log(
+                            '################################################'
+                        );
+                        console.log(games);
+                        console.log(
+                            '################################################'
+                        );
+                        socketEmit(data.socket, 'exportGames', games);
 
-                            StorageManager.setTemporarySettingsValue(
-                                'deeplink',
-                                undefined
-                            );
+                        StorageManager.setTemporarySettingsValue(
+                            'deeplink',
+                            undefined
+                        );
 
-                            if (
-                                games.length > 0 &&
+                        if (games.length > 0 && data.excelDestinationFolder) {
+                            exportGamesToExcel(
+                                games,
+                                'private',
                                 data.excelDestinationFolder
-                            ) {
-                                exportGamesToExcel(
-                                    games,
-                                    'private',
-                                    data.excelDestinationFolder
-                                );
-                            }
+                            );
                         }
-                    );
-                }
+                    }
+                );
+                //}
                 break;
             case 'analyzeVideoFile':
                 console.log(data.socket);

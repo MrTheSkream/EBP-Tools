@@ -13,10 +13,9 @@ module.exports = {
     rules: require("./webpack.rules"),
   },
   plugins: [],
-  externals: {
-    'puppeteer-extra': 'commonjs puppeteer-extra',
-    'puppeteer-extra-plugin-stealth': 'commonjs puppeteer-extra-plugin-stealth',
-    'puppeteer-core': 'commonjs puppeteer-core',
-    'is-plain-object': 'commonjs is-plain-object'
+  resolve: {
+    alias: {
+      'is-plain-object': require.resolve('is-plain-object')
+    }
   }
 };

@@ -4,18 +4,13 @@
 
 //#region Imports
 
-const puppeteerCore = require('puppeteer-core');
-const { addExtra } = require('puppeteer-extra');
-const StealthPlugin = require('puppeteer-extra-plugin-stealth');
+const puppeteer = require('puppeteer-core');
 const { execSync } = require('child_process');
 const os = require('os');
 const fs = require('fs');
 const { destroyMainWindow } = require('./core/window-manager');
 
 //#endregion
-
-const puppeteer = addExtra(puppeteerCore);
-puppeteer.use(StealthPlugin());
 
 /**
  * This function adds an EVA game to a game list.

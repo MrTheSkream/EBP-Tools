@@ -1,6 +1,6 @@
 {
     "name": "ebp-tools",
-    "version": "1.6.94",
+    "version": "1.6.92",
     "description": "",
     "main": ".webpack/main",
     "scripts": {
@@ -32,10 +32,7 @@
         "exceljs": "^4.4.0",
         "express": "^5.2.1",
         "get-port": "^7.1.0",
-        "is-plain-object": "^5.0.0",
-        "puppeteer-core": "^24.36.0",
-        "puppeteer-extra": "^3.3.6",
-        "puppeteer-extra-plugin-stealth": "^2.11.2",
+        "puppeteer-core": "^24.37.2",
         "registry-js": "^1.16.1",
         "socket.io-client": "^4.8.3"
     },
@@ -54,11 +51,11 @@
         "@vercel/webpack-asset-relocator-loader": "^1.10.0",
         "concurrently": "^9.2.1",
         "copy-webpack-plugin": "^13.0.1",
-        "electron": "^40.0.0",
+        "electron": "^40.2.1",
         "electron-squirrel-startup": "^1.0.1",
         "eslint": "^9.39.2",
         "prettier": "^3.8.1",
         "typescript": "^5.9.3",
-        "typescript-eslint": "^8.53.1"
+        "typescript-eslint": "^8.54.0"
     }
 }

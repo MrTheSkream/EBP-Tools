@@ -118,6 +118,16 @@ export const MODES = [
         new Position(920, 596),
         new Position(996, 596),
         new Position(959, 573)
+      ),
+      new LoadingFrame(
+        new Position(959, 369),
+        new Position(808, 708),
+        new Position(1110, 708),
+        new Position(959, 708),
+        new Position(959, 430),
+        new Position(840, 708),
+        new Position(1070, 708),
+        new Position(959, 640)
       )
     ]
   ),

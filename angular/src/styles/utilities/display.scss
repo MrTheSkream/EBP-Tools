@@ -1,21 +1,21 @@
-// Copyright (c) 2025, Antoine Duval
+// Copyright (c) 2026, Antoine Duval
 // This file is part of a source-visible project.
 // See LICENSE for terms. Unauthorized use is prohibited.
 
-@use "sass:map";
-@use "../imports/variables" as variables;
+@use 'sass:map';
+@use '../imports/variables' as variables;
 
 $displays: (
-  "none": "none",
-  "inline": "inline",
-  "inline-block": "inline-block",
-  "block": "block",
-  "grid": "grid",
-  "table": "table",
-  "table-cell": "table-cell",
-  "table-row": "table-row",
-  "flex": "flex",
-  "inline-flex": "inline-flex",
+  'none': 'none',
+  'inline': 'inline',
+  'inline-block': 'inline-block',
+  'block': 'block',
+  'grid': 'grid',
+  'table': 'table',
+  'table-cell': 'table-cell',
+  'table-row': 'table-row',
+  'flex': 'flex',
+  'inline-flex': 'inline-flex'
 );
 
 @media print {
@@ -32,7 +32,7 @@ $displays: (
   }
 }
 
-@media (min-width: map.get(variables.$grid_breakpoints, "sm")) {
+@media (min-width: map.get(variables.$grid_breakpoints, 'sm')) {
   @each $display, $i in $displays {
     .d-sm-#{$display} {
       display: #{$i};
@@ -40,7 +40,7 @@ $displays: (
   }
 }
 
-@media (min-width: map.get(variables.$grid_breakpoints, "md")) {
+@media (min-width: map.get(variables.$grid_breakpoints, 'md')) {
   @each $display, $i in $displays {
     .d-md-#{$display} {
       display: #{$i};
@@ -48,7 +48,7 @@ $displays: (
   }
 }
 
-@media (min-width: map.get(variables.$grid_breakpoints, "lg")) {
+@media (min-width: map.get(variables.$grid_breakpoints, 'lg')) {
   @each $display, $i in $displays {
     .d-lg-#{$display} {
       display: #{$i};
@@ -56,7 +56,7 @@ $displays: (
   }
 }
 
-@media (min-width: map.get(variables.$grid_breakpoints, "xl")) {
+@media (min-width: map.get(variables.$grid_breakpoints, 'xl')) {
   @each $display, $i in $displays {
     .d-xl-#{$display} {
       display: #{$i};
@@ -64,7 +64,7 @@ $displays: (
   }
 }
 
-@media (min-width: map.get(variables.$grid_breakpoints, "xl2")) {
+@media (min-width: map.get(variables.$grid_breakpoints, 'xl2')) {
   @each $display, $i in $displays {
     .d-xl2-#{$display} {
       display: #{$i};
@@ -72,7 +72,7 @@ $displays: (
   }
 }
 
-@media (min-width: map.get(variables.$grid_breakpoints, "xl3")) {
+@media (min-width: map.get(variables.$grid_breakpoints, 'xl3')) {
   @each $display, $i in $displays {
     .d-xl3-#{$display} {
       display: #{$i};
@@ -80,7 +80,7 @@ $displays: (
   }
 }
 
-@media (min-width: map.get(variables.$grid_breakpoints, "xl4")) {
+@media (min-width: map.get(variables.$grid_breakpoints, 'xl4')) {
   @each $display, $i in $displays {
     .d-xl4-#{$display} {
       display: #{$i};
@@ -88,7 +88,7 @@ $displays: (
   }
 }
 
-@media (min-width: map.get(variables.$grid_breakpoints, "xl5")) {
+@media (min-width: map.get(variables.$grid_breakpoints, 'xl5')) {
   @each $display, $i in $displays {
     .d-xl5-#{$display} {
       display: #{$i};

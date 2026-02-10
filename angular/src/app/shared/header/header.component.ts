@@ -1,4 +1,4 @@
-// Copyright (c) 2025, Antoine Duval
+// Copyright (c) 2026, Antoine Duval
 // This file is part of a source-visible project.
 // See LICENSE for terms. Unauthorized use is prohibited.
 
@@ -41,10 +41,7 @@ export class HeaderComponent implements OnInit {
   protected disableLogoutButton: boolean = false;
   protected showMyAccountBox: boolean = false;
 
-  protected readonly pages: string[] = [
-    'replay_downloader',
-    'replay_cutter'
-  ];
+  protected readonly pages: string[] = ['replay_downloader', 'replay_cutter'];
   protected page?: string;
 
   private static STORAGE_KEY_NAME: string = 'language';
@@ -64,7 +61,7 @@ export class HeaderComponent implements OnInit {
   //#region Functions
 
   ngOnInit(): void {
-    if(isDevMode()){
+    if (isDevMode()) {
       this.pages.push('game_history');
     }
 

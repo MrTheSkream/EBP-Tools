@@ -1,11 +1,11 @@
-// Copyright (c) 2025, Antoine Duval
+// Copyright (c) 2026, Antoine Duval
 // This file is part of a source-visible project.
 // See LICENSE for terms. Unauthorized use is prohibited.
 
 @use '../../../../../styles/imports/variables' as variables;
 
 mat-dialog-content {
-  i{
+  i {
     font-size: calc(#{variables.$margin} * 4);
     margin: 0 auto;
     display: block;
@@ -13,14 +13,14 @@ mat-dialog-content {
   }
 
   ::ng-deep {
-    span{
+    span {
       width: 100%;
       display: block;
       text-align: center;
       margin-bottom: variables.$margin;
     }
 
-    code{
+    code {
       text-decoration: underline;
     }
   }

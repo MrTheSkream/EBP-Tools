@@ -1,4 +1,4 @@
-// Copyright (c) 2025, Antoine Duval
+// Copyright (c) 2026, Antoine Duval
 // This file is part of a source-visible project.
 // See LICENSE for terms. Unauthorized use is prohibited.
 
@@ -515,19 +515,19 @@ $material_colors: (
   blue_gray_600: $material_blue_gray_600,
   blue_gray_700: $material_blue_gray_700,
   blue_gray_800: $material_blue_gray_800,
-  blue_gray_900: $material_blue_gray_900,
+  blue_gray_900: $material_blue_gray_900
 );
 
 @each $color-key, $color-var in $material_colors {
-  .color-#{"" + $color-key} {
+  .color-#{'' + $color-key} {
     color: $color-var !important;
   }
 
-  .background-color-#{"" + $color-key} {
+  .background-color-#{'' + $color-key} {
     background-color: $color-var !important;
   }
 
-  .border-color-#{"" + $color-key} {
+  .border-color-#{'' + $color-key} {
     border-color: $color-var !important;
   }
 }

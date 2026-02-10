@@ -1,4 +1,4 @@
-// Copyright (c) 2025, Antoine Duval
+// Copyright (c) 2026, Antoine Duval
 // This file is part of a source-visible project.
 // See LICENSE for terms. Unauthorized use is prohibited.
 
@@ -46,10 +46,16 @@ const IS_DEV_MODE = process.env.NODE_ENV !== 'production';
 const ROOT_PATH = IS_DEV_MODE ? path.dirname(__dirname) : process.resourcesPath;
 const OS_PLATFORM = os.platform();
 const FFMPEG_PATH = getFFmpegPath(OS_PLATFORM, IS_DEV_MODE, ROOT_PATH);
-const PERMANENT_SETTINGS_PATH = path.join(app.getPath('userData'), 'settings.json');
-const TEMPORARY_SETTINGS_PATH =  path.join(ROOT_PATH, 'temporary_settings.json');
+const PERMANENT_SETTINGS_PATH = path.join(
+    app.getPath('userData'),
+    'settings.json'
+);
+const TEMPORARY_SETTINGS_PATH = path.join(ROOT_PATH, 'temporary_settings.json');
 const BROWSER_PATH = path.join(ROOT_PATH, 'browser');
-const PUPPETEER_USER_DATA_PATH = path.join(app.getPath('userData'), 'puppeteer-data');
+const PUPPETEER_USER_DATA_PATH = path.join(
+    app.getPath('userData'),
+    'puppeteer-data'
+);
 const PROTOCOL_NAME = 'tools';
 
 //#region Window Constants

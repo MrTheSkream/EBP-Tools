@@ -1,4 +1,4 @@
-// Copyright (c) 2025, Antoine Duval
+// Copyright (c) 2026, Antoine Duval
 // This file is part of a source-visible project.
 // See LICENSE for terms. Unauthorized use is prohibited.
 
@@ -453,12 +453,12 @@ input {
 }
 
 label:has(
-    input[type='text']:not(.readonly):focus,
-    input[type='url']:not(.readonly):focus,
-    input[type='email']:not(.readonly):focus,
-    input[type='number']:not(.readonly):focus,
-    input[type='date']:not(.readonly):focus,
-    input[type='time']:not(.readonly):focus
-  ) {
+  input[type='text']:not(.readonly):focus,
+  input[type='url']:not(.readonly):focus,
+  input[type='email']:not(.readonly):focus,
+  input[type='number']:not(.readonly):focus,
+  input[type='date']:not(.readonly):focus,
+  input[type='time']:not(.readonly):focus
+) {
   color: variables.$main_color;
 }

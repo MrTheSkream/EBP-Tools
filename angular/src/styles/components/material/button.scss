@@ -1,9 +1,9 @@
-// Copyright (c) 2025, Antoine Duval
+// Copyright (c) 2026, Antoine Duval
 // This file is part of a source-visible project.
 // See LICENSE for terms. Unauthorized use is prohibited.
 
-@use "../../imports/variables" as variables;
-@use "../../imports/material_colors" as material_colors;
+@use '../../imports/variables' as variables;
+@use '../../imports/material_colors' as material_colors;
 
 $button_decoration_position: 5px;
 $button_decoration_width: 2px;
@@ -172,7 +172,7 @@ button,
 
     &:after,
     &:before {
-      content: "";
+      content: '';
       position: absolute;
       height: 7px;
       width: 7px;

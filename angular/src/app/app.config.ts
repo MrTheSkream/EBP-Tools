@@ -1,4 +1,4 @@
-// Copyright (c) 2025, Antoine Duval
+// Copyright (c) 2026, Antoine Duval
 // This file is part of a source-visible project.
 // See LICENSE for terms. Unauthorized use is prohibited.
 
@@ -14,16 +14,12 @@ import { provideRouter } from '@angular/router';
 import { routes } from './app.routes';
 import { TranslateModule } from '@ngx-translate/core';
 import { provideToastr } from 'ngx-toastr';
-import {
-  provideHttpClient,
-  withInterceptors
-} from '@angular/common/http';
+import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { provideTranslateHttpLoader } from '@ngx-translate/http-loader';
 import { provideAnimations } from '@angular/platform-browser/animations';
 import { APIInterceptor } from './core/api.interceptor';
 
 //#endregion
-
 
 export const appConfig: ApplicationConfig = {
   providers: [

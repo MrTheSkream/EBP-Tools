@@ -1,13 +1,12 @@
-// Copyright (c) 2025, Antoine Duval
+// Copyright (c) 2026, Antoine Duval
 // This file is part of a source-visible project.
 // See LICENSE for terms. Unauthorized use is prohibited.
 
-@use "../../../../styles/imports/variables" as variables;
+@use '../../../../styles/imports/variables' as variables;
 
 :host {
-	display: flex;
-	flex-wrap: wrap;
-	margin: 0 calc(#{variables.$margin} * -1);
-	width: calc(100% + #{variables.$margin} * 2);
+  display: flex;
+  flex-wrap: wrap;
+  margin: 0 calc(#{variables.$margin} * -1);
+  width: calc(100% + #{variables.$margin} * 2);
 }
-

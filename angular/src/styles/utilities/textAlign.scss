@@ -1,13 +1,13 @@
-// Copyright (c) 2025, Antoine Duval
+// Copyright (c) 2026, Antoine Duval
 // This file is part of a source-visible project.
 // See LICENSE for terms. Unauthorized use is prohibited.
 
-@use "../imports/variables" as variables;
+@use '../imports/variables' as variables;
 
 $textAlignments: (
-  "start": "left",
-  "center": "center",
-  "end": "right",
+  'start': 'left',
+  'center': 'center',
+  'end': 'right'
 );
 
 @each $size, $pixel in variables.$sizes {

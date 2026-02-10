@@ -1,4 +1,4 @@
-// Copyright (c) 2025, Antoine Duval
+// Copyright (c) 2026, Antoine Duval
 // This file is part of a source-visible project.
 // See LICENSE for terms. Unauthorized use is prohibited.
 
@@ -19,5 +19,4 @@ import { MatTooltipModule } from '@angular/material/tooltip';
   imports: [CommonModule, MatDialogModule, TranslateModule, MatTooltipModule],
   standalone: true
 })
-export class LinuxIntroDialog {
-}
+export class LinuxIntroDialog {}

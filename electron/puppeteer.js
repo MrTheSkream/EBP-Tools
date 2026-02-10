@@ -9,6 +9,7 @@ const { execSync } = require('child_process');
 const os = require('os');
 const fs = require('fs');
 const { destroyMainWindow } = require('./core/window-manager');
+const { PUPPETEER_USER_DATA_PATH } = require('./config/constants');
 
 //#endregion
 
@@ -359,6 +360,7 @@ function extractPublicPseudoGames(
             const BROWSER = await puppeteer.launch({
                 executablePath: browserPath,
                 headless: false,
+                userDataDir: PUPPETEER_USER_DATA_PATH,
                 defaultViewport: debug
                     ? null
                     : {
@@ -430,6 +432,7 @@ async function extractPrivatePseudoGames(
             const BROWSER = await puppeteer.launch({
                 executablePath: browserPath,
                 headless: false,
+                userDataDir: PUPPETEER_USER_DATA_PATH,
                 defaultViewport: null,
                 args: ['--start-maximized']
             });
@@ -481,7 +484,7 @@ async function extractPrivatePseudoGames(
                 callback
             );
 
-            await PAGE.goto(`https://app.eva.gg/fr-FR/login`, {
+            await PAGE.goto(`https://app.eva.gg/fr-FR/profile/dashboard`, {
                 waitUntil: 'networkidle2'
             });
         } catch (err) {

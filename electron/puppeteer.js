@@ -222,7 +222,7 @@ async function extractGames(
                         const JSON_DATA = JSON.parse(DATA);
                         if (
                             JSON_DATA.operationName ===
-                            'useAfterhGameHistoryPage'
+                            'useAfterhGameHistoryCursor'
                         ) {
                             if (JSON_DATA.variables.page.page == 1) {
                                 JSON_DATA.variables.page.page += skip;
@@ -250,6 +250,7 @@ async function extractGames(
 
     await page.setRequestInterception(true);
     page.on('response', async (response) => {
+        console.log('AAA');
         if (!isExtractingStopped) {
             if (response.status() === 403) {
                 console.log('❌ Accès refusé à l’API :', response.url());
@@ -259,14 +260,16 @@ async function extractGames(
                     let nodes = undefined;
                     const JSON_DATA = await response.json();
 
+                    console.log(JSON_DATA);
+
                     // Si on est sur une page publique
                     if (
-                        JSON_DATA?.data?.listLastAfterhGameHistories &&
+                        JSON_DATA?.data?.cursorAfterhGameHistory?.nodes &&
                         Array.isArray(
-                            JSON_DATA.data.listLastAfterhGameHistories
+                            JSON_DATA.data.cursorAfterhGameHistory?.nodes
                         )
                     ) {
-                        nodes = JSON_DATA.data.listLastAfterhGameHistories;
+                        nodes = JSON_DATA.data.cursorAfterhGameHistory?.nodes;
                     }
                     // Si on est sur sa page en étant connecté
                     else if (

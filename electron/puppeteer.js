@@ -166,6 +166,32 @@ async function extractGames(
         }
     });
 
+    // On active l'interception avant d'enregistrer les handlers
+    await page.setRequestInterception(true);
+
+    // On masque les signes de Puppeteer/automation
+    await page.evaluateOnNewDocument(() => {
+        // On supprime la propriété webdriver
+        Object.defineProperty(navigator, 'webdriver', {
+            get: () => undefined
+        });
+
+        // On simule des plugins
+        Object.defineProperty(navigator, 'plugins', {
+            get: () => [1, 2, 3, 4, 5]
+        });
+
+        // On simule les langues
+        Object.defineProperty(navigator, 'languages', {
+            get: () => ['fr-FR', 'fr', 'en-US', 'en']
+        });
+
+        // On supprime les traces de Chrome DevTools Protocol
+        window.chrome = {
+            runtime: {}
+        };
+    });
+
     page.on('request', async (request) => {
         if (!isExtractingStopped) {
             const RESOURCE_TYPE = request.resourceType();
@@ -216,10 +242,15 @@ async function extractGames(
             }
 
             if (URL.includes('graphql')) {
+                console.log('[PUPPETEER] Requête GraphQL interceptée:', URL);
                 try {
                     const DATA = request.postData();
                     if (DATA) {
                         const JSON_DATA = JSON.parse(DATA);
+                        console.log(
+                            '[PUPPETEER] Operation:',
+                            JSON_DATA.operationName
+                        );
                         if (
                             JSON_DATA.operationName ===
                             'useAfterhGameHistoryCursor'
@@ -240,15 +271,16 @@ async function extractGames(
                         request.continue();
                     }
                 } catch (err) {
-                    dialog.showErrorBox('Error', err);
+                    console.error('[PUPPETEER] Erreur interception:', err);
+                    request.continue();
                 }
             } else {
                 request.continue();
             }
+        } else {
+            request.continue();
         }
     });
-
-    await page.setRequestInterception(true);
     page.on('response', async (response) => {
         console.log('AAA');
         if (!isExtractingStopped) {

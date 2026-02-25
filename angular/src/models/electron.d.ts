@@ -41,13 +41,11 @@ export interface ElectronAPI {
     tag: string,
     nbPages: number,
     seasonIndex: number,
-    skip: number,
     timeToWait: number
   ) => Promise<void>;
   extractPrivatePseudoGames: (
     nbPages: number,
     seasonIndex: number,
-    skip: number,
     timeToWait: number
   ) => Promise<void>;
   getExpressPort: () => Promise<number>;

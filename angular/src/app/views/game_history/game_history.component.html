@@ -88,23 +88,6 @@ See LICENSE for terms. Unauthorized use is prohibited.
                 }
               </mat-select>
             </mat-form-field>
-            <!-- NB PAGE TO SKIP -->
-            <mat-form-field
-              matTooltip="{{
-                'view.game_history.ignoreExplanations' | translate
-              }}"
-            >
-              <mat-label>{{
-                'view.game_history.ignore' | translate
-              }}</mat-label>
-              <input
-                matInput
-                placeholder="0"
-                min="0"
-                type="number"
-                [(ngModel)]="skip"
-              />
-            </mat-form-field>
           </div>
         </div>
         <form class="d-flex" (submit)="onPublicPseudoExport()">

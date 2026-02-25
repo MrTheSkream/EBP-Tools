@@ -370,7 +370,6 @@ if (!APP_GOT_THE_LOCK) {
                         data.publicPseudo,
                         data.nbPages,
                         data.seasonIndex,
-                        data.skip,
                         data.timeToWait,
                         dialog,
                         getMainWindow(),
@@ -401,7 +400,6 @@ if (!APP_GOT_THE_LOCK) {
                     app,
                     data.nbPages,
                     data.seasonIndex,
-                    data.skip,
                     data.timeToWait,
                     dialog,
                     getMainWindow(),
@@ -1574,12 +1572,11 @@ if (!APP_GOT_THE_LOCK) {
         // The front-end asks the server to extract the public player games.
         ipcMain.handle(
             'extract-private-pseudo-games',
-            (event, nbPages, seasonIndex, skip, timeToWait) => {
+            (event, nbPages, seasonIndex, timeToWait) => {
                 extractPrivatePseudoGames(
                     app,
                     nbPages,
                     seasonIndex,
-                    skip,
                     timeToWait,
                     dialog,
                     getMainWindow(),
@@ -1608,14 +1605,13 @@ if (!APP_GOT_THE_LOCK) {
         // The front-end asks the server to extract the public player games.
         ipcMain.handle(
             'extract-public-pseudo-games',
-            (event, tag, nbPages, seasonIndex, skip, timeToWait) => {
+            (event, tag, nbPages, seasonIndex, timeToWait) => {
                 if (tag) {
                     extractPublicPseudoGames(
                         app,
                         tag,
                         nbPages,
                         seasonIndex,
-                        skip,
                         timeToWait,
                         dialog,
                         getMainWindow(),

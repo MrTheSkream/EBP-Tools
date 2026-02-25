@@ -51,9 +51,9 @@ contextBridge.exposeInMainWorld("electronAPI", {
   // The front-end asks the server to ask the user to select files.
   openFiles: (extensions) => ipcRenderer.invoke("open-files", extensions),
   // The front-end asks the server to extract the public player games.
-  extractPublicPseudoGames: (tag, nbPages, seasonIndex, skip, timeToWait) => ipcRenderer.invoke("extract-public-pseudo-games", tag, nbPages, seasonIndex, skip, timeToWait),
+  extractPublicPseudoGames: (tag, nbPages, seasonIndex, timeToWait) => ipcRenderer.invoke("extract-public-pseudo-games", tag, nbPages, seasonIndex, timeToWait),
   // The front-end asks the server to extract the private player games.
-  extractPrivatePseudoGames: (tag, nbPages, seasonIndex, skip, timeToWait) => ipcRenderer.invoke("extract-private-pseudo-games", tag, nbPages, seasonIndex, skip, timeToWait),
+  extractPrivatePseudoGames: (tag, nbPages, seasonIndex, timeToWait) => ipcRenderer.invoke("extract-private-pseudo-games", tag, nbPages, seasonIndex, timeToWait),
   // The front-end asks the server to crop, cut and upload a video to the EBP's S3 server.
   uploadGameMiniMap: (gameIndex, game, cropPosition, margedCropPosition, videoPath, gameID, orangeTeamInfosPosition, blueTeamInfosPosition, topInfosPosition, sortedOrangePlayersNames, sortedBluePlayersNames) => ipcRenderer.invoke("upload-game-mini-map", gameIndex, game, cropPosition, margedCropPosition, videoPath, gameID, orangeTeamInfosPosition, blueTeamInfosPosition, topInfosPosition, sortedOrangePlayersNames, sortedBluePlayersNames),
   // The front-end asks the server to cut a video file manualy edited.

@@ -54,8 +54,6 @@ export class GameHistoryComponent implements OnInit {
 
   protected nbPages: number = 1;
 
-  protected skip: number = 0;
-
   protected timeToWait: number = 1;
 
   protected seasonIndex: number = this.seasons.length;
@@ -206,7 +204,6 @@ export class GameHistoryComponent implements OnInit {
               this.publicPseudo!,
               this.nbPages,
               this.seasonIndex,
-              this.skip ?? 0,
               this.timeToWait ?? 1
             );
           }
@@ -228,7 +225,6 @@ export class GameHistoryComponent implements OnInit {
           window.electronAPI.extractPrivatePseudoGames(
             this.nbPages,
             this.seasonIndex,
-            this.skip ?? 0,
             this.timeToWait ?? 1
           );
         }

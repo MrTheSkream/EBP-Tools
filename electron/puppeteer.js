@@ -120,7 +120,6 @@ async function extractGames(
     page,
     nbPages,
     seasonIndex,
-    skip,
     timeToWait,
     dialog,
     publicMode,
@@ -131,7 +130,7 @@ async function extractGames(
     const GAMES = [];
     let isExtractingStopped = false;
     let loadIndex = 0;
-    const QUERY = '.btn-group > button:last-child';
+    const QUERY = '.ProfileLayout div > button';
     let onEVAWebSite = false;
 
     setTimeout(async () => {
@@ -255,9 +254,6 @@ async function extractGames(
                             JSON_DATA.operationName ===
                             'useAfterhGameHistoryCursor'
                         ) {
-                            if (JSON_DATA.variables.page.page == 1) {
-                                JSON_DATA.variables.page.page += skip;
-                            }
                             JSON_DATA.variables.seasonId = seasonIndex;
                             request.continue({
                                 headers: request.headers(),
@@ -326,11 +322,8 @@ async function extractGames(
                             const MAX = timeToWait * 1000 + RANDOM;
                             setTimeout(
                                 async () => {
-                                    await page.waitForSelector(QUERY);
-
-                                    const END =
-                                        (await page.$(QUERY + ':disabled')) !==
-                                        null;
+                                    // Le bouton disparaît à la dernière page
+                                    const END = (await page.$(QUERY)) === null;
                                     if (END) {
                                         const ELAPSED_SECONDS = (
                                             (new Date().getTime() - start) /
@@ -382,7 +375,6 @@ function extractPublicPseudoGames(
     tag,
     nbPages,
     seasonIndex,
-    skip,
     timeToWait,
     dialog,
     mainWindow,
@@ -430,7 +422,6 @@ function extractPublicPseudoGames(
                 PAGE,
                 nbPages,
                 seasonIndex,
-                skip,
                 timeToWait,
                 dialog,
                 true,
@@ -454,7 +445,6 @@ async function extractPrivatePseudoGames(
     app /* Electron.App */,
     nbPages,
     seasonIndex,
-    skip,
     timeToWait,
     dialog,
     mainWindow,
@@ -481,7 +471,6 @@ async function extractPrivatePseudoGames(
                     extractPrivatePseudoGames(
                         nbPages,
                         seasonIndex,
-                        skip,
                         timeToWait,
                         dialog,
                         callback
@@ -511,7 +500,6 @@ async function extractPrivatePseudoGames(
                 PAGE,
                 nbPages,
                 seasonIndex,
-                skip,
                 timeToWait,
                 dialog,
                 false,

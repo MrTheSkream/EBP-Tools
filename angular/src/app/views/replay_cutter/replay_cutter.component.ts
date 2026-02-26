@@ -1591,7 +1591,7 @@ export class ReplayCutterComponent implements OnInit, OnDestroy {
 
   private analyzeVideoFile(training: boolean, videoFilePath: string): void {
     ReplayCutterService.videoURLToCanvas(
-      `http://localhost:${this.globalService.serverPort}/file?path=${videoFilePath}`,
+      `http://localhost:${this.globalService.serverPort}/file?path=${encodeURIComponent(videoFilePath)}`,
       15 * 1000,
       (videoFrame?: HTMLCanvasElement) => {
         if (videoFrame) {

@@ -63,6 +63,7 @@ export interface ElectronAPI {
   checkJwtToken: () => Promise<void>;
   openFile: (pathFile: string) => Promise<void>;
   openFiles: (extensions: string[]) => Promise<string[]>;
+  fixMp4ForBrowser: (videoPath: string) => Promise<string>;
   openURL: (url: string) => void;
   setSetting: (setting: string) => Promise<string>;
   setVideoFile: (callback: (path: string) => void) => Promise<void>;

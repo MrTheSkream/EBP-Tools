@@ -72,8 +72,10 @@ const { checkJwtToken, logout } = require('./services/auth-service');
 const { setupExpressServer } = require('./express/express-server');
 const {
     changeVideoResolution,
-    removeBorders
+    removeBorders,
+    fixForBrowser
 } = require('./services/video-service');
+const { unlinkSync } = require('./services/global-service');
 const UpdateService = require('./services/update-service');
 const ytDlpService = require('./services/ytdlp-service');
 
@@ -319,7 +321,7 @@ if (!APP_GOT_THE_LOCK) {
                             );
 
                             if (fs.existsSync(FILES_TO_ENCODE_PATHS[0])) {
-                                fs.unlinkSync(FILES_TO_ENCODE_PATHS[0]);
+                                unlinkSync(FILES_TO_ENCODE_PATHS[0]);
                             }
 
                             fs.renameSync(TMP_PATH, OUTPUT);
@@ -744,17 +746,6 @@ if (!APP_GOT_THE_LOCK) {
     }
 
     /**
-     * Safely deletes a file/folder if it exists, with Unicode normalization for proper file path handling.
-     * @param path The file/folder path to delete.
-     */
-    function unlinkSync(path) {
-        const NORMALIZED_CUT_PATH = path.normalize('NFC');
-        if (fs.existsSync(NORMALIZED_CUT_PATH)) {
-            fs.unlinkSync(NORMALIZED_CUT_PATH);
-        }
-    }
-
-    /**
      * Crops a video file to a specific rectangular region using FFmpeg and saves it with reduced framerate (10fps).
      * @param game Game object containing team names and map information for filename generation.
      * @param videoPath Path to the source video file to crop.
@@ -933,8 +924,8 @@ if (!APP_GOT_THE_LOCK) {
             throw error;
         }
 
-        fs.unlinkSync(CONCAT_FILE);
-        TEMP_FILES.forEach((f) => fs.unlinkSync(f));
+        unlinkSync(CONCAT_FILE);
+        TEMP_FILES.forEach((f) => unlinkSync(f));
     }
 
     /**
@@ -1724,6 +1715,11 @@ if (!APP_GOT_THE_LOCK) {
         // The front-end asks the server to ask the user to choose files with the computer explorer.
         ipcMain.handle('open-files', async (event, extensions) => {
             return openFiles(extensions);
+        });
+
+        // The front-end asks the server to fix an mp4 file.
+        ipcMain.handle('fix-mp4-for-browser', async (event, videoPath) => {
+            return fixForBrowser(videoPath);
         });
 
         // The front-end asks the server to cut a video file.

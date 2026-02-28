@@ -1583,7 +1583,11 @@ export class ReplayCutterComponent implements OnInit, OnDestroy {
         .openFiles(['mp4', 'mkv'])
         .then((filesPath: string[]) => {
           if (filesPath.length > 0) {
-            this.analyzeVideoFile(training, filesPath[0]);
+            window.electronAPI
+              .fixMp4ForBrowser(filesPath[0])
+              .then((filePath: string) => {
+                this.analyzeVideoFile(training, filePath);
+              });
           }
         });
     }

@@ -198,22 +198,22 @@ class YtDlpService {
         response.pipe(file);
 
         file.on('finish', () => {
-            file.close();
-
-            // Make executable on macOS and Linux
-            if (this.OS_PLATFORM === 'darwin' || this.OS_PLATFORM === 'linux') {
-                try {
-                    fs.chmodSync(outputPath, 0o755);
-                    console.log('[YT-DLP] Made binary executable');
-                } catch (err) {
-                    console.error(
-                        '[YT-DLP] Failed to make binary executable:',
-                        err
-                    );
+            file.close(() => {
+                // Make executable on macOS and Linux
+                if (this.OS_PLATFORM === 'darwin' || this.OS_PLATFORM === 'linux') {
+                    try {
+                        fs.chmodSync(outputPath, 0o755);
+                        console.log('[YT-DLP] Made binary executable');
+                    } catch (err) {
+                        console.error(
+                            '[YT-DLP] Failed to make binary executable:',
+                            err
+                        );
+                    }
                 }
-            }
 
-            resolve();
+                resolve();
+            });
         });
 
         file.on('error', (err) => {

@@ -232,7 +232,13 @@ class UpdateService {
 
             FILE.on('finish', () => {
                 FILE.close(() => {
-                    callback?.();
+                    // On Windows, the OS may not release the file handle immediately after close(), causing EBUSY when trying to spawn the installer.
+                    // A short delay ensures the kernel has fully released the file.
+                    if (os.platform() === 'win32') {
+                        setTimeout(() => callback?.(), 500);
+                    } else {
+                        callback?.();
+                    }
                 });
             });
         });

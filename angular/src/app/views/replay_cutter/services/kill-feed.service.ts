@@ -229,7 +229,8 @@ export class KillFeedService {
               const NOW: number = VIDEO.currentTime;
               this.percent = Math.ceil(100 - (NOW / VIDEO.duration) * 100);
 
-              if (ReplayCutterService.detectGamePlaying(VIDEO, [this.game])) {
+              const FRAME_DATA = ReplayCutterService.captureFrameData(VIDEO);
+              if (FRAME_DATA && ReplayCutterService.detectGamePlaying(FRAME_DATA, [this.game])) {
                 this.doesFrameContainDeaths(VIDEO, replayCutterComponent);
               }
 

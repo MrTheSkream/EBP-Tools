@@ -1114,11 +1114,16 @@ export class ReplayCutterComponent implements OnInit, OnDestroy {
 
     const TEAM_IS_ORANGE = color.r > 255 / 2;
 
+    const FRAME_DATA = ReplayCutterService.captureFrameData(frame);
+    if (!FRAME_DATA) {
+      return;
+    }
+
     // We are looking for the bottom and the top.
     const X: number = TEAM_IS_ORANGE ? 125 : 1806;
     for (let y = ReplayCutterService.getSourceSize(frame).height; y >= 0; y--) {
       const IS_PRIMARY_COLOR = ReplayCutterService.colorSimilarity(
-        ReplayCutterService.getPixelColor(frame, X, y),
+        ReplayCutterService.getPixelColorFromData(FRAME_DATA, X, y),
         color
       );
 
@@ -1159,8 +1164,8 @@ export class ReplayCutterComponent implements OnInit, OnDestroy {
       x++
     ) {
       const IS_PRIMARY_COLOR = ReplayCutterService.colorSimilarity(
-        ReplayCutterService.getPixelColor(
-          frame,
+        ReplayCutterService.getPixelColorFromData(
+          FRAME_DATA,
           TEAM_IS_ORANGE
             ? x
             : ReplayCutterService.getSourceSize(frame).width - x,
@@ -1506,7 +1511,8 @@ export class ReplayCutterComponent implements OnInit, OnDestroy {
 
     return new Promise((resolve) => {
       const ON_SEEKED = () => {
-        if (ReplayCutterService.detectGamePlaying(VIDEO, [game], true)) {
+        const FRAME_DATA = ReplayCutterService.captureFrameData(VIDEO);
+        if (FRAME_DATA && ReplayCutterService.detectGamePlaying(FRAME_DATA, [game], true)) {
           resolve(VIDEO.currentTime);
           CLEAN();
         } else if (VIDEO.currentTime + jump < VIDEO.duration) {
@@ -1747,10 +1753,15 @@ export class ReplayCutterComponent implements OnInit, OnDestroy {
                 });
               });
 
+            const FRAME_DATA = ReplayCutterService.captureFrameData(VIDEO);
+            if (!FRAME_DATA) {
+              return;
+            }
+
             //#region Detection of a game score frame
 
             if (!found) {
-              const MODE = ReplayCutterService.detectGameScoreFrame(VIDEO);
+              const MODE = ReplayCutterService.detectGameScoreFrame(FRAME_DATA);
               if (MODE >= 0) {
                 found = true;
                 if (this._games.length == 0 || this._games[0].start != -1) {
@@ -1929,7 +1940,7 @@ export class ReplayCutterComponent implements OnInit, OnDestroy {
             //#region Detection of the end of a game
 
             if (!found) {
-              if (ReplayCutterService.detectGameEndFrame(VIDEO)) {
+              if (ReplayCutterService.detectGameEndFrame(FRAME_DATA)) {
                 found = true;
 
                 if (this._games.length == 0 || this._games[0].start != -1) {
@@ -1992,7 +2003,7 @@ export class ReplayCutterComponent implements OnInit, OnDestroy {
 
             if (!found) {
               if (
-                ReplayCutterService.detectGameLoadingFrame(VIDEO, this._games)
+                ReplayCutterService.detectGameLoadingFrame(FRAME_DATA, this._games)
               ) {
                 found = true;
                 this.lastDetectedGamePlayingFrame = undefined;
@@ -2002,7 +2013,7 @@ export class ReplayCutterComponent implements OnInit, OnDestroy {
             }
 
             if (!found) {
-              if (ReplayCutterService.detectGameIntro(VIDEO, this._games)) {
+              if (ReplayCutterService.detectGameIntro(FRAME_DATA, this._games)) {
                 found = true;
                 this.lastDetectedGamePlayingFrame = undefined;
                 this._games[0].start =
@@ -2015,7 +2026,7 @@ export class ReplayCutterComponent implements OnInit, OnDestroy {
             //#region Detecting card name during game.
 
             if (!found) {
-              if (ReplayCutterService.detectGamePlaying(VIDEO, this._games)) {
+              if (ReplayCutterService.detectGamePlaying(FRAME_DATA, this._games)) {
                 this.lastDetectedGamePlayingFrame = NOW;
                 // We are looking for the name of the map.
                 if (this._games[0].map == '') {

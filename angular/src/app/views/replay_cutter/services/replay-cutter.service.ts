@@ -171,11 +171,17 @@ export class ReplayCutterService {
                       }
                     );
 
+                    const FRAME_DATA =
+                      ReplayCutterService.captureFrameData(VIDEO);
+                    if (!FRAME_DATA) {
+                      return;
+                    }
+
                     //#region Detection of a game score frame
 
                     if (!found) {
                       const MODE =
-                        ReplayCutterService.detectGameScoreFrame(VIDEO);
+                        ReplayCutterService.detectGameScoreFrame(FRAME_DATA);
                       if (MODE >= 0) {
                         found = true;
                         if (games.length == 0 || games[0].start != -1) {
@@ -363,7 +369,7 @@ export class ReplayCutterService {
                     //#region Detection of the end of a game
 
                     if (!found) {
-                      if (ReplayCutterService.detectGameEndFrame(VIDEO)) {
+                      if (ReplayCutterService.detectGameEndFrame(FRAME_DATA)) {
                         found = true;
 
                         if (games.length == 0 || games[0].start != -1) {
@@ -427,7 +433,10 @@ export class ReplayCutterService {
 
                     if (!found) {
                       if (
-                        ReplayCutterService.detectGameLoadingFrame(VIDEO, games)
+                        ReplayCutterService.detectGameLoadingFrame(
+                          FRAME_DATA,
+                          games
+                        )
                       ) {
                         found = true;
                         lastDetectedGamePlayingFrame = undefined;
@@ -437,7 +446,7 @@ export class ReplayCutterService {
                     }
 
                     if (!found) {
-                      if (ReplayCutterService.detectGameIntro(VIDEO, games)) {
+                      if (ReplayCutterService.detectGameIntro(FRAME_DATA, games)) {
                         found = true;
                         lastDetectedGamePlayingFrame = undefined;
                         games[0].start =
@@ -450,7 +459,7 @@ export class ReplayCutterService {
                     //#region Detecting card name during game.
 
                     if (!found) {
-                      if (ReplayCutterService.detectGamePlaying(VIDEO, games)) {
+                      if (ReplayCutterService.detectGamePlaying(FRAME_DATA, games)) {
                         lastDetectedGamePlayingFrame = NOW;
                         // We are looking for the name of the map.
                         if (games[0].map == '') {
@@ -786,6 +795,49 @@ export class ReplayCutterService {
   }
 
   /**
+   * Captures all pixel data from a frame into a reusable buffer.
+   * @param source The image source to capture.
+   * @returns An object with the raw RGBA data and frame width, or undefined if capture fails.
+   */
+  public static captureFrameData(
+    source: CanvasImageSource
+  ): { data: Uint8ClampedArray; width: number } | undefined {
+    const SIZE = ReplayCutterService.getSourceSize(source);
+    const CANVAS = document.createElement('canvas');
+    CANVAS.width = SIZE.width;
+    CANVAS.height = SIZE.height;
+    const CTX = CANVAS.getContext('2d');
+    if (CTX) {
+      CTX.drawImage(source, 0, 0, SIZE.width, SIZE.height);
+      return {
+        data: CTX.getImageData(0, 0, SIZE.width, SIZE.height).data,
+        width: SIZE.width
+      };
+    }
+    return undefined;
+  }
+
+  /**
+   * Returns the RGB color of a pixel from pre-captured frame data.
+   * @param frameData Frame data captured with captureFrameData.
+   * @param x X coordinate of the pixel.
+   * @param y Y coordinate of the pixel.
+   * @returns RGB color of the pixel.
+   */
+  public static getPixelColorFromData(
+    frameData: { data: Uint8ClampedArray; width: number },
+    x: number,
+    y: number
+  ): RGB {
+    const INDEX = (Math.round(y) * frameData.width + Math.round(x)) * 4;
+    return new RGB(
+      frameData.data[INDEX],
+      frameData.data[INDEX + 1],
+      frameData.data[INDEX + 2]
+    );
+  }
+
+  /**
    * This function returns the RGB color of a video pixel at a given position.
    * @param video HTML DOM of the video from which to extract the pixel.
    * @param x X coordinate of the pixel on the video.
@@ -827,13 +879,16 @@ export class ReplayCutterService {
    * @param video HTML DOM of the video element to be analyzed.
    * @returns Is the current frame a game score frame?
    */
-  public static detectGameScoreFrame(video: HTMLVideoElement): number {
+  public static detectGameScoreFrame(frameData: {
+    data: Uint8ClampedArray;
+    width: number;
+  }): number {
     for (let i = 0; i < MODES.length; i++) {
       if (
         /* Orange logo */
         ReplayCutterService.colorSimilarity(
-          ReplayCutterService.getPixelColor(
-            video,
+          ReplayCutterService.getPixelColorFromData(
+            frameData,
             MODES[i].scoreFrame.orangeLogo.x,
             MODES[i].scoreFrame.orangeLogo.y
           ),
@@ -841,8 +896,8 @@ export class ReplayCutterService {
         ) &&
         /* Blue logo */
         ReplayCutterService.colorSimilarity(
-          ReplayCutterService.getPixelColor(
-            video,
+          ReplayCutterService.getPixelColorFromData(
+            frameData,
             MODES[i].scoreFrame.blueLogo.x,
             MODES[i].scoreFrame.blueLogo.y
           ),
@@ -1182,24 +1237,27 @@ export class ReplayCutterService {
    * @param video The video element to analyze.
    * @returns True if the end-of-game frame is detected, otherwise false.
    */
-  public static detectGameEndFrame(video: HTMLVideoElement): boolean {
+  public static detectGameEndFrame(frameData: {
+    data: Uint8ClampedArray;
+    width: number;
+  }): boolean {
     if (
       /* Orange logo */
       ReplayCutterService.colorSimilarity(
-        ReplayCutterService.getPixelColor(video, 387, 417),
+        ReplayCutterService.getPixelColorFromData(frameData, 387, 417),
         new RGB(251, 209, 0)
       ) &&
       ReplayCutterService.colorSimilarity(
-        ReplayCutterService.getPixelColor(video, 481, 472),
+        ReplayCutterService.getPixelColorFromData(frameData, 481, 472),
         new RGB(252, 205, 4)
       ) &&
       /* Blue logo */
       ReplayCutterService.colorSimilarity(
-        ReplayCutterService.getPixelColor(video, 1498, 437),
+        ReplayCutterService.getPixelColorFromData(frameData, 1498, 437),
         new RGB(46, 144, 242)
       ) &&
       ReplayCutterService.colorSimilarity(
-        ReplayCutterService.getPixelColor(video, 1630, 486),
+        ReplayCutterService.getPixelColorFromData(frameData, 1630, 486),
         new RGB(46, 136, 226)
       )
     ) {
@@ -1216,7 +1274,7 @@ export class ReplayCutterService {
    * @returns Is the current frame a game loading frame?
    */
   public static detectGameLoadingFrame(
-    video: HTMLVideoElement,
+    frameData: { data: Uint8ClampedArray; width: number },
     games: Game[]
   ): boolean {
     if (games.length > 0 && games[0].end != -1 && games[0].start == -1) {
@@ -1227,64 +1285,64 @@ export class ReplayCutterService {
       ) {
         if (
           /* Logo top */ ReplayCutterService.colorSimilarity(
-            ReplayCutterService.getPixelColor(
-              video,
+            ReplayCutterService.getPixelColorFromData(
+              frameData,
               MODES[games[0].mode].loadingFrames[index].logoTop.x,
               MODES[games[0].mode].loadingFrames[index].logoTop.y
             ),
             new RGB(255, 255, 255)
           ) &&
           /* Logo left */ ReplayCutterService.colorSimilarity(
-            ReplayCutterService.getPixelColor(
-              video,
+            ReplayCutterService.getPixelColorFromData(
+              frameData,
               MODES[games[0].mode].loadingFrames[index].logoLeft.x,
               MODES[games[0].mode].loadingFrames[index].logoLeft.y
             ),
             new RGB(255, 255, 255)
           ) &&
           /* Logo right */ ReplayCutterService.colorSimilarity(
-            ReplayCutterService.getPixelColor(
-              video,
+            ReplayCutterService.getPixelColorFromData(
+              frameData,
               MODES[games[0].mode].loadingFrames[index].logoRight.x,
               MODES[games[0].mode].loadingFrames[index].logoRight.y
             ),
             new RGB(255, 255, 255)
           ) &&
           /* Logo middle */ ReplayCutterService.colorSimilarity(
-            ReplayCutterService.getPixelColor(
-              video,
+            ReplayCutterService.getPixelColorFromData(
+              frameData,
               MODES[games[0].mode].loadingFrames[index].logoMiddle.x,
               MODES[games[0].mode].loadingFrames[index].logoMiddle.y
             ),
             new RGB(255, 255, 255)
           ) &&
           /* Logo black 1 */ ReplayCutterService.colorSimilarity(
-            ReplayCutterService.getPixelColor(
-              video,
+            ReplayCutterService.getPixelColorFromData(
+              frameData,
               MODES[games[0].mode].loadingFrames[index].logoBlack1.x,
               MODES[games[0].mode].loadingFrames[index].logoBlack1.y
             ),
             new RGB(0, 0, 0)
           ) &&
           /* Logo black 2 */ ReplayCutterService.colorSimilarity(
-            ReplayCutterService.getPixelColor(
-              video,
+            ReplayCutterService.getPixelColorFromData(
+              frameData,
               MODES[games[0].mode].loadingFrames[index].logoBlack2.x,
               MODES[games[0].mode].loadingFrames[index].logoBlack2.y
             ),
             new RGB(0, 0, 0)
           ) &&
           /* Logo black 3 */ ReplayCutterService.colorSimilarity(
-            ReplayCutterService.getPixelColor(
-              video,
+            ReplayCutterService.getPixelColorFromData(
+              frameData,
               MODES[games[0].mode].loadingFrames[index].logoBlack3.x,
               MODES[games[0].mode].loadingFrames[index].logoBlack3.y
             ),
             new RGB(0, 0, 0)
           ) &&
           /* Logo black 4 */ ReplayCutterService.colorSimilarity(
-            ReplayCutterService.getPixelColor(
-              video,
+            ReplayCutterService.getPixelColorFromData(
+              frameData,
               MODES[games[0].mode].loadingFrames[index].logoBlack4.x,
               MODES[games[0].mode].loadingFrames[index].logoBlack4.y
             ),
@@ -1306,7 +1364,7 @@ export class ReplayCutterService {
    * @returns Is the current frame a game intro frame?
    */
   public static detectGameIntro(
-    video: HTMLVideoElement,
+    frameData: { data: Uint8ClampedArray; width: number },
     games: Game[]
   ): boolean {
     if (games.length > 0 && games[0].end != -1 && games[0].start == -1) {
@@ -1314,185 +1372,185 @@ export class ReplayCutterService {
       if (
         //#region B1
         (ReplayCutterService.colorSimilarity(
-          ReplayCutterService.getPixelColor(video, 1495, 942),
+          ReplayCutterService.getPixelColorFromData(frameData, 1495, 942),
           new RGB(255, 255, 255),
           30
         ) &&
           ReplayCutterService.colorSimilarity(
-            ReplayCutterService.getPixelColor(video, 1512, 950),
+            ReplayCutterService.getPixelColorFromData(frameData, 1512, 950),
             new RGB(255, 255, 255),
             30
           ) &&
           ReplayCutterService.colorSimilarity(
-            ReplayCutterService.getPixelColor(video, 1495, 962),
+            ReplayCutterService.getPixelColorFromData(frameData, 1495, 962),
             new RGB(255, 255, 255),
             30
           ) &&
           ReplayCutterService.colorSimilarity(
-            ReplayCutterService.getPixelColor(video, 1512, 972),
+            ReplayCutterService.getPixelColorFromData(frameData, 1512, 972),
             new RGB(255, 255, 255),
             30
           ) &&
           ReplayCutterService.colorSimilarity(
-            ReplayCutterService.getPixelColor(video, 1495, 982),
+            ReplayCutterService.getPixelColorFromData(frameData, 1495, 982),
             new RGB(255, 255, 255),
             30
           ) &&
           ReplayCutterService.colorSimilarity(
-            ReplayCutterService.getPixelColor(video, 1503, 951),
+            ReplayCutterService.getPixelColorFromData(frameData, 1503, 951),
             new RGB(0, 0, 0),
             200
           ) &&
           ReplayCutterService.colorSimilarity(
-            ReplayCutterService.getPixelColor(video, 1503, 972),
+            ReplayCutterService.getPixelColorFromData(frameData, 1503, 972),
             new RGB(0, 0, 0),
             200
           )) ||
         //#endregion
         //#region B2
         (ReplayCutterService.colorSimilarity(
-          ReplayCutterService.getPixelColor(video, 1558, 960),
+          ReplayCutterService.getPixelColorFromData(frameData, 1558, 960),
           new RGB(255, 255, 255),
           30
         ) &&
           ReplayCutterService.colorSimilarity(
-            ReplayCutterService.getPixelColor(video, 1572, 968),
+            ReplayCutterService.getPixelColorFromData(frameData, 1572, 968),
             new RGB(255, 255, 255),
             30
           ) &&
           ReplayCutterService.colorSimilarity(
-            ReplayCutterService.getPixelColor(video, 1558, 977),
+            ReplayCutterService.getPixelColorFromData(frameData, 1558, 977),
             new RGB(255, 255, 255),
             30
           ) &&
           ReplayCutterService.colorSimilarity(
-            ReplayCutterService.getPixelColor(video, 1572, 987),
+            ReplayCutterService.getPixelColorFromData(frameData, 1572, 987),
             new RGB(255, 255, 255),
             30
           ) &&
           ReplayCutterService.colorSimilarity(
-            ReplayCutterService.getPixelColor(video, 1558, 995),
+            ReplayCutterService.getPixelColorFromData(frameData, 1558, 995),
             new RGB(255, 255, 255),
             30
           ) &&
           ReplayCutterService.colorSimilarity(
-            ReplayCutterService.getPixelColor(video, 1564, 969),
+            ReplayCutterService.getPixelColorFromData(frameData, 1564, 969),
             new RGB(0, 0, 0),
             200
           ) &&
           ReplayCutterService.colorSimilarity(
-            ReplayCutterService.getPixelColor(video, 1564, 986),
+            ReplayCutterService.getPixelColorFromData(frameData, 1564, 986),
             new RGB(0, 0, 0),
             200
           )) ||
         //#endregion
         //#region B3
         (ReplayCutterService.colorSimilarity(
-          ReplayCutterService.getPixelColor(video, 1556, 957),
+          ReplayCutterService.getPixelColorFromData(frameData, 1556, 957),
           new RGB(255, 255, 255),
           30
         ) &&
           ReplayCutterService.colorSimilarity(
-            ReplayCutterService.getPixelColor(video, 1571, 964),
+            ReplayCutterService.getPixelColorFromData(frameData, 1571, 964),
             new RGB(255, 255, 255),
             30
           ) &&
           ReplayCutterService.colorSimilarity(
-            ReplayCutterService.getPixelColor(video, 1556, 975),
+            ReplayCutterService.getPixelColorFromData(frameData, 1556, 975),
             new RGB(255, 255, 255),
             30
           ) &&
           ReplayCutterService.colorSimilarity(
-            ReplayCutterService.getPixelColor(video, 1571, 984),
+            ReplayCutterService.getPixelColorFromData(frameData, 1571, 984),
             new RGB(255, 255, 255),
             30
           ) &&
           ReplayCutterService.colorSimilarity(
-            ReplayCutterService.getPixelColor(video, 1556, 993),
+            ReplayCutterService.getPixelColorFromData(frameData, 1556, 993),
             new RGB(255, 255, 255),
             30
           ) &&
           ReplayCutterService.colorSimilarity(
-            ReplayCutterService.getPixelColor(video, 1564, 966),
+            ReplayCutterService.getPixelColorFromData(frameData, 1564, 966),
             new RGB(0, 0, 0),
             200
           ) &&
           ReplayCutterService.colorSimilarity(
-            ReplayCutterService.getPixelColor(video, 1564, 984),
+            ReplayCutterService.getPixelColorFromData(frameData, 1564, 984),
             new RGB(0, 0, 0),
             200
           )) ||
         //#endregion
         //#region B4
         (ReplayCutterService.colorSimilarity(
-          ReplayCutterService.getPixelColor(video, 1617, 979),
+          ReplayCutterService.getPixelColorFromData(frameData, 1617, 979),
           new RGB(255, 255, 255),
           30
         ) &&
           ReplayCutterService.colorSimilarity(
-            ReplayCutterService.getPixelColor(video, 1630, 985),
+            ReplayCutterService.getPixelColorFromData(frameData, 1630, 985),
             new RGB(255, 255, 255),
             30
           ) &&
           ReplayCutterService.colorSimilarity(
-            ReplayCutterService.getPixelColor(video, 1617, 995),
+            ReplayCutterService.getPixelColorFromData(frameData, 1617, 995),
             new RGB(255, 255, 255),
             30
           ) &&
           ReplayCutterService.colorSimilarity(
-            ReplayCutterService.getPixelColor(video, 1630, 1004),
+            ReplayCutterService.getPixelColorFromData(frameData, 1630, 1004),
             new RGB(255, 255, 255),
             30
           ) &&
           ReplayCutterService.colorSimilarity(
-            ReplayCutterService.getPixelColor(video, 1617, 1011),
+            ReplayCutterService.getPixelColorFromData(frameData, 1617, 1011),
             new RGB(255, 255, 255),
             30
           ) &&
           ReplayCutterService.colorSimilarity(
-            ReplayCutterService.getPixelColor(video, 1623, 987),
+            ReplayCutterService.getPixelColorFromData(frameData, 1623, 987),
             new RGB(0, 0, 0),
             200
           ) &&
           ReplayCutterService.colorSimilarity(
-            ReplayCutterService.getPixelColor(video, 1623, 1004),
+            ReplayCutterService.getPixelColorFromData(frameData, 1623, 1004),
             new RGB(0, 0, 0),
             200
           )) ||
         //#endregion
         //#region B5
         (ReplayCutterService.colorSimilarity(
-          ReplayCutterService.getPixelColor(video, 1606, 976),
+          ReplayCutterService.getPixelColorFromData(frameData, 1606, 976),
           new RGB(255, 255, 255),
           30
         ) &&
           ReplayCutterService.colorSimilarity(
-            ReplayCutterService.getPixelColor(video, 1619, 982),
+            ReplayCutterService.getPixelColorFromData(frameData, 1619, 982),
             new RGB(255, 255, 255),
             30
           ) &&
           ReplayCutterService.colorSimilarity(
-            ReplayCutterService.getPixelColor(video, 1606, 991),
+            ReplayCutterService.getPixelColorFromData(frameData, 1606, 991),
             new RGB(255, 255, 255),
             30
           ) &&
           ReplayCutterService.colorSimilarity(
-            ReplayCutterService.getPixelColor(video, 1619, 1000),
+            ReplayCutterService.getPixelColorFromData(frameData, 1619, 1000),
             new RGB(255, 255, 255),
             30
           ) &&
           ReplayCutterService.colorSimilarity(
-            ReplayCutterService.getPixelColor(video, 1606, 1008),
+            ReplayCutterService.getPixelColorFromData(frameData, 1606, 1008),
             new RGB(255, 255, 255),
             30
           ) &&
           ReplayCutterService.colorSimilarity(
-            ReplayCutterService.getPixelColor(video, 1612, 983),
+            ReplayCutterService.getPixelColorFromData(frameData, 1612, 983),
             new RGB(0, 0, 0),
             200
           ) &&
           ReplayCutterService.colorSimilarity(
-            ReplayCutterService.getPixelColor(video, 1612, 1000),
+            ReplayCutterService.getPixelColorFromData(frameData, 1612, 1000),
             new RGB(0, 0, 0),
             200
           ))
@@ -1513,63 +1571,63 @@ export class ReplayCutterService {
    * @returns Is the current frame a playing game frame?
    */
   public static detectGamePlaying(
-    video: HTMLVideoElement,
+    frameData: { data: Uint8ClampedArray; width: number },
     games: Game[],
     force: boolean = false
   ): boolean {
     if ((games.length > 0 && games[0].start == -1) || force) {
       // Trying to detect the color of all players' life bars.
-      const J1_PIXEL = ReplayCutterService.getPixelColor(
-        video,
+      const J1_PIXEL = ReplayCutterService.getPixelColorFromData(
+        frameData,
         MODES[games[0].mode].gameFrame.playersX[0],
         (MODES[games[0].mode].gameFrame.playersY[0][0] +
           MODES[games[0].mode].gameFrame.playersY[0][1]) /
           2
       );
-      const J2_PIXEL = ReplayCutterService.getPixelColor(
-        video,
+      const J2_PIXEL = ReplayCutterService.getPixelColorFromData(
+        frameData,
         MODES[games[0].mode].gameFrame.playersX[0],
         (MODES[games[0].mode].gameFrame.playersY[1][0] +
           MODES[games[0].mode].gameFrame.playersY[1][1]) /
           2
       );
-      const J3_PIXEL = ReplayCutterService.getPixelColor(
-        video,
+      const J3_PIXEL = ReplayCutterService.getPixelColorFromData(
+        frameData,
         MODES[games[0].mode].gameFrame.playersX[0],
         (MODES[games[0].mode].gameFrame.playersY[2][0] +
           MODES[games[0].mode].gameFrame.playersY[2][1]) /
           2
       );
-      const J4_PIXEL = ReplayCutterService.getPixelColor(
-        video,
+      const J4_PIXEL = ReplayCutterService.getPixelColorFromData(
+        frameData,
         MODES[games[0].mode].gameFrame.playersX[0],
         (MODES[games[0].mode].gameFrame.playersY[3][0] +
           MODES[games[0].mode].gameFrame.playersY[3][1]) /
           2
       );
-      const J5_PIXEL = ReplayCutterService.getPixelColor(
-        video,
+      const J5_PIXEL = ReplayCutterService.getPixelColorFromData(
+        frameData,
         MODES[games[0].mode].gameFrame.playersX[1],
         (MODES[games[0].mode].gameFrame.playersY[0][0] +
           MODES[games[0].mode].gameFrame.playersY[0][1]) /
           2
       );
-      const J6_PIXEL = ReplayCutterService.getPixelColor(
-        video,
+      const J6_PIXEL = ReplayCutterService.getPixelColorFromData(
+        frameData,
         MODES[games[0].mode].gameFrame.playersX[1],
         (MODES[games[0].mode].gameFrame.playersY[1][0] +
           MODES[games[0].mode].gameFrame.playersY[1][1]) /
           2
       );
-      const J7_PIXEL = ReplayCutterService.getPixelColor(
-        video,
+      const J7_PIXEL = ReplayCutterService.getPixelColorFromData(
+        frameData,
         MODES[games[0].mode].gameFrame.playersX[1],
         (MODES[games[0].mode].gameFrame.playersY[2][0] +
           MODES[games[0].mode].gameFrame.playersY[2][1]) /
           2
       );
-      const J8_PIXEL = ReplayCutterService.getPixelColor(
-        video,
+      const J8_PIXEL = ReplayCutterService.getPixelColorFromData(
+        frameData,
         MODES[games[0].mode].gameFrame.playersX[1],
         (MODES[games[0].mode].gameFrame.playersY[3][0] +
           MODES[games[0].mode].gameFrame.playersY[3][1]) /

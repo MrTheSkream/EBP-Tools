@@ -5,11 +5,17 @@
 
 set -e
 
+echo "Creating isolated virtual environment..."
+python3 -m venv .venv
+source .venv/bin/activate
+
 echo "Installing dependencies..."
 pip3 install -r requirements.txt
 
 echo "Building macOS binary with PyInstaller..."
 python3 -m PyInstaller --onefile --name darwin analyze_video.py
+
+deactivate
 
 echo "Moving binary to binaries/analyzer/darwin..."
 mkdir -p ../binaries/analyzer

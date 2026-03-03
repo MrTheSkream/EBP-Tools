@@ -3,11 +3,17 @@ REM Copyright (c) 2026, Antoine Duval
 REM Build the Python video analyzer for Windows using PyInstaller.
 REM Run from the python\ directory: build.bat
 
+echo Creating isolated virtual environment...
+python -m venv .venv
+call .venv\Scripts\activate.bat
+
 echo Installing dependencies...
 pip install -r requirements.txt
 
 echo Building Windows binary with PyInstaller...
 pyinstaller --onefile --name win32 analyze_video.py
+
+call deactivate
 
 echo Moving binary to binaries\analyzer\win32.exe...
 if not exist "..\binaries\analyzer" mkdir "..\binaries\analyzer"

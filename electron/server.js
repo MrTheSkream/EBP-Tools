@@ -51,6 +51,8 @@ const {
     ROOT_PATH,
     DEFAULT_VIDEO_HEIGHT,
     FFMPEG_PATH,
+    ANALYZER_PATH,
+    TESSERACT_PATH,
     PROTOCOL_NAME,
     getCurrentPort
 } = require('./config/constants');
@@ -1172,6 +1174,51 @@ if (!APP_GOT_THE_LOCK) {
         }
 
         //#endregion
+
+        // The front-end asks the server to run the Python video analyzer.
+        ipcMain.handle('run-analyzer', (event, videoPath, settingsJSON) => {
+            return new Promise((resolve, reject) => {
+                const ARGS = [videoPath, FFMPEG_PATH, TESSERACT_PATH, settingsJSON || '{}'];
+                const ANALYZER = spawn(ANALYZER_PATH, ARGS);
+                let BUFFER = '';
+
+                ANALYZER.stdout.on('data', (data) => {
+                    BUFFER += data.toString();
+                    const LINES = BUFFER.split('\n');
+                    BUFFER = LINES.pop(); // keep incomplete line
+                    for (const LINE of LINES) {
+                        if (!LINE.trim()) continue;
+                        try {
+                            const MSG = JSON.parse(LINE);
+                            getMainWindow().webContents.send('analyzer-update', MSG);
+                            if (MSG.type === 'done' || MSG.type === 'error') {
+                                resolve(MSG);
+                            }
+                        } catch (_) {}
+                    }
+                });
+
+                ANALYZER.stderr.on('data', (data) => {
+                    console.error('[analyzer stderr]', data.toString());
+                });
+
+                ANALYZER.on('close', (code) => {
+                    if (BUFFER.trim()) {
+                        try {
+                            const MSG = JSON.parse(BUFFER.trim());
+                            getMainWindow().webContents.send('analyzer-update', MSG);
+                        } catch (_) {}
+                    }
+                    resolve({ type: 'close', code });
+                });
+
+                ANALYZER.on('error', (err) => {
+                    const MSG = { type: 'error', message: err.message };
+                    getMainWindow().webContents.send('analyzer-update', MSG);
+                    reject(err);
+                });
+            });
+        });
 
         // The front-end asks the server to enables/disables debug mode.
         ipcMain.handle('switch-debug-mode', switchDebugMode);

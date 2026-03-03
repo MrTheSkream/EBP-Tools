@@ -60,3 +60,8 @@ Debug
 # System files
 /angular/.DS_Store
 /angular/Thumbs.db
+
+# Generated Python analyzer binaries (built per-platform with python/build.sh|bat)
+/binaries/analyzer/darwin
+/binaries/analyzer/win32.exe
+/binaries/tesseract/

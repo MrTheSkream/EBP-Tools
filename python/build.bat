@@ -1,0 +1,21 @@
+@echo off
+REM Copyright (c) 2026, Antoine Duval
+REM Build the Python video analyzer for Windows using PyInstaller.
+REM Run from the python\ directory: build.bat
+
+echo Installing dependencies...
+pip install -r requirements.txt
+
+echo Building Windows binary with PyInstaller...
+pyinstaller --onefile --name win32 analyze_video.py
+
+echo Moving binary to binaries\analyzer\win32.exe...
+if not exist "..\binaries\analyzer" mkdir "..\binaries\analyzer"
+move dist\win32.exe ..\binaries\analyzer\win32.exe
+
+echo Cleaning up PyInstaller artifacts...
+rmdir /s /q build
+rmdir /s /q dist
+del win32.spec
+
+echo Done! Binary at ..\binaries\analyzer\win32.exe

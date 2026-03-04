@@ -52,6 +52,7 @@ const {
     DEFAULT_VIDEO_HEIGHT,
     FFMPEG_PATH,
     PROTOCOL_NAME,
+    PUPPETEER_USER_DATA_PATH,
     getCurrentPort
 } = require('./config/constants');
 const {
@@ -445,6 +446,9 @@ if (!APP_GOT_THE_LOCK) {
                 }
 
                 StorageManager.setTemporarySettingsValue('deeplink', undefined);
+                break;
+            case 'clean_puppeteer_data':
+                unlinkSync(PUPPETEER_USER_DATA_PATH);
                 break;
         }
     }

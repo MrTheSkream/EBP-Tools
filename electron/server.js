@@ -52,7 +52,6 @@ const {
     DEFAULT_VIDEO_HEIGHT,
     FFMPEG_PATH,
     ANALYZER_PATH,
-    TESSERACT_PATH,
     PROTOCOL_NAME,
     getCurrentPort
 } = require('./config/constants');
@@ -1178,7 +1177,7 @@ if (!APP_GOT_THE_LOCK) {
         // The front-end asks the server to run the Python video analyzer.
         ipcMain.handle('run-analyzer', (event, videoPath, settingsJSON) => {
             return new Promise((resolve, reject) => {
-                const ARGS = [videoPath, FFMPEG_PATH, TESSERACT_PATH, settingsJSON || '{}'];
+                const ARGS = [videoPath, FFMPEG_PATH, '', settingsJSON || '{}'];
                 const SPAWN_OPTIONS = {
                     stdio: ['ignore', 'pipe', 'pipe'],
                     cwd: path.dirname(ANALYZER_PATH),

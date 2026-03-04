@@ -52,51 +52,6 @@ function getAnalyzerPath(osPlatform, isDevMode, rootPath) {
     );
 }
 
-/**
- * Get the path to the Tesseract binary bundled with the application.
- * Falls back to the system Tesseract if the bundled one is absent.
- * @returns {string} Path to Tesseract executable (may be empty string on Linux)
- */
-function getTesseractPath(osPlatform, isDevMode, rootPath) {
-    if (osPlatform === 'linux') {
-        try {
-            return execSync('which tesseract').toString().trim();
-        } catch (error) {
-            return '';
-        }
-    }
-
-    const DIRECTORY = isDevMode ? '../binaries/tesseract' : 'tesseract';
-    const BUNDLED = path.join(rootPath, DIRECTORY, osPlatform === 'win32' ? 'win32.exe' : osPlatform);
-    if (fs.existsSync(BUNDLED)) return BUNDLED;
-
-    if (osPlatform === 'win32') {
-        const SYSTEM_PATHS = [
-            path.join(process.env.PROGRAMFILES || 'C:\\Program Files', 'Tesseract-OCR', 'tesseract.exe'),
-            path.join(process.env['PROGRAMFILES(X86)'] || 'C:\\Program Files (x86)', 'Tesseract-OCR', 'tesseract.exe'),
-            path.join(process.env.LOCALAPPDATA || '', 'Tesseract-OCR', 'tesseract.exe'),
-        ];
-        for (const P of SYSTEM_PATHS) {
-            if (P && fs.existsSync(P)) return P;
-        }
-        try {
-            return execSync('where tesseract').toString().trim().split('\n')[0].trim();
-        } catch (_) {}
-    }
-
-    if (osPlatform === 'darwin') {
-        const MAC_PATHS = ['/usr/local/bin/tesseract', '/opt/homebrew/bin/tesseract'];
-        for (const P of MAC_PATHS) {
-            if (fs.existsSync(P)) return P;
-        }
-        try {
-            return execSync('which tesseract').toString().trim();
-        } catch (_) {}
-    }
-
-    return '';
-}
-
 //#endregion
 
 const EBP_DOMAIN = 'evabattleplan.com';
@@ -106,7 +61,6 @@ const ROOT_PATH = IS_DEV_MODE ? path.dirname(__dirname) : process.resourcesPath;
 const OS_PLATFORM = os.platform();
 const FFMPEG_PATH = getFFmpegPath(OS_PLATFORM, IS_DEV_MODE, ROOT_PATH);
 const ANALYZER_PATH = getAnalyzerPath(OS_PLATFORM, IS_DEV_MODE, ROOT_PATH);
-const TESSERACT_PATH = getTesseractPath(OS_PLATFORM, IS_DEV_MODE, ROOT_PATH);
 const PERMANENT_SETTINGS_PATH = path.join(
     app.getPath('userData'),
     'settings.json'
@@ -169,7 +123,6 @@ module.exports = {
 
     FFMPEG_PATH,
     ANALYZER_PATH,
-    TESSERACT_PATH,
 
     PERMANENT_SETTINGS_PATH,
     TEMPORARY_SETTINGS_PATH,

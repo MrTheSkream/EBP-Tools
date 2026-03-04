@@ -3,6 +3,7 @@
 # See LICENSE for terms. Unauthorized use is prohibited.
 
 import sys
+import os
 import json
 import subprocess
 import io
@@ -757,6 +758,15 @@ def _analyze(
 # Entry point
 # ---------------------------------------------------------------------------
 
+def _get_bundled_tesseract() -> str:
+    """Renvoie le chemin vers le tesseract embarqué par PyInstaller, ou ''."""
+    BASE = getattr(sys, '_MEIPASS', '')
+    if not BASE:
+        return ''
+    CANDIDATE = os.path.join(BASE, 'tesseract', 'tesseract.exe')
+    return CANDIDATE if os.path.isfile(CANDIDATE) else ''
+
+
 def main() -> None:
     """
     Point d'entrée du binaire.
@@ -775,6 +785,8 @@ def main() -> None:
     FFMPEG_PATH = sys.argv[2]
 
     TESSERACT_CMD = sys.argv[3] if len(sys.argv) > 3 else ''
+    if not TESSERACT_CMD:
+        TESSERACT_CMD = _get_bundled_tesseract()
     if TESSERACT_CMD:
         pytesseract.pytesseract.tesseract_cmd = TESSERACT_CMD
 

@@ -10,8 +10,14 @@ call .venv\Scripts\activate.bat
 echo Installing dependencies...
 pip install -r requirements.txt
 
-echo Building Windows binary with PyInstaller...
-pyinstaller --onefile --name win32 analyze_video.py
+set TESS_DIR=C:\Program Files\Tesseract-OCR
+
+echo Building Windows binary with PyInstaller (embedding Tesseract)...
+pyinstaller --onefile --name win32 ^
+  --add-data "%TESS_DIR%\tesseract.exe;tesseract" ^
+  --add-data "%TESS_DIR%\*.dll;tesseract" ^
+  --add-data "%TESS_DIR%\tessdata\eng.traineddata;tesseract\tessdata" ^
+  analyze_video.py
 
 call deactivate
 

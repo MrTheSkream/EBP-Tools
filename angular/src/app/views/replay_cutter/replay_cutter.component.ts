@@ -85,6 +85,7 @@ export class ReplayCutterComponent implements OnInit, OnDestroy {
   protected percent: number = -1;
   protected inputFileDisabled: boolean = true;
   private lastDetectedGamePlayingFrame?: number;
+  private pythonAnalysisRunning: boolean = false;
 
   private _videoPath: string | undefined;
   public set videoPath(value: string | undefined) {
@@ -356,13 +357,18 @@ export class ReplayCutterComponent implements OnInit, OnDestroy {
               });
             });
         } else if (msg.type === 'done') {
+          console.log('[analyzer] done payload:', JSON.stringify(msg.games));
+          this.pythonAnalysisRunning = false;
           this._games = (msg.games ?? []).map((g) =>
             this.createGameFromJSON(g)
           );
           this.onVideoEnded(this._games);
         } else if (msg.type === 'error') {
           console.error('[analyzer] error:', msg.message);
+          this.pythonAnalysisRunning = false;
           this.onVideoEnded(this._games);
+        } else if (msg.log) {
+          console.log('[analyzer]', msg.log);
         }
       });
     });
@@ -1747,6 +1753,7 @@ export class ReplayCutterComponent implements OnInit, OnDestroy {
     this.globalService.loading = '';
     this._videoPath = videoFilePath;
     this._games = [];
+    this.pythonAnalysisRunning = true;
 
     this.translateService
       .get('view.replay_cutter.videoIsBeingAnalyzed', { games: 0 })
@@ -1817,6 +1824,9 @@ export class ReplayCutterComponent implements OnInit, OnDestroy {
    * @param event The loaded data event from the video element.
    */
   protected videoLoadedData(event: Event): void {
+    if (this.pythonAnalysisRunning) {
+      return;
+    }
     if (event.target) {
       const VIDEO = event.target as HTMLVideoElement;
       VIDEO.currentTime = VIDEO.duration;
@@ -1831,6 +1841,9 @@ export class ReplayCutterComponent implements OnInit, OnDestroy {
    * @param event The time update event from the video element.
    */
   protected async videoTimeUpdate(event: Event): Promise<void> {
+    if (this.pythonAnalysisRunning) {
+      return;
+    }
     if (this.debugPause) {
       setTimeout(() => {
         this.videoTimeUpdate(event);

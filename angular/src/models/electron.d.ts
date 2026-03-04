@@ -37,6 +37,7 @@ export interface AnalyzerMessage {
     };
   }>;
   message?: string;
+  log?: string;
   code?: number;
 }
 

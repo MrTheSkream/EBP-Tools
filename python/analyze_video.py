@@ -301,7 +301,8 @@ def _ocr_region(
     def _recognize(i: Image.Image) -> str:
         try:
             return pytesseract.image_to_string(i, config=CONFIG).replace('\r', '').replace('\n', '').strip()
-        except Exception:
+        except Exception as e:
+            _emit({'log': f'[OCR ERROR] {e}'})
             return ''
 
     results = [_recognize(img)]
@@ -330,7 +331,9 @@ def _ocr_region(
         results = [checker(r) for r in results]
 
     NON_EMPTY = [r for r in results if r]
-    return _most_frequent(NON_EMPTY) if NON_EMPTY else ''
+    RESULT = _most_frequent(NON_EMPTY) if NON_EMPTY else ''
+    _emit({'log': f'[OCR] region=({x1},{y1})-({x2},{y2}) results={results} → {repr(RESULT)}'})
+    return RESULT
 
 # ---------------------------------------------------------------------------
 # Frame type detection — mirrors detect* functions from the TypeScript service

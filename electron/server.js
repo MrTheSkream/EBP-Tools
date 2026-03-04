@@ -1179,22 +1179,46 @@ if (!APP_GOT_THE_LOCK) {
         ipcMain.handle('run-analyzer', (event, videoPath, settingsJSON) => {
             return new Promise((resolve, reject) => {
                 const ARGS = [videoPath, FFMPEG_PATH, TESSERACT_PATH, settingsJSON || '{}'];
-                const ANALYZER = spawn(ANALYZER_PATH, ARGS);
+                const SPAWN_OPTIONS = {
+                    stdio: ['ignore', 'pipe', 'pipe'],
+                    cwd: path.dirname(ANALYZER_PATH),
+                    windowsHide: true
+                };
+                const ANALYZER = spawn(ANALYZER_PATH, ARGS, SPAWN_OPTIONS);
                 let BUFFER = '';
+                const LINE_QUEUE = [];
+                let SCHEDULED = false;
+                let RESOLVED = false;
+
+                const processQueue = () => {
+                    SCHEDULED = false;
+                    const WINDOW = getMainWindow();
+                    while (LINE_QUEUE.length > 0) {
+                        const LINE = LINE_QUEUE.shift();
+                        if (!LINE.trim()) continue;
+                        try {
+                            const MSG = JSON.parse(LINE);
+                            if (WINDOW && !WINDOW.isDestroyed()) {
+                                WINDOW.webContents.send('analyzer-update', MSG);
+                            }
+                            if ((MSG.type === 'done' || MSG.type === 'error') && !RESOLVED) {
+                                RESOLVED = true;
+                                resolve(MSG);
+                            }
+                        } catch (_) {}
+                    }
+                };
 
                 ANALYZER.stdout.on('data', (data) => {
                     BUFFER += data.toString();
                     const LINES = BUFFER.split('\n');
-                    BUFFER = LINES.pop(); // keep incomplete line
+                    BUFFER = LINES.pop();
                     for (const LINE of LINES) {
-                        if (!LINE.trim()) continue;
-                        try {
-                            const MSG = JSON.parse(LINE);
-                            getMainWindow().webContents.send('analyzer-update', MSG);
-                            if (MSG.type === 'done' || MSG.type === 'error') {
-                                resolve(MSG);
-                            }
-                        } catch (_) {}
+                        LINE_QUEUE.push(LINE);
+                    }
+                    if (LINE_QUEUE.length > 0 && !SCHEDULED) {
+                        SCHEDULED = true;
+                        setImmediate(processQueue);
                     }
                 });
 
@@ -1204,12 +1228,18 @@ if (!APP_GOT_THE_LOCK) {
 
                 ANALYZER.on('close', (code) => {
                     if (BUFFER.trim()) {
-                        try {
-                            const MSG = JSON.parse(BUFFER.trim());
-                            getMainWindow().webContents.send('analyzer-update', MSG);
-                        } catch (_) {}
+                        LINE_QUEUE.push(BUFFER.trim());
+                        if (!SCHEDULED) {
+                            SCHEDULED = true;
+                            setImmediate(processQueue);
+                        }
                     }
-                    resolve({ type: 'close', code });
+                    setImmediate(() => {
+                        if (!RESOLVED) {
+                            RESOLVED = true;
+                            resolve({ type: 'close', code });
+                        }
+                    });
                 });
 
                 ANALYZER.on('error', (err) => {

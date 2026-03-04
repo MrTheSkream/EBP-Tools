@@ -68,8 +68,33 @@ function getTesseractPath(osPlatform, isDevMode, rootPath) {
 
     const DIRECTORY = isDevMode ? '../binaries/tesseract' : 'tesseract';
     const BUNDLED = path.join(rootPath, DIRECTORY, osPlatform === 'win32' ? 'win32.exe' : osPlatform);
-    // Si le binaire bundlé est absent, retourne '' → pytesseract utilisera le Tesseract système.
-    return fs.existsSync(BUNDLED) ? BUNDLED : '';
+    if (fs.existsSync(BUNDLED)) return BUNDLED;
+
+    if (osPlatform === 'win32') {
+        const SYSTEM_PATHS = [
+            path.join(process.env.PROGRAMFILES || 'C:\\Program Files', 'Tesseract-OCR', 'tesseract.exe'),
+            path.join(process.env['PROGRAMFILES(X86)'] || 'C:\\Program Files (x86)', 'Tesseract-OCR', 'tesseract.exe'),
+            path.join(process.env.LOCALAPPDATA || '', 'Tesseract-OCR', 'tesseract.exe'),
+        ];
+        for (const P of SYSTEM_PATHS) {
+            if (P && fs.existsSync(P)) return P;
+        }
+        try {
+            return execSync('where tesseract').toString().trim().split('\n')[0].trim();
+        } catch (_) {}
+    }
+
+    if (osPlatform === 'darwin') {
+        const MAC_PATHS = ['/usr/local/bin/tesseract', '/opt/homebrew/bin/tesseract'];
+        for (const P of MAC_PATHS) {
+            if (fs.existsSync(P)) return P;
+        }
+        try {
+            return execSync('which tesseract').toString().trim();
+        } catch (_) {}
+    }
+
+    return '';
 }
 
 //#endregion

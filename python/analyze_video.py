@@ -3,6 +3,7 @@
 # See LICENSE for terms. Unauthorized use is prohibited.
 
 import sys
+import os
 import json
 import subprocess
 import io
@@ -301,7 +302,8 @@ def _ocr_region(
     def _recognize(i: Image.Image) -> str:
         try:
             return pytesseract.image_to_string(i, config=CONFIG).replace('\r', '').replace('\n', '').strip()
-        except Exception:
+        except Exception as e:
+            _emit({'log': f'[OCR ERROR] {e}'})
             return ''
 
     results = [_recognize(img)]
@@ -330,7 +332,9 @@ def _ocr_region(
         results = [checker(r) for r in results]
 
     NON_EMPTY = [r for r in results if r]
-    return _most_frequent(NON_EMPTY) if NON_EMPTY else ''
+    RESULT = _most_frequent(NON_EMPTY) if NON_EMPTY else ''
+    _emit({'log': f'[OCR] region=({x1},{y1})-({x2},{y2}) results={results} → {repr(RESULT)}'})
+    return RESULT
 
 # ---------------------------------------------------------------------------
 # Frame type detection — mirrors detect* functions from the TypeScript service
@@ -538,9 +542,8 @@ def _analyze(
     while TIMESTAMP > 0:
         PERCENT = int((1.0 - TIMESTAMP / DURATION) * 100) if DURATION > 0 else 0
 
-        # Emit current progress; include CURRENT if it has partial data worth showing.
-        EMIT_GAMES = ([CURRENT] + GAMES) if CURRENT else GAMES
-        _emit({'type': 'progress', 'percent': PERCENT, 'games': len(EMIT_GAMES), 'time': TIMESTAMP})
+        COMPLETED_COUNT = sum(1 for g in GAMES if g['start'] != -1)
+        _emit({'type': 'progress', 'percent': PERCENT, 'games': COMPLETED_COUNT, 'time': TIMESTAMP})
 
         FRAME = _get_frame(CAP, TIMESTAMP)
         if FRAME is None:
@@ -755,6 +758,16 @@ def _analyze(
 # Entry point
 # ---------------------------------------------------------------------------
 
+def _get_bundled_tesseract() -> str:
+    """Renvoie le chemin vers le tesseract embarqué par PyInstaller, ou ''."""
+    BASE = getattr(sys, '_MEIPASS', '')
+    if not BASE:
+        return ''
+    EXE_NAME = 'tesseract.exe' if sys.platform == 'win32' else 'tesseract'
+    CANDIDATE = os.path.join(BASE, 'tesseract', EXE_NAME)
+    return CANDIDATE if os.path.isfile(CANDIDATE) else ''
+
+
 def main() -> None:
     """
     Point d'entrée du binaire.
@@ -773,6 +786,8 @@ def main() -> None:
     FFMPEG_PATH = sys.argv[2]
 
     TESSERACT_CMD = sys.argv[3] if len(sys.argv) > 3 else ''
+    if not TESSERACT_CMD:
+        TESSERACT_CMD = _get_bundled_tesseract()
     if TESSERACT_CMD:
         pytesseract.pytesseract.tesseract_cmd = TESSERACT_CMD
 

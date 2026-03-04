@@ -12,8 +12,17 @@ source .venv/bin/activate
 echo "Installing dependencies..."
 pip3 install -r requirements.txt
 
-echo "Building macOS binary with PyInstaller..."
-python3 -m PyInstaller --onefile --name darwin analyze_video.py
+TESS_BIN="/opt/homebrew/bin/tesseract"
+TESS_DATA="/opt/homebrew/share/tessdata"
+TESS_LIB="/opt/homebrew/lib"
+
+echo "Building macOS binary with PyInstaller (embedding Tesseract)..."
+python3 -m PyInstaller --onefile --name darwin \
+  --add-data "${TESS_BIN}:tesseract" \
+  --add-data "${TESS_DATA}/eng.traineddata:tesseract/tessdata" \
+  --add-binary "${TESS_LIB}/libtesseract*.dylib:tesseract" \
+  --add-binary "${TESS_LIB}/liblept*.dylib:tesseract" \
+  analyze_video.py
 
 deactivate
 

@@ -763,7 +763,8 @@ def _get_bundled_tesseract() -> str:
     BASE = getattr(sys, '_MEIPASS', '')
     if not BASE:
         return ''
-    CANDIDATE = os.path.join(BASE, 'tesseract', 'tesseract.exe')
+    EXE_NAME = 'tesseract.exe' if sys.platform == 'win32' else 'tesseract'
+    CANDIDATE = os.path.join(BASE, 'tesseract', EXE_NAME)
     return CANDIDATE if os.path.isfile(CANDIDATE) else ''
 
 

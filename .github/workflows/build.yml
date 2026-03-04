@@ -127,7 +127,7 @@ jobs:
             - name: Install Tesseract
               run: choco install tesseract --no-progress -y
             - name: Build Python analyzer binary
-              run: cd python && build.bat
+              run: cd python && .\build.bat
             # Building Angular and making the Electron application.
             - name: Build Electron app
               run: npm run make

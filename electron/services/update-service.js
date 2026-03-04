@@ -66,7 +66,7 @@ class UpdateService {
      * @param {boolean} invisible Should we hide the graphical update elements?
      */
     autoUpdate(invisible) {
-        if (!IS_DEV_MODE) {
+        if (!IS_DEV_MODE && !this.localVersion.startsWith('0')) {
             this.getProjectLatestVersion(() => {
                 if (this.githubVersion) {
                     if (this.githubVersion != this.localVersion) {

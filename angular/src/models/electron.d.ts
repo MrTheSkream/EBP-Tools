@@ -17,7 +17,8 @@ import { VideoFormat } from '../app/views/replay_downloader/models/video-format.
 export interface AnalyzerMessage {
   type: 'progress' | 'done' | 'error' | 'close' | 'log';
   percent?: number;
-  games?: Array<{
+  /** In progress messages: number of games so far. In done: array of game objects. */
+  games?: number | Array<{
     mode: number;
     start: number;
     end: number;

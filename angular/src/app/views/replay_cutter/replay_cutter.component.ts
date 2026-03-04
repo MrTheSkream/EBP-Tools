@@ -341,7 +341,10 @@ export class ReplayCutterComponent implements OnInit, OnDestroy {
         if (msg.type === 'progress') {
           this.percent = msg.percent ?? this.percent;
           console.log(this.percent);
-          const GAMES_COUNT = msg.games?.length ?? this._games.length;
+          const GAMES_COUNT =
+            typeof msg.games === 'number'
+              ? msg.games
+              : (msg.games?.length ?? this._games.length);
           this.translateService
             .get('view.replay_cutter.videoIsBeingAnalyzed', {
               games: GAMES_COUNT
@@ -359,9 +362,8 @@ export class ReplayCutterComponent implements OnInit, OnDestroy {
         } else if (msg.type === 'done') {
           console.log('[analyzer] done payload:', JSON.stringify(msg.games));
           this.pythonAnalysisRunning = false;
-          this._games = (msg.games ?? []).map((g) =>
-            this.createGameFromJSON(g)
-          );
+          const GAMES_LIST = Array.isArray(msg.games) ? msg.games : [];
+          this._games = GAMES_LIST.map((g) => this.createGameFromJSON(g));
           this.onVideoEnded(this._games);
         } else if (msg.type === 'error') {
           console.error('[analyzer] error:', msg.message);

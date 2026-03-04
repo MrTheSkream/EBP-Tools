@@ -541,9 +541,8 @@ def _analyze(
     while TIMESTAMP > 0:
         PERCENT = int((1.0 - TIMESTAMP / DURATION) * 100) if DURATION > 0 else 0
 
-        # Emit current progress; include CURRENT if it has partial data worth showing.
-        EMIT_GAMES = ([CURRENT] + GAMES) if CURRENT else GAMES
-        _emit({'type': 'progress', 'percent': PERCENT, 'games': len(EMIT_GAMES), 'time': TIMESTAMP})
+        COMPLETED_COUNT = sum(1 for g in GAMES if g['start'] != -1)
+        _emit({'type': 'progress', 'percent': PERCENT, 'games': COMPLETED_COUNT, 'time': TIMESTAMP})
 
         FRAME = _get_frame(CAP, TIMESTAMP)
         if FRAME is None:

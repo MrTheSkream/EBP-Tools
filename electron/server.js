@@ -1067,7 +1067,7 @@ if (!APP_GOT_THE_LOCK) {
     // Handle deep link on macOS (when app is already open)
     app.on('open-url', (event, url) => {
         event.preventDefault();
-        getMainWindow().hide();
+        getMainWindow()?.hide();
         handleDeepLink(url);
     });
 
@@ -1691,7 +1691,7 @@ if (!APP_GOT_THE_LOCK) {
                     !getMainWindow().isDestroyed() &&
                     !IS_DEV_MODE
                 ) {
-                    getMainWindow().hide();
+                    getMainWindow()?.hide();
                 }
 
                 await createFloatingWindow(450, 150, notificationData);

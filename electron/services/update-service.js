@@ -41,7 +41,7 @@ class UpdateService {
      * Displays the "Up to date" notification.
      */
     showUpdatedNotification() {
-        getMainWindow().hide();
+        getMainWindow()?.hide();
 
         createFloatingWindow(
             450,
@@ -96,7 +96,7 @@ class UpdateService {
                             );
 
                             if (invisible === false) {
-                                getMainWindow().hide();
+                                getMainWindow()?.hide();
 
                                 createFloatingWindow(
                                     450,

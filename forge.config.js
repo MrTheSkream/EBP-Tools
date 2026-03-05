@@ -16,7 +16,6 @@ module.exports = {
             './electron/template.xlsx',
             './binaries/ffmpeg/',
             './binaries/analyzer/',
-            './binaries/tesseract/',
             './app-update.yml'
         ],
         icon: 'electron/assets/icon',
@@ -169,7 +168,7 @@ module.exports = {
 
                 const BINARIES = [
                     path.join(RESOURCES_BASE, 'ffmpeg', 'darwin'),
-                    path.join(RESOURCES_BASE, 'analyzer', 'darwin'),
+                    path.join(RESOURCES_BASE, 'analyzer', 'darwin')
                 ];
 
                 for (const BIN of BINARIES) {
@@ -177,7 +176,10 @@ module.exports = {
                         execSync(`chmod +x "${BIN}"`);
                         console.log(`chmod +x: ${BIN}`);
                     } catch (error) {
-                        console.error(`Erreur lors du chmod de ${BIN} :`, error);
+                        console.error(
+                            `Erreur lors du chmod de ${BIN} :`,
+                            error
+                        );
                     }
                 }
             }
